@@ -3,9 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>Вход в систему</title>
+    <style>
+        .success-message {
+            color: green;
+            margin-bottom: 15px;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
 <h1>Вход в систему</h1>
+
+<div class="success-message" th:if="${param.registered}">
+    Регистрация прошла успешно! Теперь вы можете войти.
+</div>
+
+<div class="error-message" th:if="${param.error}">
+    Неверное имя пользователя или пароль.
+</div>
+
 <form th:action="@{/login}" method="post">
     <div>
         <label for="username">Имя пользователя:</label>

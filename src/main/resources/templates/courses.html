@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Курсы - Online School</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 0;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar ul {
+            display: flex;
+            list-style: none;
+        }
+        .navbar li {
+            margin-right: 20px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+        }
+        .course-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .course-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .course-card h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <h2>Online School</h2>
+                </div>
+                <ul>
+                    <li><a href="/">Главная</a></li>
+                    <li><a href="/courses">Курсы</a></li>
+                    <li><a href="/login">Войти</a></li>
+                    <li><a href="/register">Регистрация</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="container">
+        <h1>Доступные курсы</h1>
+        
+        <div class="course-list">
+            <!-- Здесь будут курсы из базы данных -->
+            <div class="course-card">
+                <h3>Основы Java программирования</h3>
+                <p>Изучите основы Java и объектно-ориентированного программирования</p>
+                <p><strong>Преподаватель:</strong> Иван Иванов</p>
+                <a href="#">Подробнее</a>
+            </div>
+            
+            <div class="course-card">
+                <h3>Web-разработка</h3>
+                <p>HTML, CSS, JavaScript и фреймворки для современной веб-разработки</p>
+                <p><strong>Преподаватель:</strong> Мария Петрова</p>
+                <a href="#">Подробнее</a>
+            </div>
+            
+            <div class="course-card">
+                <h3>Spring Framework</h3>
+                <p>Изучите популярный фреймворк для разработки на Java</p>
+                <p><strong>Преподаватель:</strong> Алексей Смирнов</p>
+                <a href="#">Подробнее</a>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 
