@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика вызовов</title>
+</head>
+<body>
+<h1>Статистика вызовов</h1>
+<p>Средняя продолжительность вызова: <span th:text="${averageDuration}"></span> минут</p>
+<p>Максимальное количество пострадавших: <span th:text="${maxCasualties}"></span></p>
+<p>Минимальная сумма ущерба: <span th:text="${minDamageAmount}"></span> руб.</p>
+<a th:href="@{/call-statistics}">Назад к списку</a>
+</body>
+</html>

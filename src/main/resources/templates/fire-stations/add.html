@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить пожарную часть</title>
+</head>
+<body>
+<h1>Добавить пожарную часть</h1>
+<form th:action="@{/fire-stations/add}" th:object="${fireStation}" method="post">
+    <div>
+        <label for="name">Название:</label>
+        <input type="text" id="name" th:field="*{name}" required>
+    </div>
+    <div>
+        <label for="address">Адрес:</label>
+        <input type="text" id="address" th:field="*{address}" required>
+    </div>
+    <div>
+        <label for="phoneNumber">Телефон:</label>
+        <input type="text" id="phoneNumber" th:field="*{phoneNumber}" required>
+    </div>
+    <div>
+        <button type="submit">Сохранить</button>
+    </div>
+</form>
+<a th:href="@{/templates/fire-stations}">Назад к списку</a>
+</body>
+</html>

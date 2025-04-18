@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать вебинар - Онлайн Школа</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">Онлайн Школа</a>
+            <div class="nav-links">
+                <a href="/courses">Курсы</a>
+                <a href="/webinars" class="active">Вебинары</a>
+                <a href="/materials">Материалы</a>
+                <div class="user-menu">
+                    <span th:text="${#authentication.name}"></span>
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn">Выйти</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="form-container">
+            <h1>Создать вебинар</h1>
+            <form th:action="@{/webinars/create}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Название</label>
+                    <input type="text" id="title" name="title" th:value="${webinar?.title}" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Описание</label>
+                    <textarea id="description" name="description" th:text="${webinar?.description}" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="courseId">Курс</label>
+                    <select id="courseId" name="courseId" required>
+                        <option value="">Выберите курс</option>
+                        <option th:each="course : ${courses}" 
+                                th:value="${course.id}" 
+                                th:text="${course.title}"
+                                th:selected="${webinar?.course?.id == course.id}">
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startTime">Дата и время</label>
+                    <input type="datetime-local" id="startTime" name="startTime" 
+                           th:value="${#temporals.format(webinar?.startTime, 'yyyy-MM-dd\'T\'HH:mm')}" required>
+                </div>
+                <div class="form-group">
+                    <label for="file">Материалы</label>
+                    <input type="file" id="file" name="file">
+                </div>
+                <button type="submit" class="btn">Создать</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html> 

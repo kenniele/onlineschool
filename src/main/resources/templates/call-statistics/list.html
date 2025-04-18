@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Список статистики вызовов</title>
+</head>
+<body>
+<h1>Список статистики вызовов</h1>
+<a th:href="@{/call-statistics/add}">Добавить новую статистику</a>
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Вызов</th>
+        <th>Продолжительность (мин)</th>
+        <th>Пострадавшие</th>
+        <th>Ущерб</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="callStat : ${callStatistics}">
+        <td th:text="${callStat.id}"></td>
+        <td th:text="${callStat.fireCall.description}"></td>
+        <td th:text="${callStat.duration}"></td>
+        <td th:text="${callStat.casualties}"></td>
+        <td th:text="${callStat.damageAmount}"></td>
+        <td>
+            <a th:href="@{/call-statistics/edit/{id}(id=${callStat.id})}">Редактировать</a>
+            <a th:href="@{/call-statistics/delete/{id}(id=${callStat.id})}">Удалить</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<a th:href="@{/}">На главную</a>
+</body>
+</html>

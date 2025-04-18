@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн Школа</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Онлайн Школа</div>
+            <div class="nav-links">
+                <a href="/" class="active">Главная</a>
+                <a href="/courses.html">Курсы</a>
+                <a href="/webinars.html">Вебинары</a>
+                <a href="/profile.html">Профиль</a>
+            </div>
+            <div class="auth-buttons">
+                <button id="loginBtn">Войти</button>
+                <button id="registerBtn">Регистрация</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Добро пожаловать в Онлайн Школу</h1>
+            <p>Изучайте новые навыки с лучшими преподавателями</p>
+            <button class="cta-button">Начать обучение</button>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <i class="fas fa-video"></i>
+                <h3>Вебинары</h3>
+                <p>Живые онлайн-занятия с преподавателями</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-book"></i>
+                <h3>Курсы</h3>
+                <p>Структурированные программы обучения</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>Прогресс</h3>
+                <p>Отслеживайте свои успехи</p>
+            </div>
+        </section>
+
+        <section class="upcoming-webinars">
+            <h2>Ближайшие вебинары</h2>
+            <div id="webinarList" class="webinar-grid">
+                <!-- Вебинары будут загружены через JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>О нас</h4>
+                <p>Онлайн платформа для обучения</p>
+            </div>
+            <div class="footer-section">
+                <h4>Контакты</h4>
+                <p>Email: info@onlineSchool.ru</p>
+                <p>Телефон: +7 (999) 123-45-67</p>
+            </div>
+            <div class="footer-section">
+                <h4>Социальные сети</h4>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-vk"></i></a>
+                    <a href="#"><i class="fab fa-telegram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Онлайн Школа. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/webinars.js"></script>
+</body>
+</html> 

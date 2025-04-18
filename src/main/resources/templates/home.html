@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная страница</title>
+</head>
+<body>
+<h1>Добро пожаловать в информационно-справочную систему пожарной службы!</h1>
+<nav>
+    <ul>
+        <li><a th:href="@{/}">Главная</a></li>
+        <li><a th:href="@{/fire-stations}">Пожарные части</a></li>
+        <li><a th:href="@{/employees}">Сотрудники</a></li>
+        <li><a th:href="@{/fire-trucks}">Пожарные машины</a></li>
+        <li><a th:href="@{/fire-calls}">Вызовы</a></li>
+        <li><a th:href="@{/call-statistics}">Статистика</a></li>
+        <li><a th:href="@{/about}">Об авторе</a></li>
+    </ul>
+</nav>
+</body>
+</html>
