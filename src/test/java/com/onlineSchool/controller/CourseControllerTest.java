@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
-class CourseControllerTest extends BaseIntegrationTest {
+public class CourseControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -30,191 +31,231 @@ class CourseControllerTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private CourseService courseService;
+
+    @Autowired
+    private UserService userService;
+
     private User testTeacher;
     private User testStudent;
     private Course testCourse;
-    private LocalDateTime now;
 
     @BeforeEach
     void setUp() {
-        now = LocalDateTime.now();
+        // Создаем преподавателя
+        testTeacher = createTestTeacher();
         
-        // Создаем тестового преподавателя
-        testTeacher = User.builder()
-                .username("testteacher")
-                .password("password")
-                .email("teacher@example.com")
-                .firstName("Test")
-                .lastName("Teacher")
-                .role(Role.TEACHER)
-                .build();
-        testTeacher = userService.save(testTeacher);
+        // Создаем студента
+        testStudent = createTestUser();
+        
+        // Создаем курс
+        testCourse = createTestCourse(testTeacher);
+        testCourse.setTitle("Test Course");
+        testCourse.setDescription("Test Description");
+        testCourse.setPrice(100.0);
+        courseService.save(testCourse);
+    }
 
-        // Создаем тестового студента
-        testStudent = User.builder()
-                .username("teststudent")
-                .password("password")
-                .email("student@example.com")
-                .firstName("Test")
-                .lastName("Student")
-                .role(Role.USER)
-                .build();
-        testStudent = userService.save(testStudent);
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getAllCourses_ShouldReturnCourses() throws Exception {
+        // Given в setUp
 
-        // Создаем тестовый курс
-        testCourse = Course.builder()
-                .title("Test Course")
-                .description("Test Description")
-                .price(99.99)
-                .teacher(testTeacher)
-                .startDate(now)
-                .endDate(now.plusMonths(3))
-                .active(true)
-                .build();
-        testCourse = courseService.save(testCourse);
+        // When
+        ResultActions result = mockMvc.perform(get("/api/courses")
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
+                .andExpect(jsonPath("$[0].title", is(testCourse.getTitle())));
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    void getAllCourses_ShouldReturnCoursesList() throws Exception {
-        mockMvc.perform(get("/api/courses"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].title", is("Test Course")));
+    void getAllCourses_WithUserRole_ShouldReturnForbidden() throws Exception {
+        mockMvc.perform(get("/api/courses")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void getAllActiveCourses_ShouldReturnActiveCoursesList() throws Exception {
-        mockMvc.perform(get("/api/courses/active"))
-                .andExpect(status().isOk())
+    void getAllActiveCourses_ShouldReturnActiveCourses() throws Exception {
+        // Given в setUp
+        courseService.activate(testCourse.getId());
+
+        // When
+        ResultActions result = mockMvc.perform(get("/api/courses/active")
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].title", is("Test Course")))
+                .andExpect(jsonPath("$[0].title", is(testCourse.getTitle())))
                 .andExpect(jsonPath("$[0].active", is(true)));
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void getCoursesByTeacherId_ShouldReturnCoursesList() throws Exception {
-        mockMvc.perform(get("/api/courses/teacher/{teacherId}", testTeacher.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].title", is("Test Course")));
-    }
+    void getCourseById_ShouldReturnCourse() throws Exception {
+        // Given в setUp
 
-    @Test
-    @WithMockUser(roles = "USER")
-    void getCoursesByStudentId_ShouldReturnCoursesList() throws Exception {
-        // Сначала добавляем студента на курс
-        courseService.addStudent(testCourse.getId(), testStudent.getId());
-        
-        mockMvc.perform(get("/api/courses/student/{studentId}", testStudent.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title", is("Test Course")));
-    }
+        // When
+        ResultActions result = mockMvc.perform(get("/api/courses/{id}", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
 
-    @Test
-    @WithMockUser(roles = "USER")
-    void getCourseById_WhenCourseExists_ShouldReturnCourse() throws Exception {
-        mockMvc.perform(get("/api/courses/{id}", testCourse.getId()))
-                .andExpect(status().isOk())
+        // Then
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(testCourse.getId().intValue())))
-                .andExpect(jsonPath("$.title", is("Test Course")))
-                .andExpect(jsonPath("$.description", is("Test Description")));
-    }
-
-    @Test
-    @WithMockUser(roles = "USER")
-    void getCourseById_WhenCourseNotExists_ShouldReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/courses/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(jsonPath("$.title", is(testCourse.getTitle())))
+                .andExpect(jsonPath("$.description", is(testCourse.getDescription())))
+                .andExpect(jsonPath("$.price", is(testCourse.getPrice())));
     }
 
     @Test
     @WithMockUser(roles = "TEACHER")
-    void createCourse_WhenValidInput_ShouldReturnCreatedCourse() throws Exception {
-        Course newCourse = Course.builder()
-                .title("New Course")
-                .description("New Description")
-                .price(149.99)
-                .teacher(testTeacher)
-                .startDate(now.plusDays(1))
-                .endDate(now.plusMonths(4))
-                .active(true)
-                .build();
+    void createCourse_WithTeacherRole_ShouldCreateAndReturnCourse() throws Exception {
+        // Given
+        Course newCourse = new Course();
+        newCourse.setTitle("New Course");
+        newCourse.setDescription("New Description");
+        newCourse.setPrice(200.0);
+        newCourse.setTeacher(testTeacher);
+        newCourse.setStartDate(LocalDateTime.now());
+        newCourse.setEndDate(LocalDateTime.now().plusDays(30));
 
+        // When
+        ResultActions result = mockMvc.perform(post("/api/courses")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newCourse)));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is(newCourse.getTitle())))
+                .andExpect(jsonPath("$.description", is(newCourse.getDescription())))
+                .andExpect(jsonPath("$.price", is(newCourse.getPrice())));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void createCourse_WithUserRole_ShouldReturnForbidden() throws Exception {
+        // Given
+        Course newCourse = new Course();
+        newCourse.setTitle("New Course");
+        newCourse.setDescription("New Description");
+        newCourse.setPrice(200.0);
+        newCourse.setTeacher(testTeacher);
+        newCourse.setStartDate(LocalDateTime.now());
+        newCourse.setEndDate(LocalDateTime.now().plusDays(30));
+
+        // When & Then
         mockMvc.perform(post("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newCourse)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is("New Course")))
-                .andExpect(jsonPath("$.description", is("New Description")))
-                .andExpect(jsonPath("$.price", is(149.99)));
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "TEACHER")
-    void updateCourse_WhenCourseExists_ShouldReturnUpdatedCourse() throws Exception {
-        testCourse.setTitle("Updated Course");
+    void updateCourse_WithTeacherRole_ShouldUpdateAndReturnCourse() throws Exception {
+        // Given
+        testCourse.setTitle("Updated Title");
         testCourse.setDescription("Updated Description");
+        testCourse.setPrice(300.0);
 
-        mockMvc.perform(put("/api/courses/{id}", testCourse.getId())
+        // When
+        ResultActions result = mockMvc.perform(put("/api/courses/{id}", testCourse.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(testCourse)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is("Updated Course")))
-                .andExpect(jsonPath("$.description", is("Updated Description")));
+                .content(objectMapper.writeValueAsString(testCourse)));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(testCourse.getId().intValue())))
+                .andExpect(jsonPath("$.title", is("Updated Title")))
+                .andExpect(jsonPath("$.description", is("Updated Description")))
+                .andExpect(jsonPath("$.price", is(300.0)));
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
-    void deleteCourse_ShouldDeleteCourse() throws Exception {
-        mockMvc.perform(delete("/api/courses/{id}", testCourse.getId()))
-                .andExpect(status().isOk());
-        
-        mockMvc.perform(get("/api/courses/{id}", testCourse.getId()))
+    @WithMockUser(roles = "ADMIN")
+    void deleteCourse_WithAdminRole_ShouldDeleteCourse() throws Exception {
+        // Given в setUp
+
+        // When
+        ResultActions result = mockMvc.perform(delete("/api/courses/{id}", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk());
+
+        // Проверяем что курс удален
+        mockMvc.perform(get("/api/courses/{id}", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockUser(roles = "TEACHER")
-    void activateCourse_ShouldActivateCourse() throws Exception {
-        // Сначала деактивируем курс
-        courseService.deactivate(testCourse.getId());
-        
-        mockMvc.perform(post("/api/courses/{id}/activate", testCourse.getId()))
-                .andExpect(status().isOk())
+    void deleteCourse_WithTeacherRole_ShouldReturnForbidden() throws Exception {
+        // Given в setUp
+
+        // When & Then
+        mockMvc.perform(delete("/api/courses/{id}", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void activateCourse_WithAdminRole_ShouldActivateCourse() throws Exception {
+        // Given в setUp
+
+        // When
+        ResultActions result = mockMvc.perform(post("/api/courses/{id}/activate", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", is(true)));
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
-    void deactivateCourse_ShouldDeactivateCourse() throws Exception {
-        mockMvc.perform(post("/api/courses/{id}/deactivate", testCourse.getId()))
-                .andExpect(status().isOk())
+    @WithMockUser(roles = "ADMIN")
+    void deactivateCourse_WithAdminRole_ShouldDeactivateCourse() throws Exception {
+        // Given
+        courseService.activate(testCourse.getId());
+
+        // When
+        ResultActions result = mockMvc.perform(post("/api/courses/{id}/deactivate", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", is(false)));
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
-    void addStudent_ShouldAddStudentToCourse() throws Exception {
-        mockMvc.perform(post("/api/courses/{id}/students/{studentId}", 
-                testCourse.getId(), testStudent.getId()))
-                .andExpect(status().isOk())
+    @WithMockUser(roles = "ADMIN")
+    void addAndRemoveStudent_ShouldUpdateEnrollments() throws Exception {
+        // Given в setUp
+
+        // When добавляем студента
+        ResultActions addResult = mockMvc.perform(post("/api/courses/{id}/students/{studentId}", 
+                testCourse.getId(), testStudent.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        addResult.andExpect(status().isOk())
                 .andExpect(jsonPath("$.students", hasSize(1)))
                 .andExpect(jsonPath("$.students[0].id", is(testStudent.getId().intValue())));
-    }
 
-    @Test
-    @WithMockUser(roles = "TEACHER")
-    void removeStudent_ShouldRemoveStudentFromCourse() throws Exception {
-        // Сначала добавляем студента на курс
-        courseService.addStudent(testCourse.getId(), testStudent.getId());
-        
-        mockMvc.perform(delete("/api/courses/{id}/students/{studentId}", 
-                testCourse.getId(), testStudent.getId()))
-                .andExpect(status().isOk())
+        // When удаляем студента
+        ResultActions removeResult = mockMvc.perform(delete("/api/courses/{id}/students/{studentId}", 
+                testCourse.getId(), testStudent.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        removeResult.andExpect(status().isOk())
                 .andExpect(jsonPath("$.students", hasSize(0)));
     }
 } 

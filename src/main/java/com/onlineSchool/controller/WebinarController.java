@@ -101,8 +101,7 @@ public class WebinarController {
     }
 
     @PostMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivateWebinar(@PathVariable Long id) {
-        webinarService.deactivate(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Webinar> deactivateWebinar(@PathVariable Long id) {
+        return ResponseEntity.ok(webinarService.deactivate(id));
     }
 } 
