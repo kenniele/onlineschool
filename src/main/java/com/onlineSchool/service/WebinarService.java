@@ -154,11 +154,12 @@ public class WebinarService {
     }
 
     @Transactional
-    public void deactivate(Long id) {
+    public Webinar deactivate(Long id) {
         Webinar webinar = findById(id)
                 .orElseThrow(() -> new RuntimeException("Webinar not found"));
         
+        webinar.setActive(false);
         webinar.setStatus(WebinarStatus.CANCELLED);
-        webinarRepository.save(webinar);
+        return webinarRepository.save(webinar);
     }
 } 

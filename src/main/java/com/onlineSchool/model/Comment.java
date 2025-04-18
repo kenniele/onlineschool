@@ -21,9 +21,12 @@ public class Comment {
     @Column(name = "content", nullable = false)
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private Long userId;
 
     @NotNull
     @Enumerated(EnumType.STRING)

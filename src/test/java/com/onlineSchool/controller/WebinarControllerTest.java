@@ -15,7 +15,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,6 +31,15 @@ class WebinarControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private CourseService courseService;
+    
+    @Autowired
+    private WebinarService webinarService;
 
     private User testTeacher;
     private User testStudent;
@@ -146,21 +157,20 @@ class WebinarControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "TEACHER")
     void createWebinar_ShouldReturnCreatedWebinar() throws Exception {
-        Webinar newWebinar = Webinar.builder()
-                .title("New Webinar")
-                .description("New Description")
-                .startTime(now.plusDays(2))
-                .duration(90)
-                .maxParticipants(50)
-                .course(testCourse)
-                .teacher(testTeacher)
-                .status(WebinarStatus.SCHEDULED)
-                .active(true)
-                .build();
+        Map<String, Object> webinarMap = new HashMap<>();
+        webinarMap.put("title", "New Webinar");
+        webinarMap.put("description", "New Description");
+        webinarMap.put("startTime", now.plusDays(2).toString());
+        webinarMap.put("duration", 90);
+        webinarMap.put("maxParticipants", 50);
+        webinarMap.put("courseId", testCourse.getId());
+        webinarMap.put("teacherId", testTeacher.getId());
+        webinarMap.put("status", "SCHEDULED");
+        webinarMap.put("active", true);
 
         mockMvc.perform(post("/api/webinars")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newWebinar)))
+                        .content(objectMapper.writeValueAsString(webinarMap)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is("New Webinar")))
                 .andExpect(jsonPath("$.description", is("New Description")));
@@ -169,12 +179,21 @@ class WebinarControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "TEACHER")
     void updateWebinar_ShouldReturnUpdatedWebinar() throws Exception {
-        testWebinar.setTitle("Updated Webinar");
-        testWebinar.setDescription("Updated Description");
+        Map<String, Object> webinarMap = new HashMap<>();
+        webinarMap.put("id", testWebinar.getId());
+        webinarMap.put("title", "Updated Webinar");
+        webinarMap.put("description", "Updated Description");
+        webinarMap.put("startTime", testWebinar.getStartTime().toString());
+        webinarMap.put("duration", testWebinar.getDuration());
+        webinarMap.put("maxParticipants", testWebinar.getMaxParticipants());
+        webinarMap.put("courseId", testCourse.getId());
+        webinarMap.put("teacherId", testTeacher.getId());
+        webinarMap.put("status", testWebinar.getStatus().toString());
+        webinarMap.put("active", testWebinar.isActive());
 
         mockMvc.perform(put("/api/webinars/{id}", testWebinar.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testWebinar)))
+                        .content(objectMapper.writeValueAsString(webinarMap)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is("Updated Webinar")))
                 .andExpect(jsonPath("$.description", is("Updated Description")));
@@ -242,22 +261,19 @@ class WebinarControllerTest extends BaseIntegrationTest {
     @WithMockUser(roles = "TEACHER")
     void deactivateWebinar_ShouldDeactivateWebinar() throws Exception {
         mockMvc.perform(post("/api/webinars/{id}/deactivate", testWebinar.getId()))
-                .andExpect(status().isOk());
-        
-        mockMvc.perform(get("/api/webinars/{id}", testWebinar.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", is(false)));
     }
-    
+
     @Test
     @WithMockUser(roles = "USER")
     void getWebinarsByParticipant_ShouldReturnWebinars() throws Exception {
-        // Добавляем участника в вебинар
+        // Сначала добавляем участника
         webinarService.addParticipant(testWebinar.getId(), testStudent.getId());
         
-        mockMvc.perform(get("/api/webinars/participant/{userId}", testStudent.getId()))
+        mockMvc.perform(get("/api/webinars/participant/{participantId}", testStudent.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].title", is("Test Webinar")));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(testWebinar.getId().intValue())));
     }
 } 

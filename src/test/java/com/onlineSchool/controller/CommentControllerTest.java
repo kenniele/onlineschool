@@ -8,6 +8,12 @@ import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
 import com.onlineSchool.model.Webinar;
 import com.onlineSchool.model.WebinarStatus;
+import com.onlineSchool.repository.CommentRepository;
+import com.onlineSchool.repository.UserRepository;
+import com.onlineSchool.repository.WebinarRepository;
+import com.onlineSchool.service.CommentService;
+import com.onlineSchool.service.UserService;
+import com.onlineSchool.service.WebinarService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +23,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -30,6 +38,15 @@ class CommentControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private WebinarService webinarService;
+    
+    @Autowired
+    private CommentService commentService;
 
     private User testUser;
     private User testTeacher;
@@ -133,16 +150,15 @@ class CommentControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void createComment_ShouldReturnCreatedComment() throws Exception {
-        Comment newComment = Comment.builder()
-                .content("New comment")
-                .user(testUser)
-                .entityType(EntityType.WEBINAR)
-                .entityId(testWebinar.getId())
-                .build();
+        Map<String, Object> commentMap = new HashMap<>();
+        commentMap.put("content", "New comment");
+        commentMap.put("userId", testUser.getId());
+        commentMap.put("entityType", "WEBINAR");
+        commentMap.put("entityId", testWebinar.getId());
 
         mockMvc.perform(post("/api/comments")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(newComment)))
+                .content(objectMapper.writeValueAsString(commentMap)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", is("New comment")))
                 .andExpect(jsonPath("$.user.id", is(testUser.getId().intValue())));
@@ -151,17 +167,16 @@ class CommentControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void updateComment_ShouldReturnUpdatedComment() throws Exception {
-        Comment updatedComment = Comment.builder()
-                .id(testComment.getId())
-                .content("Updated comment")
-                .user(testUser)
-                .entityType(EntityType.WEBINAR)
-                .entityId(testWebinar.getId())
-                .build();
+        Map<String, Object> commentMap = new HashMap<>();
+        commentMap.put("id", testComment.getId());
+        commentMap.put("content", "Updated comment");
+        commentMap.put("userId", testUser.getId());
+        commentMap.put("entityType", "WEBINAR");
+        commentMap.put("entityId", testWebinar.getId());
 
         mockMvc.perform(put("/api/comments/{id}", testComment.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedComment)))
+                .content(objectMapper.writeValueAsString(commentMap)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(testComment.getId().intValue())))
                 .andExpect(jsonPath("$.content", is("Updated comment")))
@@ -171,17 +186,16 @@ class CommentControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void updateComment_WhenCommentNotExists_ShouldReturnNotFound() throws Exception {
-        Comment updatedComment = Comment.builder()
-                .id(999L)
-                .content("Updated comment")
-                .user(testUser)
-                .entityType(EntityType.WEBINAR)
-                .entityId(testWebinar.getId())
-                .build();
+        Map<String, Object> commentMap = new HashMap<>();
+        commentMap.put("id", 999L);
+        commentMap.put("content", "Updated comment");
+        commentMap.put("userId", testUser.getId());
+        commentMap.put("entityType", "WEBINAR");
+        commentMap.put("entityId", testWebinar.getId());
 
         mockMvc.perform(put("/api/comments/999")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedComment)))
+                .content(objectMapper.writeValueAsString(commentMap)))
                 .andExpect(status().isNotFound());
     }
 

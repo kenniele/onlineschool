@@ -21,6 +21,11 @@ public class CommentService {
     private final WebinarService webinarService;
 
     @Transactional(readOnly = true)
+    public List<Comment> findAll() {
+        return commentRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<Comment> findByWebinarId(Long webinarId) {
         return commentRepository.findByWebinarId(webinarId);
     }

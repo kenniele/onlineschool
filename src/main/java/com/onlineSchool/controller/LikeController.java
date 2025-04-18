@@ -56,7 +56,11 @@ public class LikeController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Like> createLike(@RequestBody Like like) {
-        return ResponseEntity.ok(likeService.createLike(like));
+        if (like.getUser() != null && like.getUser().getId() != null) {
+            return ResponseEntity.ok(likeService.createLike(like));
+        }
+
+        return ResponseEntity.badRequest().build();
     }
 
     @DeleteMapping("/{id}")

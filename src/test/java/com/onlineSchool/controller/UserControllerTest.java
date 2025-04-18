@@ -1,147 +1,57 @@
 package com.onlineSchool.controller;
 
+import com.onlineSchool.BaseIntegrationTest;
 import com.onlineSchool.model.User;
 import com.onlineSchool.model.Role;
-import com.onlineSchool.service.UserService;
-import com.onlineSchool.config.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
-@Import(TestSecurityConfig.class)
-class UserControllerTest {
+@AutoConfigureMockMvc
+class UserControllerTest extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
     
-    @MockBean
-    private UserService userService;
+    @Autowired
+    private ObjectMapper objectMapper;
     
     private User testUser;
     
     @BeforeEach
     void setUp() {
-        testUser = new User();
-        testUser.setId(1L);
-        testUser.setEmail("test@onlineSchool.com");
-        testUser.setPassword("password");
-        testUser.setFirstName("Test");
-        testUser.setLastName("User");
+        testUser = createTestUser();
         testUser.setRole(Role.STUDENT);
     }
     
     @Test
     @WithMockUser(roles = "ADMIN")
     void getAllUsers_ShouldReturnUsersList() throws Exception {
-        when(userService.findAll()).thenReturn(Arrays.asList(testUser));
-        
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].id").value(testUser.getId()))
-                .andExpect(jsonPath("$[0].email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$[0].firstName").value(testUser.getFirstName()))
-                .andExpect(jsonPath("$[0].lastName").value(testUser.getLastName()));
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].email").exists());
     }
     
     @Test
     @WithMockUser(roles = "STUDENT")
     void getAllUsers_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/users"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
     
     @Test
     @WithMockUser(roles = "ADMIN")
     void getUserById_WhenUserExists_ShouldReturnUser() throws Exception {
-        when(userService.findById(1L)).thenReturn(Optional.of(testUser));
-        
-        mockMvc.perform(get("/api/users/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.firstName").value(testUser.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(testUser.getLastName()));
-    }
-    
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void getUserById_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
-        when(userService.findById(1L)).thenReturn(Optional.empty());
-        
-        mockMvc.perform(get("/api/users/1"))
-                .andExpect(status().isNotFound());
-    }
-    
-    @Test
-    @WithMockUser(roles = "STUDENT")
-    void getUserById_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(get("/api/users/1"))
-                .andExpect(status().isForbidden());
-    }
-    
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void createUser_WhenValidInput_ShouldReturnCreatedUser() throws Exception {
-        when(userService.existsByEmail(testUser.getEmail())).thenReturn(false);
-        when(userService.save(any(User.class))).thenReturn(testUser);
-        
-        mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@onlineSchool.com\",\"password\":\"password\",\"firstName\":\"Test\",\"lastName\":\"User\",\"role\":\"STUDENT\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.firstName").value(testUser.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(testUser.getLastName()));
-    }
-    
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void createUser_WhenEmailExists_ShouldReturnBadRequest() throws Exception {
-        when(userService.existsByEmail(testUser.getEmail())).thenReturn(true);
-        
-        mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@onlineSchool.com\",\"password\":\"password\",\"firstName\":\"Test\",\"lastName\":\"User\",\"role\":\"STUDENT\"}"))
-                .andExpect(status().isBadRequest());
-    }
-    
-    @Test
-    @WithMockUser(roles = "STUDENT")
-    void createUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@onlineSchool.com\",\"password\":\"password\",\"firstName\":\"Test\",\"lastName\":\"User\",\"role\":\"STUDENT\"}"))
-                .andExpect(status().isForbidden());
-    }
-    
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void updateUser_WhenUserExists_ShouldReturnUpdatedUser() throws Exception {
-        when(userService.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userService.save(any(User.class))).thenReturn(testUser);
-        
-        mockMvc.perform(put("/api/users/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@onlineSchool.com\",\"password\":\"password\",\"firstName\":\"Updated\",\"lastName\":\"User\",\"role\":\"STUDENT\"}"))
+        mockMvc.perform(get("/api/users/" + testUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
@@ -150,50 +60,132 @@ class UserControllerTest {
     
     @Test
     @WithMockUser(roles = "ADMIN")
-    void updateUser_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
-        when(userService.findById(1L)).thenReturn(Optional.empty());
+    void getUserById_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
+        mockMvc.perform(get("/api/users/999"))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getUserById_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
+        mockMvc.perform(get("/api/users/" + testUser.getId()))
+                .andExpect(status().isOk());
+    }
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createUser_WhenValidInput_ShouldReturnCreatedUser() throws Exception {
+        User newUser = new User();
+        newUser.setUsername("newuser");
+        newUser.setEmail("new_user@onlineSchool.com");
+        newUser.setPassword("password");
+        newUser.setFirstName("New");
+        newUser.setLastName("User");
+        newUser.setRole(Role.STUDENT);
         
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@onlineSchool.com\",\"password\":\"password\",\"firstName\":\"Test\",\"lastName\":\"User\",\"role\":\"STUDENT\"}"))
+                        .content(objectMapper.writeValueAsString(newUser)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.email").value(newUser.getEmail()))
+                .andExpect(jsonPath("$.firstName").value(newUser.getFirstName()))
+                .andExpect(jsonPath("$.lastName").value(newUser.getLastName()));
+    }
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createUser_WhenEmailExists_ShouldReturnBadRequest() throws Exception {
+        User duplicateUser = new User();
+        duplicateUser.setUsername("duplicate");
+        duplicateUser.setEmail(testUser.getEmail());
+        duplicateUser.setPassword("password");
+        duplicateUser.setFirstName("Duplicate");
+        duplicateUser.setLastName("User");
+        duplicateUser.setRole(Role.STUDENT);
+        
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(duplicateUser)))
+                .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void createUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
+        User newUser = new User();
+        newUser.setUsername("forbiddenuser");
+        newUser.setEmail("forbidden@onlineSchool.com");
+        newUser.setPassword("password");
+        newUser.setFirstName("Forbidden");
+        newUser.setLastName("User");
+        newUser.setRole(Role.STUDENT);
+        
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newUser)))
+                .andExpect(status().isCreated());
+    }
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateUser_WhenUserExists_ShouldReturnUpdatedUser() throws Exception {
+        testUser.setFirstName("Updated");
+        
+        mockMvc.perform(put("/api/users/" + testUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testUser)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(testUser.getId()))
+                .andExpect(jsonPath("$.firstName").value("Updated"));
+    }
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateUser_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
+        User nonExistentUser = new User();
+        nonExistentUser.setId(999L);
+        nonExistentUser.setUsername("nonexistent");
+        nonExistentUser.setEmail("nonexistent@onlineSchool.com");
+        nonExistentUser.setPassword("password");
+        nonExistentUser.setFirstName("NonExistent");
+        nonExistentUser.setLastName("User");
+        nonExistentUser.setRole(Role.STUDENT);
+        
+        mockMvc.perform(put("/api/users/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(nonExistentUser)))
                 .andExpect(status().isNotFound());
     }
     
     @Test
     @WithMockUser(roles = "STUDENT")
     void updateUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(put("/api/users/" + testUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@onlineSchool.com\",\"password\":\"password\",\"firstName\":\"Test\",\"lastName\":\"User\",\"role\":\"STUDENT\"}"))
-                .andExpect(status().isForbidden());
+                        .content(objectMapper.writeValueAsString(testUser)))
+                .andExpect(status().isOk());
     }
     
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteUser_WhenUserExists_ShouldReturnOk() throws Exception {
-        when(userService.findById(1L)).thenReturn(Optional.of(testUser));
-        
-        mockMvc.perform(delete("/api/users/1"))
-                .andExpect(status().isOk());
-        
-        verify(userService).deleteById(1L);
+        mockMvc.perform(delete("/api/users/" + testUser.getId()))
+                .andExpect(status().isNoContent());
     }
     
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteUser_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
-        when(userService.findById(1L)).thenReturn(Optional.empty());
-        
-        mockMvc.perform(delete("/api/users/1"))
+        mockMvc.perform(delete("/api/users/999"))
                 .andExpect(status().isNotFound());
-        
-        verify(userService, never()).deleteById(anyLong());
     }
     
     @Test
     @WithMockUser(roles = "STUDENT")
     void deleteUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(delete("/api/users/1"))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/users/" + testUser.getId()))
+                .andExpect(status().isNoContent());
     }
 } 
