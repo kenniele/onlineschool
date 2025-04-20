@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.h2.Driver
+    restart: unless-stopped
+    networks:
+      - online-school-network
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      - SPRING_PROFILES_ACTIVE=test
+    networks:
+      - online-school-network
+
+networks:
+  online-school-network:
+    driver: bridge 

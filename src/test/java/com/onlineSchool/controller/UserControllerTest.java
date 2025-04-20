@@ -45,7 +45,7 @@ class UserControllerTest extends BaseIntegrationTest {
     @WithMockUser(roles = "STUDENT")
     void getAllUsers_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/users"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
     
     @Test
@@ -68,8 +68,8 @@ class UserControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "STUDENT")
     void getUserById_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(get("/api/users/" + testUser.getId()))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/users/{id}", testUser.getId()))
+                .andExpect(status().isForbidden());
     }
     
     @Test
@@ -113,18 +113,16 @@ class UserControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "STUDENT")
     void createUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        User newUser = new User();
-        newUser.setUsername("forbiddenuser");
-        newUser.setEmail("forbidden@onlineSchool.com");
-        newUser.setPassword("password");
-        newUser.setFirstName("Forbidden");
-        newUser.setLastName("User");
-        newUser.setRole(Role.STUDENT);
-        
+        User user = new User();
+        user.setUsername("forbiddenuser");
+        user.setPassword("password");
+        user.setEmail("forbidden@example.com");
+        user.setRole(Role.STUDENT);
+
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newUser)))
-                .andExpect(status().isCreated());
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isForbidden());
     }
     
     @Test
@@ -162,10 +160,16 @@ class UserControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "STUDENT")
     void updateUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(put("/api/users/" + testUser.getId())
+        User user = new User();
+        user.setUsername("testuser");
+        user.setPassword("password");
+        user.setEmail("test@example.com");
+        user.setRole(Role.STUDENT);
+
+        mockMvc.perform(put("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testUser)))
-                .andExpect(status().isOk());
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isForbidden());
     }
     
     @Test
@@ -185,7 +189,7 @@ class UserControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "STUDENT")
     void deleteUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(delete("/api/users/" + testUser.getId()))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/users/1"))
+                .andExpect(status().isForbidden());
     }
 } 

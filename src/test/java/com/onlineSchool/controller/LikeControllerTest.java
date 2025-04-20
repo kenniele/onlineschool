@@ -139,8 +139,8 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    public void getLikesByUser_ShouldReturnLikesList() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void getLikesByUser_ShouldReturnLikesList() throws Exception {
         mockMvc.perform(get("/api/likes/user/{userId}", testUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -148,8 +148,8 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    public void getLikesByUserAndEntity_ShouldReturnLikesList() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void getLikesByUserAndEntity_ShouldReturnLikesList() throws Exception {
         mockMvc.perform(get("/api/likes/user/{userId}/entity/{entityType}/{entityId}", 
                 testUser.getId(), testLike.getEntityType(), testLike.getEntityId()))
                 .andExpect(status().isOk())
@@ -187,8 +187,8 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    public void hasLiked_WhenUserLiked_ShouldReturnTrue() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void hasLiked_WhenUserLiked_ShouldReturnTrue() throws Exception {
         mockMvc.perform(get("/api/likes/has-liked/{userId}/{entityType}/{entityId}", 
                 testUser.getId(), testLike.getEntityType(), testLike.getEntityId()))
                 .andExpect(status().isOk())
@@ -196,8 +196,8 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    public void hasLiked_WhenUserNotLiked_ShouldReturnFalse() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void hasLiked_WhenUserNotLiked_ShouldReturnFalse() throws Exception {
         // Создаем другого пользователя, который не ставил лайк
         User otherUser = User.builder()
                 .username("otheruser")

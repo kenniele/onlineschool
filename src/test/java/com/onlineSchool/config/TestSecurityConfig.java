@@ -23,6 +23,10 @@ public class TestSecurityConfig {
         http
             .csrf((csrf) -> csrf.disable())
             .authorizeHttpRequests((authorize) -> authorize
+                // Разрешаем доступ к публичным ресурсам
+                .requestMatchers("/", "/index", "/login", "/register", "/courses", "/h2-console/**").permitAll()
+                // Для API путей проверка выполняется аннотациями @PreAuthorize
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
             .sessionManagement((session) -> session

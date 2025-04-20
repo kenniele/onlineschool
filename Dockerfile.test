@@ -1,0 +1,13 @@
+FROM maven:3.9.3-eclipse-temurin-17
+
+WORKDIR /app
+
+# Копирование файлов с зависимостями
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Копирование исходного кода
+COPY src ./src
+
+# Запуск тестов
+CMD ["mvn", "test"] 

@@ -104,7 +104,7 @@ class CommentControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     void getAllComments_ShouldReturnComments() throws Exception {
         mockMvc.perform(get("/api/comments"))
                 .andExpect(status().isOk())

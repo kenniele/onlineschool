@@ -81,6 +81,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
     void getAllActiveCourses_ShouldReturnActiveCourses() throws Exception {
         // Given в setUp
         courseService.activate(testCourse.getId());
@@ -97,6 +98,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
     void getCourseById_ShouldReturnCourse() throws Exception {
         // Given в setUp
 
