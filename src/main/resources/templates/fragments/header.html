@@ -10,10 +10,10 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto">
-                        <li class="nav-item" th:classappend="${#request.requestURI == '/' ? 'active' : ''}">
+                        <li class="nav-item">
                             <a class="nav-link" th:href="@{/}">Главная</a>
                         </li>
-                        <li class="nav-item" th:classappend="${#request.requestURI.startsWith('/courses') ? 'active' : ''}">
+                        <li class="nav-item">
                             <a class="nav-link" th:href="@{/courses}">Курсы</a>
                         </li>
                         <li class="nav-item" sec:authorize="!isAuthenticated()">
@@ -22,9 +22,15 @@
                         <li class="nav-item" sec:authorize="!isAuthenticated()">
                             <a class="nav-link" th:href="@{/register}">Регистрация</a>
                         </li>
+                        <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                            <a class="nav-link" th:href="@{/webinars/my}">Мои вебинары</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" th:href="@{/admin}">Панель администратора</a>
+                        </li>
                         <li class="nav-item" sec:authorize="isAuthenticated()">
                              <span class="navbar-text text-white mr-3">
-                                Добро пожаловать, <span sec:authentication="principal.username">Пользователь</span>!
+                                Добро пожаловать, <span sec:authentication="name">Пользователь</span>!
                             </span>
                             <form th:action="@{/logout}" method="post" style="display: inline;">
                                 <button type="submit" class="nav-link btn btn-link text-white" style="display: inline; cursor: pointer; padding: 0; vertical-align: baseline;">Выйти</button>

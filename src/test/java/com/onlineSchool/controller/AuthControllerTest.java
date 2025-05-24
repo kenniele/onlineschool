@@ -4,11 +4,13 @@ import com.onlineSchool.BaseIntegrationTest;
 import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
 import com.onlineSchool.service.UserService;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AuthControllerTest extends BaseIntegrationTest {
 
     @Autowired
@@ -28,6 +31,9 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @BeforeEach
     void setUp() {
@@ -44,6 +50,9 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .param("confirmPassword", "password123"))
                 .andExpect(status().is3xxRedirection()) // Ожидаем редирект
                 .andExpect(redirectedUrl("/login?registered"));
+
+        entityManager.flush();
+        entityManager.clear();
 
         // Проверяем, что пользователь действительно сохранен в базе
         User savedUser = userService.findByUsername("testuserReg").orElse(null);

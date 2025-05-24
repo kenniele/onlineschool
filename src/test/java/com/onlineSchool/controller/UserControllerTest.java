@@ -1,6 +1,7 @@
 package com.onlineSchool.controller;
 
 import com.onlineSchool.BaseIntegrationTest;
+import com.onlineSchool.config.TestSecurityConfig;
 import com.onlineSchool.model.User;
 import com.onlineSchool.model.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,14 +9,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class UserControllerTest extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
@@ -42,7 +47,7 @@ class UserControllerTest extends BaseIntegrationTest {
     }
     
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username = "testuser", roles = "USER")
     void getAllUsers_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isForbidden());
@@ -66,7 +71,7 @@ class UserControllerTest extends BaseIntegrationTest {
     }
     
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username = "testuser", roles = "USER")
     void getUserById_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/users/{id}", testUser.getId()))
                 .andExpect(status().isForbidden());
@@ -111,7 +116,7 @@ class UserControllerTest extends BaseIntegrationTest {
     }
     
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username = "testuser", roles = "USER")
     void createUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         User user = new User();
         user.setUsername("forbiddenuser");
@@ -158,7 +163,7 @@ class UserControllerTest extends BaseIntegrationTest {
     }
     
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username = "testuser", roles = "USER")
     void updateUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         User user = new User();
         user.setUsername("testuser");
@@ -187,7 +192,7 @@ class UserControllerTest extends BaseIntegrationTest {
     }
     
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username = "testuser", roles = "USER")
     void deleteUser_WhenNotAdmin_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isForbidden());

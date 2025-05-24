@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${user.id == null ? 'Добавить пользователя' : 'Изменить пользователя'}">Форма пользователя</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container mt-4">
+        <h1 th:text="${user.id == null ? 'Добавить нового пользователя' : 'Изменить пользователя'}">Заголовок</h1>
+
+        <form th:action="${user.id == null ? '/admin/users/save' : '/admin/users/update'}" th:object="${user}" method="post">
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                <small class="form-text text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                <small class="form-text text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" class="form-control" id="password" name="rawPassword" th:placeholder="${user.id == null ? '' : 'Оставьте пустым, чтобы не менять'}">
+                <small class="form-text text-muted" th:if="${user.id != null}">Оставьте пустым, если не хотите изменять пароль.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="firstName">Имя:</label>
+                <input type="text" class="form-control" id="firstName" th:field="*{firstName}">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Фамилия:</label>
+                <input type="text" class="form-control" id="lastName" th:field="*{lastName}">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Роль:</label>
+                <select class="form-control" id="role" th:field="*{role}" required>
+                    <option th:each="roleValue : ${T(com.onlineSchool.model.Role).values()}"
+                            th:value="${roleValue}"
+                            th:text="${roleValue.displayName}">STUDENT</option>
+                </select>
+            </div>
+
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="active" th:field="*{active}">
+                <label class="form-check-label" for="active">Активен</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a th:href="@{/admin/users}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html> 

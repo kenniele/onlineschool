@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.onlineSchool.config.TestSecurityConfig;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,7 +27,7 @@ import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(classes = {OnlineSchoolApplication.class, TestSecurityConfig.class})
 @ActiveProfiles("test")
 @Transactional
 public abstract class BaseIntegrationTest {

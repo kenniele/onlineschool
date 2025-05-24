@@ -2,6 +2,7 @@ package com.onlineSchool.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onlineSchool.BaseIntegrationTest;
+import com.onlineSchool.config.TestSecurityConfig;
 import com.onlineSchool.model.Course;
 import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
@@ -11,8 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -23,6 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class CourseControllerTest extends BaseIntegrationTest {
 
     @Autowired
@@ -58,7 +63,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void getAllCourses_ShouldReturnCourses() throws Exception {
         // Given в setUp
 
@@ -73,7 +78,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username="testuser", roles = "USER")
     void getAllCourses_WithUserRole_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -81,7 +86,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username="testuser", roles = "USER")
     void getAllActiveCourses_ShouldReturnActiveCourses() throws Exception {
         // Given в setUp
         courseService.activate(testCourse.getId());
@@ -98,7 +103,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username="testuser", roles = "USER")
     void getCourseById_ShouldReturnCourse() throws Exception {
         // Given в setUp
 
@@ -115,7 +120,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void createCourse_WithTeacherRole_ShouldCreateAndReturnCourse() throws Exception {
         // Given
         Course newCourse = new Course();
@@ -139,7 +144,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username="testuser", roles = "USER")
     void createCourse_WithUserRole_ShouldReturnForbidden() throws Exception {
         // Given
         Course newCourse = new Course();
@@ -158,7 +163,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void updateCourse_WithTeacherRole_ShouldUpdateAndReturnCourse() throws Exception {
         // Given
         testCourse.setTitle("Updated Title");
@@ -179,7 +184,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void deleteCourse_WithAdminRole_ShouldDeleteCourse() throws Exception {
         // Given в setUp
 
@@ -197,7 +202,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void deleteCourse_WithTeacherRole_ShouldReturnForbidden() throws Exception {
         // Given в setUp
 
@@ -208,7 +213,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void activateCourse_WithAdminRole_ShouldActivateCourse() throws Exception {
         // Given в setUp
 
@@ -222,7 +227,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void deactivateCourse_WithAdminRole_ShouldDeactivateCourse() throws Exception {
         // Given
         courseService.activate(testCourse.getId());
@@ -237,7 +242,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void addAndRemoveStudent_ShouldUpdateEnrollments() throws Exception {
         // Given в setUp
 

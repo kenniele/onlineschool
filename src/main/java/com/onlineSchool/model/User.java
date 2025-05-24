@@ -31,7 +31,6 @@ public class User implements UserDetails {
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @NotBlank
     @Column(name = "password", nullable = false)
     private String password;
 

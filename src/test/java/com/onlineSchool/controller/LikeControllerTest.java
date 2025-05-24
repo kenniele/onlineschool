@@ -2,6 +2,7 @@ package com.onlineSchool.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onlineSchool.BaseIntegrationTest;
+import com.onlineSchool.config.TestSecurityConfig;
 import com.onlineSchool.model.Comment;
 import com.onlineSchool.model.Course;
 import com.onlineSchool.model.EntityType;
@@ -15,8 +16,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -28,6 +31,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class LikeControllerTest extends BaseIntegrationTest {
 
     @Autowired

@@ -59,9 +59,12 @@ class UserServiceTest extends BaseIntegrationTest {
         List<User> actualUsers = userService.findAll();
 
         // then
-        assertEquals(2, actualUsers.size());
+        // Ожидаем 3 пользователя: 2 созданных в setUp и 1 администратор из DataInitializer
+        assertEquals(3, actualUsers.size()); 
         assertTrue(actualUsers.stream().anyMatch(u -> u.getEmail().equals("student@test.com")));
         assertTrue(actualUsers.stream().anyMatch(u -> u.getEmail().equals("teacher@test.com")));
+        // Проверяем наличие администратора
+        assertTrue(actualUsers.stream().anyMatch(u -> u.getRole() == Role.ADMIN && u.getUsername().equals("admin"))); 
     }
 
     @Test

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель администратора - Online School</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container mt-4">
+        <h1>Панель администратора</h1>
+        <p>Добро пожаловать в панель администратора!</p>
+        
+        <div class="list-group mt-4">
+            <a th:href="@{/admin/users}" class="list-group-item list-group-item-action">Управление пользователями</a>
+            <a th:href="@{/admin/courses}" class="list-group-item list-group-item-action">Управление курсами</a>
+            <a th:href="@{/admin/webinars}" class="list-group-item list-group-item-action">Управление вебинарами</a>
+            <!-- Добавьте другие ссылки по мере необходимости -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html> 

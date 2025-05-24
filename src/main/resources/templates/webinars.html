@@ -5,29 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вебинары - Онлайн Школа</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <a href="/" class="logo">Онлайн Школа</a>
-            <div class="nav-links">
-                <a href="/courses">Курсы</a>
-                <a href="/webinars" class="active">Вебинары</a>
-                <a href="/materials">Материалы</a>
-                <div class="auth-buttons" th:if="${#authorization.expression('!isAuthenticated()')}">
-                    <a href="/login" class="btn">Войти</a>
-                    <a href="/register" class="btn">Регистрация</a>
-                </div>
-                <div class="user-menu" th:if="${#authorization.expression('isAuthenticated()')}">
-                    <span th:text="${#authentication.name}"></span>
-                    <form th:action="@{/logout}" method="post" style="display: inline;">
-                        <button type="submit" class="btn">Выйти</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/header :: header}"></div>
 
     <main class="container">
         <section class="webinars-section">

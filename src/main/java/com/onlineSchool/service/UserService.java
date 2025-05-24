@@ -34,12 +34,33 @@ public class UserService {
 
     @Transactional
     public User save(User user) {
-        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+        if (user.getId() == null) { // Новый пользователь
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                // Эта ситуация не должна возникать, если контроллер правильно валидирует
+                // но для надежности можно выбросить исключение или вернуть ошибку
+                throw new IllegalArgumentException("Пароль не может быть пустым для нового пользователя.");
+            }
             // Проверяем, что пароль не является уже закодированной строкой bcrypt
             if (!user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$") && !user.getPassword().startsWith("$2y$")) {
-                 user.setPassword(passwordEncoder.encode(user.getPassword()));
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+        } else { // Существующий пользователь
+            User existingUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Пользователь с ID " + user.getId() + " не найден для обновления."));
+
+            if (user.getPassword() != null && !user.getPassword().isBlank()) {
+                // Проверяем, что пароль не является уже закодированной строкой bcrypt
+                if (!user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$") && !user.getPassword().startsWith("$2y$")) {
+                    user.setPassword(passwordEncoder.encode(user.getPassword()));
+                } 
+                // Если это уже хеш, то он был установлен напрямую (например, из existingUser), оставляем как есть
+            } else {
+                // Если новый пароль не предоставлен, используем старый пароль из базы
+                user.setPassword(existingUser.getPassword());
             }
         }
+        // Обновляем остальные поля, если они есть в объекте user (контроллер должен позаботиться о передаче полного объекта)
+        // userRepository.save(user) обновит все поля, переданные в объекте user.
         User savedUser = userRepository.save(user);
         return savedUser;
     }
@@ -86,5 +107,9 @@ public class UserService {
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 }
