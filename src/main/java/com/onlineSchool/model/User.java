@@ -55,16 +55,13 @@ public class User implements UserDetails {
     private LocalDateTime createdAt;
     
     @Column(name = "active")
-    private boolean active;
+    private boolean active = true;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (role == null) {
             role = Role.STUDENT;
-        }
-        if (!active) {
-            active = true;
         }
     }
 

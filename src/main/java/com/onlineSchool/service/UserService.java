@@ -34,10 +34,14 @@ public class UserService {
 
     @Transactional
     public User save(User user) {
-        if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+            // Проверяем, что пароль не является уже закодированной строкой bcrypt
+            if (!user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$") && !user.getPassword().startsWith("$2y$")) {
+                 user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
         }
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return savedUser;
     }
 
     @Transactional

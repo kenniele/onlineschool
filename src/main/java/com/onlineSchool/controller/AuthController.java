@@ -20,6 +20,11 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @GetMapping("/")
+    public String rootPage() {
+        return "index";
+    }
+
     @GetMapping("/login")
     public String login() {
         return "login";
@@ -43,9 +48,15 @@ public class AuthController {
             return "register";
         }
         
-        // Проверка, что пользователь с таким email или username не существует
-        if (userService.existsByEmail(email)) {
+        // Проверка, что пользователь с таким email не существует
+        if (userService.findByEmail(email).isPresent()) {
             model.addAttribute("error", "Пользователь с таким email уже существует");
+            return "register";
+        }
+        
+        // Проверка, что пользователь с таким username не существует
+        if (userService.findByUsername(username).isPresent()) {
+            model.addAttribute("error", "Пользователь с таким именем уже существует");
             return "register";
         }
         
