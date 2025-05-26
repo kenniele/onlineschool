@@ -1,117 +1,103 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/header :: head">
+<head th:replace="~{fragments/header :: head}">
     <title>Вход - Online School</title>
 </head>
 <body>
-    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="~{fragments/header :: header}"></div>
     
     <main class="main-content">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-lg-4">
-                    <div class="card">
-                        <div class="card-header text-center">
-                            <h2><i class="fas fa-sign-in-alt"></i> Вход в систему</h2>
-                            <p class="text-muted mb-0">Войдите в свой аккаунт</p>
-                        </div>
-                        <div class="card-body">
-                            <!-- Сообщения об ошибках -->
-                            <div th:if="${param.error}" class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Неверное имя пользователя или пароль
-                            </div>
-                            
-                            <div th:if="${param.logout}" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
-                                Вы успешно вышли из системы
-                            </div>
-                            
-                            <div th:if="${param.registered}" class="alert alert-success">
-                                <i class="fas fa-user-check"></i>
-                                Регистрация прошла успешно! Теперь вы можете войти
-                            </div>
-                            
-                            <form th:action="@{/login}" method="post">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
-                                <div class="form-group">
-                                    <label for="username" class="form-label">
-                                        <i class="fas fa-user"></i> Имя пользователя
-                                    </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="username" 
-                                           name="username" 
-                                           placeholder="Введите имя пользователя"
-                                           required 
-                                           autofocus>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="password" class="form-label">
-                                        <i class="fas fa-lock"></i> Пароль
-                                    </label>
-                                    <input type="password" 
-                                           class="form-control" 
-                                           id="password" 
-                                           name="password" 
-                                           placeholder="Введите пароль"
-                                           required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <div class="d-flex align-items-center">
-                                        <input type="checkbox" 
-                                               id="remember-me" 
-                                               name="remember-me" 
-                                               class="me-2">
-                                        <label for="remember-me" class="form-label mb-0">
-                                            Запомнить меня
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary w-100 mb-3">
-                                    <i class="fas fa-sign-in-alt"></i> Войти
-                                </button>
-                            </form>
-                        </div>
-                        <div class="card-footer text-center">
-                            <p class="mb-0">
-                                Нет аккаунта? 
-                                <a th:href="@{/register}" class="text-decoration-none">
-                                    <i class="fas fa-user-plus"></i> Зарегистрироваться
-                                </a>
-                            </p>
-                        </div>
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2><i class="fas fa-sign-in-alt"></i> Вход в систему</h2>
+                        <p>Войдите в свой аккаунт для продолжения</p>
                     </div>
                     
-                    <!-- Демо аккаунты -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h6 class="mb-0"><i class="fas fa-info-circle"></i> Демо аккаунты</h6>
+                    <div class="auth-body">
+                        <!-- Сообщения -->
+                        <div th:if="${param.error}" class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Неверное имя пользователя или пароль
                         </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-4">
-                                    <div class="demo-account admin-only p-2 rounded">
-                                        <strong>Админ</strong><br>
-                                        <small>admin / password</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="demo-account teacher-only p-2 rounded">
-                                        <strong>Учитель</strong><br>
-                                        <small>teacher / password</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="demo-account student-only p-2 rounded">
-                                        <strong>Студент</strong><br>
-                                        <small>student / password</small>
-                                    </div>
-                                </div>
+                        
+                        <div th:if="${param.logout}" class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            Вы успешно вышли из системы
+                        </div>
+                        
+                        <div th:if="${param.registered}" class="alert alert-success">
+                            <i class="fas fa-user-check"></i>
+                            Регистрация прошла успешно! Теперь вы можете войти
+                        </div>
+                        
+                        <form th:action="@{/login}" method="post" class="auth-form">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+                            
+                            <div class="form-group">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user"></i> Имя пользователя
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       name="username" 
+                                       placeholder="Введите имя пользователя"
+                                       required 
+                                       autofocus>
                             </div>
+                            
+                            <div class="form-group">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock"></i> Пароль
+                                </label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Введите пароль"
+                                       required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="remember-me" name="remember-me">
+                                    <span class="checkmark"></span>
+                                    Запомнить меня
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="auth-footer">
+                        <p>Нет аккаунта? 
+                            <a th:href="@{/register}" class="auth-link">
+                                <i class="fas fa-user-plus"></i> Зарегистрироваться
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Демо аккаунты -->
+                <div class="demo-accounts">
+                    <h6><i class="fas fa-info-circle"></i> Демо аккаунты</h6>
+                    <div class="demo-grid">
+                        <div class="demo-account admin-demo">
+                            <strong>Админ</strong>
+                            <small>admin / password</small>
+                        </div>
+                        <div class="demo-account teacher-demo">
+                            <strong>Учитель</strong>
+                            <small>teacher / password</small>
+                        </div>
+                        <div class="demo-account student-demo">
+                            <strong>Студент</strong>
+                            <small>student / password</small>
                         </div>
                     </div>
                 </div>
@@ -119,6 +105,6 @@
         </div>
     </main>
     
-    <div th:replace="fragments/footer :: footer"></div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

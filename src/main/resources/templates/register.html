@@ -1,188 +1,169 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/header :: head">
+<head th:replace="~{fragments/header :: head}">
     <title>Регистрация - Online School</title>
 </head>
 <body>
-    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="~{fragments/header :: header}"></div>
     
     <main class="main-content">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6">
-                    <div class="card">
-                        <div class="card-header text-center">
-                            <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
-                            <p class="text-muted mb-0">Создайте новый аккаунт</p>
-                        </div>
-                        <div class="card-body">
-                            <!-- Сообщения об ошибках -->
-                            <div th:if="${error}" class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span th:text="${error}">Ошибка</span>
-                            </div>
-                            
-                            <form th:action="@{/register}" method="post">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="username" class="form-label">
-                                                <i class="fas fa-user"></i> Имя пользователя *
-                                            </label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="username" 
-                                                   name="username" 
-                                                   placeholder="Введите имя пользователя"
-                                                   required 
-                                                   autofocus
-                                                   minlength="3"
-                                                   maxlength="50">
-                                            <small class="form-text text-muted">От 3 до 50 символов</small>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="email" class="form-label">
-                                                <i class="fas fa-envelope"></i> Email *
-                                            </label>
-                                            <input type="email" 
-                                                   class="form-control" 
-                                                   id="email" 
-                                                   name="email" 
-                                                   placeholder="Введите email"
-                                                   required>
-                                            <small class="form-text text-muted">Мы не передаем email третьим лицам</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="firstName" class="form-label">
-                                                <i class="fas fa-user-circle"></i> Имя
-                                            </label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="firstName" 
-                                                   name="firstName" 
-                                                   placeholder="Введите имя"
-                                                   maxlength="50">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="lastName" class="form-label">
-                                                <i class="fas fa-user-circle"></i> Фамилия
-                                            </label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="lastName" 
-                                                   name="lastName" 
-                                                   placeholder="Введите фамилию"
-                                                   maxlength="50">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="password" class="form-label">
-                                                <i class="fas fa-lock"></i> Пароль *
-                                            </label>
-                                            <input type="password" 
-                                                   class="form-control" 
-                                                   id="password" 
-                                                   name="password" 
-                                                   placeholder="Введите пароль"
-                                                   required
-                                                   minlength="6">
-                                            <small class="form-text text-muted">Минимум 6 символов</small>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="confirmPassword" class="form-label">
-                                                <i class="fas fa-lock"></i> Подтвердите пароль *
-                                            </label>
-                                            <input type="password" 
-                                                   class="form-control" 
-                                                   id="confirmPassword" 
-                                                   name="confirmPassword" 
-                                                   placeholder="Повторите пароль"
-                                                   required
-                                                   minlength="6">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="role" class="form-label">
-                                        <i class="fas fa-user-tag"></i> Роль
-                                    </label>
-                                    <select class="form-control form-select" id="role" name="role">
-                                        <option value="STUDENT" selected>Студент</option>
-                                        <option value="TEACHER">Преподаватель</option>
-                                    </select>
-                                    <small class="form-text text-muted">Выберите вашу роль на платформе</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <div class="d-flex align-items-center">
-                                        <input type="checkbox" 
-                                               id="terms" 
-                                               name="terms" 
-                                               class="me-2"
-                                               required>
-                                        <label for="terms" class="form-label mb-0">
-                                            Я согласен с <a href="#" class="text-decoration-none">условиями использования</a> и <a href="#" class="text-decoration-none">политикой конфиденциальности</a>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary w-100 mb-3">
-                                    <i class="fas fa-user-plus"></i> Зарегистрироваться
-                                </button>
-                            </form>
-                        </div>
-                        <div class="card-footer text-center">
-                            <p class="mb-0">
-                                Уже есть аккаунт? 
-                                <a th:href="@{/login}" class="text-decoration-none">
-                                    <i class="fas fa-sign-in-alt"></i> Войти
-                                </a>
-                            </p>
-                        </div>
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
+                        <p>Создайте новый аккаунт для начала обучения</p>
                     </div>
                     
-                    <!-- Преимущества регистрации -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h6 class="mb-0"><i class="fas fa-star"></i> Преимущества регистрации</h6>
+                    <div class="auth-body">
+                        <!-- Сообщения об ошибках -->
+                        <div th:if="${error}" class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span th:text="${error}">Ошибка</span>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center mb-3">
-                                    <i class="fas fa-book fa-2x text-primary mb-2"></i>
-                                    <h6>Доступ к курсам</h6>
-                                    <small class="text-muted">Изучайте курсы от лучших преподавателей</small>
+                        
+                        <form th:action="@{/register}" method="post" class="auth-form">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-user"></i> Имя пользователя *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="username" 
+                                           name="username" 
+                                           placeholder="Введите имя пользователя"
+                                           required 
+                                           autofocus
+                                           minlength="3"
+                                           maxlength="50">
                                 </div>
-                                <div class="col-md-4 text-center mb-3">
-                                    <i class="fas fa-video fa-2x text-success mb-2"></i>
-                                    <h6>Участие в вебинарах</h6>
-                                    <small class="text-muted">Присоединяйтесь к живым вебинарам</small>
+                                
+                                <div class="form-group">
+                                    <label for="email" class="form-label">
+                                        <i class="fas fa-envelope"></i> Email *
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
+                                           placeholder="Введите email"
+                                           required>
                                 </div>
-                                <div class="col-md-4 text-center mb-3">
-                                    <i class="fas fa-certificate fa-2x text-warning mb-2"></i>
-                                    <h6>Сертификаты</h6>
-                                    <small class="text-muted">Получайте сертификаты о прохождении</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName" class="form-label">
+                                        <i class="fas fa-user-circle"></i> Имя
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           name="firstName" 
+                                           placeholder="Введите имя"
+                                           maxlength="50">
                                 </div>
+                                
+                                <div class="form-group">
+                                    <label for="lastName" class="form-label">
+                                        <i class="fas fa-user-circle"></i> Фамилия
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           name="lastName" 
+                                           placeholder="Введите фамилию"
+                                           maxlength="50">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="password" class="form-label">
+                                        <i class="fas fa-lock"></i> Пароль *
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Введите пароль"
+                                           required
+                                           minlength="6">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="confirmPassword" class="form-label">
+                                        <i class="fas fa-lock"></i> Подтвердите пароль *
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirmPassword" 
+                                           name="confirmPassword" 
+                                           placeholder="Повторите пароль"
+                                           required
+                                           minlength="6">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="role" class="form-label">
+                                    <i class="fas fa-user-tag"></i> Роль
+                                </label>
+                                <select class="form-control" id="role" name="role">
+                                    <option value="STUDENT" selected>Студент</option>
+                                    <option value="TEACHER">Преподаватель</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="terms" name="terms" required>
+                                    <span class="checkmark"></span>
+                                    Я согласен с <a href="#" class="auth-link">условиями использования</a> и <a href="#" class="auth-link">политикой конфиденциальности</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-user-plus"></i> Зарегистрироваться
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="auth-footer">
+                        <p>Уже есть аккаунт? 
+                            <a th:href="@{/login}" class="auth-link">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Преимущества регистрации -->
+                <div class="benefits-section">
+                    <h6><i class="fas fa-star"></i> Преимущества регистрации</h6>
+                    <div class="benefits-grid">
+                        <div class="benefit-item">
+                            <i class="fas fa-book"></i>
+                            <div>
+                                <h6>Доступ к курсам</h6>
+                                <small>Изучайте курсы от лучших преподавателей</small>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="fas fa-video"></i>
+                            <div>
+                                <h6>Участие в вебинарах</h6>
+                                <small>Присоединяйтесь к живым вебинарам</small>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="fas fa-certificate"></i>
+                            <div>
+                                <h6>Сертификаты</h6>
+                                <small>Получайте сертификаты о прохождении</small>
                             </div>
                         </div>
                     </div>
@@ -191,7 +172,7 @@
         </div>
     </main>
     
-    <div th:replace="fragments/footer :: footer"></div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
     
     <script>
         // Проверка совпадения паролей

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
+<head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} ?: 'Online School'">Online School</title>
+    <title>Online School</title>
     
     <!-- Modern CSS -->
-    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" href="/css/modern-style.css">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,112 +15,131 @@
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
-<body>
-    <header class="header" th:fragment="header">
-        <div class="container">
-            <nav class="navbar">
-                <a th:href="@{/}" class="navbar-brand">
-                    <i class="fas fa-graduation-cap"></i>
-                    Online School
-                </a>
-                
+
+<header th:fragment="header" class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Online School</span>
+            </a>
+            
+            <!-- Mobile menu button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="navbar-menu" id="navbarMenu">
                 <ul class="navbar-nav">
-                    <!-- Общие ссылки для всех пользователей -->
-                    <li><a th:href="@{/}" class="nav-link">
-                        <i class="fas fa-home"></i> Главная
+                    <!-- Общие ссылки -->
+                    <li><a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> 
+                        <span>Главная</span>
                     </a></li>
                     
-                    <li><a th:href="@{/courses}" class="nav-link">
-                        <i class="fas fa-book"></i> Курсы
+                    <li><a href="/courses" class="nav-link">
+                        <i class="fas fa-book"></i> 
+                        <span>Курсы</span>
                     </a></li>
                     
                     <!-- Ссылки для авторизованных пользователей -->
                     <div sec:authorize="isAuthenticated()">
-                        <li><a th:href="@{/webinars}" class="nav-link">
-                            <i class="fas fa-video"></i> Вебинары
+                        <li><a href="/webinars" class="nav-link">
+                            <i class="fas fa-video"></i> 
+                            <span>Вебинары</span>
                         </a></li>
                         
-                        <!-- Ссылки только для учителей -->
-                        <div sec:authorize="hasRole('TEACHER')">
-                            <li><a th:href="@{/teacher/dashboard}" class="nav-link teacher-only">
-                                <i class="fas fa-tachometer-alt"></i> Панель
-                            </a></li>
-                            <li><a th:href="@{/teacher/courses}" class="nav-link teacher-only">
-                                <i class="fas fa-chalkboard-teacher"></i> Мои курсы
-                            </a></li>
-                            <li><a th:href="@{/teacher/webinars}" class="nav-link teacher-only">
-                                <i class="fas fa-calendar-plus"></i> Мои вебинары
-                            </a></li>
-                        </div>
-                        
-                        <!-- Ссылки только для студентов -->
-                        <div sec:authorize="hasRole('STUDENT')">
-                            <li><a th:href="@{/student/dashboard}" class="nav-link student-only">
-                                <i class="fas fa-tachometer-alt"></i> Панель
-                            </a></li>
-                            <li><a th:href="@{/student/courses}" class="nav-link student-only">
-                                <i class="fas fa-book-reader"></i> Мои курсы
-                            </a></li>
-                        </div>
-                        
-                        <!-- Ссылки только для администраторов -->
-                        <div sec:authorize="hasRole('ADMIN')">
-                            <li><a th:href="@{/admin}" class="nav-link admin-only">
-                                <i class="fas fa-cog"></i> Админ панель
-                            </a></li>
-                            <li><a th:href="@{/admin/users}" class="nav-link admin-only">
-                                <i class="fas fa-users"></i> Пользователи
-                            </a></li>
-                        </div>
-                        
-                        <!-- Профиль пользователя -->
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link d-flex align-items-center gap-2" id="userDropdown">
-                                <i class="fas fa-user-circle"></i>
-                                <span sec:authentication="name">Пользователь</span>
-                                <span class="role-badge" 
-                                      sec:authorize="hasRole('ADMIN')" 
-                                      th:class="'role-badge admin'">Админ</span>
-                                <span class="role-badge" 
-                                      sec:authorize="hasRole('TEACHER')" 
-                                      th:class="'role-badge teacher'">Учитель</span>
-                                <span class="role-badge" 
-                                      sec:authorize="hasRole('STUDENT')" 
-                                      th:class="'role-badge student'">Студент</span>
+                        <!-- Админские ссылки -->
+                        <li sec:authorize="hasRole('ADMIN')">
+                            <a href="/admin" class="nav-link admin-only">
+                                <i class="fas fa-cog"></i> 
+                                <span>Админ</span>
                             </a>
                         </li>
                         
-                        <li>
-                            <form th:action="@{/logout}" method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-sign-out-alt"></i> Выйти
-                                </button>
-                            </form>
+                        <!-- Ссылки учителя -->
+                        <li sec:authorize="hasRole('TEACHER')">
+                            <a href="/teacher/dashboard" class="nav-link teacher-only">
+                                <i class="fas fa-chalkboard-teacher"></i> 
+                                <span>Кабинет</span>
+                            </a>
+                        </li>
+                        
+                        <!-- Ссылки студента -->
+                        <li sec:authorize="hasRole('STUDENT')">
+                            <a href="/student/dashboard" class="nav-link student-only">
+                                <i class="fas fa-user-graduate"></i> 
+                                <span>Кабинет</span>
+                            </a>
                         </li>
                     </div>
                     
                     <!-- Ссылки для неавторизованных пользователей -->
-                    <div sec:authorize="!isAuthenticated()">
-                        <li><a th:href="@{/login}" class="nav-link">
-                            <i class="fas fa-sign-in-alt"></i> Войти
+                    <div sec:authorize="!isAuthenticated()" class="auth-links">
+                        <li><a href="/login" class="nav-link">
+                            <i class="fas fa-sign-in-alt"></i> 
+                            <span>Войти</span>
                         </a></li>
-                        <li><a th:href="@{/register}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-user-plus"></i> Регистрация
+                        <li><a href="/register" class="btn btn-primary btn-sm">
+                            <i class="fas fa-user-plus"></i> 
+                            <span>Регистрация</span>
                         </a></li>
                     </div>
+                    
+                    <!-- Профиль пользователя -->
+                    <div sec:authorize="isAuthenticated()" class="user-menu">
+                        <li class="dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" onclick="toggleDropdown(event)">
+                                <i class="fas fa-user-circle"></i>
+                                <span sec:authentication="name">Пользователь</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu">
+                                <a href="/dashboard" class="dropdown-item">
+                                    <i class="fas fa-tachometer-alt"></i> Дашборд
+                                </a>
+                                <a href="/profile" class="dropdown-item">
+                                    <i class="fas fa-user-edit"></i> Профиль
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form th:action="@{/logout}" method="post" class="logout-form">
+                                    <button type="submit" class="dropdown-item logout-btn">
+                                        <i class="fas fa-sign-out-alt"></i> Выйти
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    </div>
                 </ul>
-            </nav>
-        </div>
-    </header>
+            </div>
+        </nav>
+    </div>
     
-    <!-- Mobile Menu Toggle (для будущего использования) -->
     <script>
-        // Простая функция для мобильного меню
         function toggleMobileMenu() {
-            const navbar = document.querySelector('.navbar-nav');
-            navbar.classList.toggle('mobile-open');
+            const menu = document.getElementById('navbarMenu');
+            menu.classList.toggle('active');
         }
+        
+        function toggleDropdown(event) {
+            event.preventDefault();
+            const dropdown = event.target.closest('.dropdown');
+            dropdown.classList.toggle('active');
+        }
+        
+        // Закрытие dropdown при клике вне его
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        });
     </script>
-</body>
+</header>
 </html> 

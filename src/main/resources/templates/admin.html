@@ -1,27 +1,154 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: head}">
     <title>Панель администратора - Online School</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <!-- Admin Header -->
+            <div class="admin-header">
+                <div class="admin-title">
+                    <h1><i class="fas fa-cog"></i> Панель администратора</h1>
+                    <p>Добро пожаловать в панель администратора!</p>
+                </div>
+                <div class="admin-user">
+                    <span class="role-badge admin">Администратор</span>
+                    <span sec:authentication="name">admin</span>
+                </div>
+            </div>
 
-    <div class="container mt-4">
-        <h1>Панель администратора</h1>
-        <p>Добро пожаловать в панель администратора!</p>
-        
-        <div class="list-group mt-4">
-            <a th:href="@{/admin/users}" class="list-group-item list-group-item-action">Управление пользователями</a>
-            <a th:href="@{/admin/courses}" class="list-group-item list-group-item-action">Управление курсами</a>
-            <a th:href="@{/admin/webinars}" class="list-group-item list-group-item-action">Управление вебинарами</a>
-            <!-- Добавьте другие ссылки по мере необходимости -->
+            <!-- Admin Dashboard Cards -->
+            <div class="admin-dashboard">
+                <div class="admin-card">
+                    <div class="admin-card-icon admin-only">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="admin-card-content">
+                        <h3>Управление пользователями</h3>
+                        <p>Просмотр, создание и редактирование пользователей системы</p>
+                        <a href="/admin/users" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Перейти
+                        </a>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-icon teacher-only">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="admin-card-content">
+                        <h3>Управление курсами</h3>
+                        <p>Создание, редактирование и модерация курсов</p>
+                        <a href="/courses" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Перейти
+                        </a>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-icon student-only">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div class="admin-card-content">
+                        <h3>Управление вебинарами</h3>
+                        <p>Модерация и управление вебинарами платформы</p>
+                        <a href="/webinars" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Перейти
+                        </a>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="admin-card-content">
+                        <h3>Статистика</h3>
+                        <p>Аналитика и отчеты по платформе</p>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i> Скоро
+                        </a>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="admin-card-content">
+                        <h3>Настройки системы</h3>
+                        <p>Конфигурация и настройки платформы</p>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i> Скоро
+                        </a>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="admin-card-content">
+                        <h3>Безопасность</h3>
+                        <p>Управление правами доступа и безопасностью</p>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i> Скоро
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="admin-stats">
+                <h2>Быстрая статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-card admin-stat">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>5</h3>
+                            <p>Всего пользователей</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card admin-stat">
+                        <div class="stat-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>4</h3>
+                            <p>Активных курсов</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card admin-stat">
+                        <div class="stat-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>4</h3>
+                            <p>Запланированных вебинаров</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card admin-stat">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>100%</h3>
+                            <p>Активность системы</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </main>
+    
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html> 
