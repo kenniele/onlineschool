@@ -20,11 +20,6 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @GetMapping("/")
-    public String rootPage() {
-        return "index";
-    }
-
     @GetMapping("/login")
     public String login() {
         return "login";
@@ -40,11 +35,20 @@ public class AuthController {
                                @RequestParam String email,
                                @RequestParam String password,
                                @RequestParam String confirmPassword,
+                               @RequestParam(required = false) String firstName,
+                               @RequestParam(required = false) String lastName,
+                               @RequestParam(defaultValue = "STUDENT") String role,
                                Model model) {
         
         // Проверка, что пароли совпадают
         if (!password.equals(confirmPassword)) {
             model.addAttribute("error", "Пароли не совпадают");
+            return "register";
+        }
+        
+        // Проверка длины пароля
+        if (password.length() < 6) {
+            model.addAttribute("error", "Пароль должен содержать минимум 6 символов");
             return "register";
         }
         
@@ -65,7 +69,16 @@ public class AuthController {
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRole(Role.STUDENT);
+        user.setFirstName(firstName != null && !firstName.trim().isEmpty() ? firstName.trim() : null);
+        user.setLastName(lastName != null && !lastName.trim().isEmpty() ? lastName.trim() : null);
+        
+        // Установка роли
+        try {
+            user.setRole(Role.valueOf(role.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            user.setRole(Role.STUDENT); // По умолчанию студент
+        }
+        
         user.setActive(true);
         
         userService.save(user);

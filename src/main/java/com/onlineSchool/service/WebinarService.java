@@ -30,6 +30,18 @@ public class WebinarService {
         return webinarRepository.findById(id);
     }
 
+    public List<Webinar> findByTeacher(User teacher) {
+        return webinarRepository.findByTeacher(teacher);
+    }
+
+    public List<Webinar> findByParticipant(User participant) {
+        return webinarRepository.findByParticipantsContaining(participant);
+    }
+
+    public List<Webinar> findUpcomingByTeacher(User teacher) {
+        return webinarRepository.findByTeacherAndStartTimeAfter(teacher, LocalDateTime.now());
+    }
+
     @Transactional(readOnly = true)
     public List<Webinar> findByCourseId(Long courseId) {
         return webinarRepository.findByCourseId(courseId);
@@ -122,6 +134,28 @@ public class WebinarService {
         }
         
         webinar.setStatus(WebinarStatus.CANCELLED);
+        return webinarRepository.save(webinar);
+    }
+
+    @Transactional
+    public Webinar addParticipant(Long webinarId, User user) {
+        Webinar webinar = findById(webinarId)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        
+        if (webinar.getParticipants().size() >= 100) {
+            throw new RuntimeException("Webinar is full");
+        }
+        
+        webinar.getParticipants().add(user);
+        return webinarRepository.save(webinar);
+    }
+
+    @Transactional
+    public Webinar removeParticipant(Long webinarId, User user) {
+        Webinar webinar = findById(webinarId)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        
+        webinar.getParticipants().remove(user);
         return webinarRepository.save(webinar);
     }
 

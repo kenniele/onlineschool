@@ -16,6 +16,10 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final UserService userService;
 
+    public List<Course> findAll() {
+        return courseRepository.findAll();
+    }
+
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
     }
@@ -26,6 +30,14 @@ public class CourseService {
 
     public Optional<Course> findById(Long id) {
         return courseRepository.findById(id);
+    }
+
+    public List<Course> findByTeacher(User teacher) {
+        return courseRepository.findByTeacher(teacher);
+    }
+
+    public List<Course> findByStudent(User student) {
+        return courseRepository.findByStudentsContaining(student);
     }
 
     public List<Course> getCoursesByTeacherId(Long teacherId) {
@@ -74,6 +86,22 @@ public class CourseService {
         Course course = findById(id)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
         course.setActive(false);
+        return courseRepository.save(course);
+    }
+
+    @Transactional
+    public Course enrollStudent(Long courseId, User student) {
+        Course course = findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        course.getStudents().add(student);
+        return courseRepository.save(course);
+    }
+
+    @Transactional
+    public Course unenrollStudent(Long courseId, User student) {
+        Course course = findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        course.getStudents().remove(student);
         return courseRepository.save(course);
     }
 

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,8 +49,9 @@ public class Webinar {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
+    @Builder.Default
     @Column(name = "active")
-    private boolean active;
+    private boolean active = true;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -66,7 +67,7 @@ public class Webinar {
     @Builder.Default
     @OneToMany
     @JoinColumn(name = "entity_id", referencedColumnName = "id")
-    @Where(clause = "entity_type = 'WEBINAR'")
+    @SQLRestriction("entity_type = 'WEBINAR'")
     private List<Comment> comments = new ArrayList<>();
 
     @Builder.Default
@@ -85,9 +86,6 @@ public class Webinar {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        if (active == false) {
-            active = true;
-        }
         status = WebinarStatus.SCHEDULED;
     }
 

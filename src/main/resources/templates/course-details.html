@@ -1,174 +1,265 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${course.name} + ' - Online School'">Детали курса</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <meta name="csrf-token" th:content="${_csrf.token}"/>
-    <meta name="csrf-header" th:content="${_csrf.headerName}"/>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .container-main {
-            flex: 1;
-        }
-        .webinar-list .list-group-item {
-            margin-bottom: 5px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course.title} + ' - Online School'">Детали курса - Online School</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/modern-style.css}" rel="stylesheet">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <div class="container mt-5 container-main">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a th:href="@{/}">Главная</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/courses}">Курсы</a></li>
-                <li class="breadcrumb-item active" aria-current="page" th:text="${course.name}">Название курса</li>
-            </ol>
-        </nav>
+    <!-- Course Hero Section -->
+    <section class="course-hero">
+        <div class="container">
+            <nav class="breadcrumb-nav">
+                <a href="/" class="breadcrumb-link">
+                    <i class="fas fa-home"></i>
+                    Главная
+                </a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/courses" class="breadcrumb-link">Курсы</a>
+                <i class="fas fa-chevron-right"></i>
+                <span class="breadcrumb-current" th:text="${course.title}">Название курса</span>
+            </nav>
 
-        <div class="row">
-            <div class="col-md-8">
-                <h1 th:text="${course.name}">Название курса</h1>
-                <p class="text-muted" th:text="'Преподаватель: ' + ${course.teacherName}">Преподаватель</p>
-                <hr>
-                <p th:text="${course.description}">Полное описание курса...</p>
-                <hr>
-                <h4>Содержимое курса:</h4>
-                <div th:utext="${course.content != null ? course.content : 'Содержимое курса пока не добавлено.'}"></div>
-                <hr>
-                <h4>Вебинары курса:</h4>
-                <div th:if="${course.webinars == null || course.webinars.isEmpty()}">
-                    <p>Вебинары для этого курса еще не добавлены.</p>
-                </div>
-                <ul class="list-group webinar-list" th:if="${course.webinars != null && !course.webinars.isEmpty()}">
-                    <li class="list-group-item" th:each="webinar : ${course.webinars}">
-                        <h5 th:text="${webinar.title}">Название вебинара</h5>
-                        <p th:text="${webinar.description}">Описание вебинара</p>
-                        <p><small class="text-muted" th:text="'Дата: ' + ${#temporals.format(webinar.dateTime, 'dd.MM.yyyy HH:mm')}">Дата</small></p>
-                        <a th:href="${webinar.link}" target="_blank" class="btn btn-info btn-sm">Перейти к вебинару</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Информация о курсе</h5>
-                        <p><strong>Цена:</strong> <span th:text="${course.price == 0 ? 'Бесплатно' : course.price + ' руб.'}"></span></p>
-                        <p><strong>Начало:</strong> <span th:text="${#temporals.format(course.startDate, 'dd.MM.yyyy')}"></span></p>
-                        <p><strong>Окончание:</strong> <span th:text="${#temporals.format(course.endDate, 'dd.MM.yyyy')}"></span></p>
-                        <hr>
-                        <!-- Кнопки действий -->
-                        <th:block sec:authorize="isAuthenticated()">
-                            <button type="button" class="btn btn-outline-danger btn-block mb-2 like-button"
-                                    th:attr="data-course-id=${course.id}"
-                                    th:onclick="|likeCourse(this, ${course.id})|"
-                                    th:classappend="${@likeService.isCourseLikedByUser(course.id, #authentication.principal.id)} ? 'active' : ''">
-                                <i th:class="${@likeService.isCourseLikedByUser(course.id, #authentication.principal.id)} ? 'fas fa-heart' : 'far fa-heart'"></i> Лайк (<span class="likes-count" th:text="${@likeService.getCourseLikesCount(course.id)}">0</span>)
-                            </button>
-                        </th:block>
-                        <th:block sec:authorize="!isAuthenticated()">
-                             <button type="button" class="btn btn-outline-danger btn-block mb-2" disabled>
-                                <i class="far fa-heart"></i> Лайк (<span th:text="${@likeService.getCourseLikesCount(course.id)}">0</span>)
-                            </button>
-                        </th:block>
-
-                        <div sec:authorize="isAuthenticated()" class="mt-2">
-                             <th:block th:with="enrollmentStatus = ${@userCourseEnrollmentService.getEnrollmentStatus(course.id, #authentication.principal)}">
-                                <div th:if="${enrollmentStatus == null}"> <!-- NOT_ENROLLED -->
-                                    <form th:action="@{/api/courses/{courseId}/enroll/student/{studentId}(courseId=${course.id}, studentId=${#authentication.principal.id})}" method="post" style="display: block;">
-                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                        <button type="submit" class="btn btn-success btn-block">Записаться</button>
-                                    </form>
-                                </div>
-                                <div th:if="${enrollmentStatus?.name() == 'NOT_STARTED'}">
-                                    <form th:action="@{/api/courses/{courseId}/start(courseId=${course.id})}" method="post" style="display: block;">
-                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                        <button type="submit" class="btn btn-info btn-block">Начать курс</button>
-                                    </form>
-                                </div>
-                                <div th:if="${enrollmentStatus?.name() == 'IN_PROGRESS'}">
-                                    <form th:action="@{/api/courses/{courseId}/complete(courseId=${course.id})}" method="post" style="display: block;">
-                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                        <button type="submit" class="btn btn-warning btn-block">Завершить курс</button>
-                                    </form>
-                                </div>
-                                <div th:if="${enrollmentStatus?.name() == 'COMPLETED'}">
-                                    <button type="button" class="btn btn-secondary btn-block" disabled>Курс пройден</button>
-                                </div>
-                            </th:block>
+            <div class="course-hero-content">
+                <div class="course-hero-main">
+                    <div class="course-category">
+                        <i class="fas fa-tag"></i>
+                        Курс
+                    </div>
+                    <h1 class="course-hero-title" th:text="${course.title}">Название курса</h1>
+                    <p class="course-hero-description" th:text="${course.description}">Описание курса</p>
+                    
+                    <div class="course-hero-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Преподаватель</span>
                         </div>
-                        <div sec:authorize="!isAuthenticated()" class="mt-2">
-                            <a th:href="@{/login}" class="btn btn-success btn-block">Записаться</a>
+                        <div class="meta-item">
+                            <i class="fas fa-users"></i>
+                            <span th:text="${course.students.size()}">0</span> студентов
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span th:text="${#temporals.format(course.startDate, 'dd.MM.yyyy')}">Дата начала</span>
+                        </div>
+                        <div class="meta-item" th:if="${course.active}">
+                            <i class="fas fa-check-circle text-success"></i>
+                            Активный
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-hero-sidebar">
+                    <div class="course-card">
+                        <div class="course-image">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        
+                        <div class="course-info">
+                            <div class="price-section">
+                                <span class="price" th:if="${course.price != null}" th:text="${course.price + ' ₽'}">Цена</span>
+                                <span class="price free" th:if="${course.price == null}">Бесплатно</span>
+                            </div>
+                            
+                            <div class="course-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>Начало: <span th:text="${#temporals.format(course.startDate, 'dd.MM.yyyy')}">Дата</span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-flag-checkered"></i>
+                                    <span>Окончание: <span th:text="${#temporals.format(course.endDate, 'dd.MM.yyyy')}">Дата</span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-video"></i>
+                                    <span th:text="${webinars.size()}">0</span> вебинаров
+                                </div>
+                            </div>
+
+                            <!-- Действия для студентов -->
+                            <div class="course-actions">
+                                <div sec:authorize="hasRole('STUDENT')">
+                                    <form th:if="${!course.students.contains(#authentication.principal)}" 
+                                          th:action="@{/student/courses/{id}/enroll(id=${course.id})}" 
+                                          method="post">
+                                        <button type="submit" class="btn btn-primary btn-block">
+                                            <i class="fas fa-plus"></i>
+                                            Записаться на курс
+                                        </button>
+                                    </form>
+                                    <div th:if="${course.students.contains(#authentication.principal)}" 
+                                         class="enrolled-status">
+                                        <i class="fas fa-check-circle"></i>
+                                        Вы записаны на курс
+                                    </div>
+                                </div>
+                                
+                                <div sec:authorize="!isAuthenticated()">
+                                    <a href="/login" class="btn btn-primary btn-block">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        Войти для записи
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Заглушка для секции комментариев -->
-        <div class="row mt-5">
-            <div class="col-md-12">
-                <h3>Комментарии</h3>
-                <p>Раздел комментариев будет реализован позже.</p>
-                <!-- Здесь будет форма для добавления комментария и список комментариев -->
+    <!-- Course Content -->
+    <section class="course-content">
+        <div class="container">
+            <div class="content-tabs">
+                <button class="tab-btn active" data-tab="overview">
+                    <i class="fas fa-info-circle"></i>
+                    Обзор
+                </button>
+                <button class="tab-btn" data-tab="webinars">
+                    <i class="fas fa-video"></i>
+                    Вебинары
+                </button>
+                <button class="tab-btn" data-tab="teacher">
+                    <i class="fas fa-user"></i>
+                    Преподаватель
+                </button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div class="tab-pane active" id="overview">
+                    <div class="content-section">
+                        <h2>О курсе</h2>
+                        <div class="course-description">
+                            <p th:text="${course.description}">Описание курса</p>
+                        </div>
+
+                        <div class="course-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" th:text="${course.students.size()}">0</span>
+                                    <span class="stat-label">Студентов</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" th:text="${webinars.size()}">0</span>
+                                    <span class="stat-label">Вебинаров</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(course.startDate.toLocalDate(), course.endDate.toLocalDate())}">0</span>
+                                    <span class="stat-label">Дней</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Webinars Tab -->
+                <div class="tab-pane" id="webinars">
+                    <div class="content-section">
+                        <h2>Вебинары курса</h2>
+                        
+                        <div th:if="${webinars.empty}" class="empty-state">
+                            <i class="fas fa-video"></i>
+                            <h3>Вебинары не найдены</h3>
+                            <p>Для этого курса пока не запланированы вебинары</p>
+                        </div>
+
+                        <div class="webinars-list" th:if="${!webinars.empty}">
+                            <div th:each="webinar : ${webinars}" class="webinar-card">
+                                <div class="webinar-header">
+                                    <div class="webinar-status" 
+                                         th:classappend="${webinar.startTime.isBefore(T(java.time.LocalDateTime).now())} ? 'past' : 'upcoming'">
+                                        <i th:class="${webinar.startTime.isBefore(T(java.time.LocalDateTime).now())} ? 'fas fa-check' : 'fas fa-clock'"></i>
+                                        <span th:text="${webinar.startTime.isBefore(T(java.time.LocalDateTime).now())} ? 'Завершен' : 'Предстоящий'">Статус</span>
+                                    </div>
+                                    <div class="webinar-duration">
+                                        <i class="fas fa-clock"></i>
+                                        <span th:text="${webinar.duration}">90</span> мин
+                                    </div>
+                                </div>
+                                
+                                <div class="webinar-content">
+                                    <h3 class="webinar-title" th:text="${webinar.title}">Название вебинара</h3>
+                                    <p class="webinar-description" th:text="${webinar.description}">Описание вебинара</p>
+                                    
+                                    <div class="webinar-meta">
+                                        <div class="meta-item">
+                                            <i class="fas fa-calendar"></i>
+                                            <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата и время</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-users"></i>
+                                            <span th:text="${webinar.participants.size()}">0</span> / <span th:text="${webinar.maxParticipants}">50</span> участников
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Tab -->
+                <div class="tab-pane" id="teacher">
+                    <div class="content-section">
+                        <h2>Преподаватель</h2>
+                        
+                        <div class="teacher-card">
+                            <div class="teacher-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="teacher-info">
+                                <h3 class="teacher-name" th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Имя преподавателя</h3>
+                                <p class="teacher-email" th:text="${course.teacher.email}">email@example.com</p>
+                                <div class="teacher-stats">
+                                    <div class="stat-item">
+                                        <i class="fas fa-book"></i>
+                                        <span>Курсов: <span th:text="${course.teacher.teachingCourses.size()}">0</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <footer class="bg-light text-center text-lg-start mt-auto py-3">
-        <div class="container">
-            <p class="text-muted mb-0">&copy; 2025 Online School. Все права защищены.</p>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script th:inline="javascript">
-    /*<![CDATA[*/
-    function likeCourse(button, courseId) {
-        const token = $("meta[name='csrf-token']").attr("content");
-        const header = $("meta[name='csrf-header']").attr("content");
-
-        const isLiked = $(button).hasClass('active');
-        const url = isLiked ? '/api/courses/' + courseId + '/unlike' : '/api/courses/' + courseId + '/like';
-
-        $.ajax({
-            type: 'POST',
-            url: url,
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader(header, token);
-            },
-            success: function(response) {
-                const likesCountSpan = $(button).find('.likes-count');
-                const currentLikes = parseInt(likesCountSpan.text());
-                const icon = $(button).find('i');
-
-                if (isLiked) {
-                    likesCountSpan.text(currentLikes - 1);
-                    icon.removeClass('fas fa-heart').addClass('far fa-heart');
-                    $(button).removeClass('active');
-                } else {
-                    likesCountSpan.text(currentLikes + 1);
-                    icon.removeClass('far fa-heart').addClass('fas fa-heart');
-                    $(button).addClass('active');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error liking/unliking course:', error);
-                alert('Произошла ошибка при обработке лайка. Пожалуйста, попробуйте еще раз.');
-            }
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                
+                // Remove active class from all tabs and panes
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding pane
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
         });
-    }
-    /*]]>*/
     </script>
 </body>
 </html> 

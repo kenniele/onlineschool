@@ -46,22 +46,21 @@ public class User implements UserDetails {
     private String lastName;
 
     @NotNull
+    @Builder.Default
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.STUDENT;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
+    @Builder.Default
     @Column(name = "active")
     private boolean active = true;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        if (role == null) {
-            role = Role.STUDENT;
-        }
     }
 
     @Override
@@ -95,5 +94,10 @@ public class User implements UserDetails {
     @JsonIgnore
     public boolean isEnabled() {
         return active;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
     }
 }

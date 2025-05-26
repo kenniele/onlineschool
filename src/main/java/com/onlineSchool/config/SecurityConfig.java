@@ -1,8 +1,11 @@
 package com.onlineSchool.config;
 
+import com.onlineSchool.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,30 +20,45 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("!test")
 public class SecurityConfig {
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // Разрешить доступ к главной странице и публичным страницам (высший приоритет)
+                .requestMatchers("/", "/courses", "/courses/**").permitAll()
                 // Разрешить доступ ко всем статическим ресурсам
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/*.html", "/*.ico").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/*.html", "/*.ico").permitAll()
                 // Разрешить доступ к страницам авторизации и регистрации
-                .requestMatchers("/", "/login", "/register", "/courses", "/h2-console/**").permitAll()
+                .requestMatchers("/login", "/register", "/h2-console/**").permitAll()
+                // Вебинары только для аутентифицированных пользователей
+                .requestMatchers("/webinars", "/webinars/**").authenticated()
+                // Административные страницы только для админов
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Страницы учителей только для учителей
+                .requestMatchers("/teacher/**").hasRole("TEACHER")
+                // Страницы студентов только для студентов
+                .requestMatchers("/student/**").hasRole("STUDENT")
+                // API endpoints требуют аутентификации
+                .requestMatchers("/api/**").authenticated()
                 // Все остальные запросы требуют аутентификации
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login") // Указываем кастомную страницу логина
-                .loginProcessingUrl("/login") // URL, на который будет отправляться форма логина
-                .defaultSuccessUrl("/", true) // Изменил на /
-                .failureUrl("/login?error=true") // Страница при ошибке логина
-                .permitAll() // Разрешаем доступ к элементам формы логина всем
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/dashboard", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
             )
             .logout(logout -> logout
-                .logoutUrl("/logout") // URL для выхода
-                .logoutSuccessUrl("/login?logout=true") // Страница после успешного выхода
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
-            );
+            )
+            .userDetailsService(customUserDetailsService);
 
         return http.build();
     }

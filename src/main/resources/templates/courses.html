@@ -1,56 +1,212 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Курсы - Online School</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/modern-style.css}" rel="stylesheet">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <div class="container mt-4">
-        <h1>Доступные курсы</h1>
-
-        <div class="row">
-            <!-- Пример карточки курса (эти данные должны приходить из бэкенда) -->
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Основы Java программирования</h5>
-                        <p class="card-text">Изучите основы Java и объектно-ориентированного программирования.</p>
-                        <p class="card-text"><small class="text-muted">Преподаватель: Иван Иванов</small></p>
-                        <a href="#" class="btn btn-primary">Подробнее</a>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <i class="fas fa-graduation-cap"></i>
+                    Наши курсы
+                </h1>
+                <p class="hero-subtitle">
+                    Выберите курс и начните свое обучение уже сегодня
+                </p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" th:text="${totalCourses}">0</span>
+                        <span class="stat-label">Активных курсов</span>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Web-разработка</h5>
-                        <p class="card-text">HTML, CSS, JavaScript и фреймворки для современной веб-разработки.</p>
-                        <p class="card-text"><small class="text-muted">Преподаватель: Мария Петрова</small></p>
-                        <a href="#" class="btn btn-primary">Подробнее</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Spring Framework</h5>
-                        <p class="card-text">Изучите популярный фреймворк для разработки на Java.</p>
-                        <p class="card-text"><small class="text-muted">Преподаватель: Алексей Смирнов</small></p>
-                        <a href="#" class="btn btn-primary">Подробнее</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Конец примера карточек курсов -->
         </div>
-    </div>
+    </section>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Courses Section -->
+    <section class="courses-section">
+        <div class="container">
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filters-header">
+                    <h2>Все курсы</h2>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filters-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="courseSearch" placeholder="Поиск курсов...">
+                    </div>
+                    <select id="sortSelect" class="sort-select">
+                        <option value="title">По названию</option>
+                        <option value="teacher">По преподавателю</option>
+                        <option value="date">По дате</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Courses Grid -->
+            <div class="courses-grid" id="coursesGrid">
+                <div th:if="${courses.empty}" class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h3>Курсы не найдены</h3>
+                    <p>В данный момент нет доступных курсов</p>
+                </div>
+
+                <div th:each="course : ${courses}" class="course-card" 
+                     th:data-title="${course.title}" 
+                     th:data-teacher="${course.teacher.firstName + ' ' + course.teacher.lastName}">
+                    <div class="course-header">
+                        <div class="course-image">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="course-badge" th:if="${course.active}">
+                            <i class="fas fa-check-circle"></i>
+                            Активный
+                        </div>
+                    </div>
+                    
+                    <div class="course-content">
+                        <h3 class="course-title" th:text="${course.title}">Название курса</h3>
+                        <p class="course-description" th:text="${course.description}">Описание курса</p>
+                        
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Преподаватель</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="${#temporals.format(course.startDate, 'dd.MM.yyyy')}">Дата начала</span>
+                            </div>
+                            <div class="meta-item" th:if="${course.price != null}">
+                                <i class="fas fa-ruble-sign"></i>
+                                <span th:text="${course.price}">Цена</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span th:text="${course.students.size()}">0</span> студентов
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-actions">
+                        <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i>
+                            Подробнее
+                        </a>
+                        
+                        <!-- Кнопка записи для студентов -->
+                        <div sec:authorize="hasRole('STUDENT')">
+                            <form th:if="${!course.students.contains(#authentication.principal)}" 
+                                  th:action="@{/student/courses/{id}/enroll(id=${course.id})}" 
+                                  method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-plus"></i>
+                                    Записаться
+                                </button>
+                            </form>
+                            <span th:if="${course.students.contains(#authentication.principal)}" 
+                                  class="enrolled-badge">
+                                <i class="fas fa-check"></i>
+                                Вы записаны
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more-section" style="display: none;">
+                <button class="btn btn-outline-primary load-more-btn">
+                    <i class="fas fa-plus"></i>
+                    Загрузить еще
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <script>
+        // Search functionality
+        document.getElementById('courseSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const courseCards = document.querySelectorAll('.course-card');
+            
+            courseCards.forEach(card => {
+                const title = card.dataset.title.toLowerCase();
+                const teacher = card.dataset.teacher.toLowerCase();
+                
+                if (title.includes(searchTerm) || teacher.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Sort functionality
+        document.getElementById('sortSelect').addEventListener('change', function(e) {
+            const sortBy = e.target.value;
+            const coursesGrid = document.getElementById('coursesGrid');
+            const courseCards = Array.from(document.querySelectorAll('.course-card'));
+            
+            courseCards.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(sortBy) {
+                    case 'title':
+                        aValue = a.dataset.title;
+                        bValue = b.dataset.title;
+                        break;
+                    case 'teacher':
+                        aValue = a.dataset.teacher;
+                        bValue = b.dataset.teacher;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                return aValue.localeCompare(bValue);
+            });
+            
+            courseCards.forEach(card => coursesGrid.appendChild(card));
+        });
+
+        // View toggle
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const view = this.dataset.view;
+                const coursesGrid = document.getElementById('coursesGrid');
+                
+                if (view === 'list') {
+                    coursesGrid.classList.add('list-view');
+                } else {
+                    coursesGrid.classList.remove('list-view');
+                }
+            });
+        });
+    </script>
 </body>
 </html> 

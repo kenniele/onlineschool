@@ -2,6 +2,7 @@ package com.onlineSchool.repository;
 
 import com.onlineSchool.model.Webinar;
 import com.onlineSchool.model.WebinarStatus;
+import com.onlineSchool.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,10 +14,13 @@ import java.util.List;
 @Repository
 public interface WebinarRepository extends JpaRepository<Webinar, Long> {
     List<Webinar> findByCourseId(Long courseId);
+    List<Webinar> findByTeacher(User teacher);
     List<Webinar> findByTeacherId(Long teacherId);
     List<Webinar> findByStatus(WebinarStatus status);
     List<Webinar> findByStartTimeAfter(LocalDateTime dateTime);
     List<Webinar> findByStartTimeBefore(LocalDateTime dateTime);
+    List<Webinar> findByParticipantsContaining(User participant);
+    List<Webinar> findByTeacherAndStartTimeAfter(User teacher, LocalDateTime dateTime);
     
     @Query("SELECT w FROM Webinar w JOIN w.participants p WHERE p.id = :userId")
     List<Webinar> findByParticipantId(@Param("userId") Long userId);

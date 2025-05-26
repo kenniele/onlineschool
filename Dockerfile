@@ -1,25 +1,28 @@
-FROM maven:3.9.3-eclipse-temurin-17 AS build
+# Используем официальный образ OpenJDK 17
+FROM openjdk:17-jdk-slim
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копирование файлов с зависимостями для оптимизации кэширования
+# Копируем Maven wrapper и pom.xml
+COPY mvnw .
+COPY .mvn .mvn
 COPY pom.xml .
-RUN mvn dependency:go-offline
 
-# Копирование исходного кода
+# Делаем Maven wrapper исполняемым
+RUN chmod +x ./mvnw
+
+# Загружаем зависимости (для кэширования слоев)
+RUN ./mvnw dependency:go-offline -B
+
+# Копируем исходный код
 COPY src ./src
 
-# Сборка приложения
-RUN mvn clean package -DskipTests
+# Собираем приложение
+RUN ./mvnw clean package -DskipTests
 
-# Финальный образ
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-
-# Копирование готового jar-файла
-COPY --from=build /app/target/*.jar app.jar
-
-# Порт, на котором работает приложение
+# Экспонируем порт
 EXPOSE 8080
 
-# Запуск приложения
-ENTRYPOINT ["java","-jar","app.jar"] 
+# Запускаем приложение
+CMD ["java", "-jar", "target/fireStation-1.0.0.jar"] 
