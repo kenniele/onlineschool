@@ -67,6 +67,13 @@
                             <i class="fas fa-users"></i>
                             <span th:text="${webinar.participants != null ? webinar.participants.size() : 0} + ' / ' + ${webinar.maxParticipants ?: 50} + ' участников'">Участники</span>
                         </div>
+                        <div class="meta-item" th:if="${webinar.meetingUrl != null and !webinar.meetingUrl.empty}">
+                            <i class="fas fa-video"></i>
+                            <a th:href="${webinar.meetingUrl}" target="_blank" class="meeting-link">
+                                Ссылка на конференцию
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
                         <div class="meta-item">
                             <i class="fas fa-heart"></i>
                             <span th:text="${webinar.likes != null ? webinar.likes.size() : 0} + ' лайков'">0 лайков</span>
@@ -77,12 +84,26 @@
                 <div class="card-footer">
                     <div class="webinar-actions">
                         <!-- Лайк -->
-                        <form th:action="@{/api/webinars/{id}/like(id=${webinar.id})}" method="post" style="display: inline;">
-                            <button type="submit" class="btn btn-outline" th:classappend="${webinar.likes != null and webinar.likes.contains(#authentication.principal)} ? 'liked'">
+                        <div sec:authorize="isAuthenticated()">
+                            <button type="button" 
+                                    class="btn btn-outline like-btn" 
+                                    th:data-entity-type="WEBINAR"
+                                    th:data-entity-id="${webinar.id}"
+                                    th:classappend="${webinar.likes != null and webinar.likes.stream().anyMatch(like -> like.user.id == #authentication.principal.id)} ? 'liked' : ''">
                                 <i class="fas fa-heart"></i>
-                                <span th:text="${webinar.likes != null and webinar.likes.contains(#authentication.principal)} ? 'Убрать лайк' : 'Лайк'">Лайк</span>
+                                <span class="like-text">
+                                    <span th:text="${webinar.likes != null and webinar.likes.stream().anyMatch(like -> like.user.id == #authentication.principal.id)} ? 'Убрать лайк' : 'Лайк'">Лайк</span>
+                                </span>
+                                <span class="like-count" th:text="'(' + ${webinar.likes != null ? webinar.likes.size() : 0} + ')'">0</span>
                             </button>
-                        </form>
+                        </div>
+                        
+                        <div sec:authorize="!isAuthenticated()">
+                            <a href="/login" class="btn btn-outline">
+                                <i class="fas fa-heart"></i>
+                                Лайк (<span th:text="${webinar.likes != null ? webinar.likes.size() : 0}">0</span>)
+                            </a>
+                        </div>
                         
                         <!-- Действия для студентов -->
                         <div sec:authorize="hasRole('STUDENT')">
@@ -102,10 +123,14 @@
                                 Вы участвуете
                             </span>
                             
-                            <a th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS' and webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
-                               href="#" class="btn btn-warning">
+                            <!-- Кнопка входа в вебинар для участников -->
+                            <a th:if="${webinar.status != null and (webinar.status.name() == 'IN_PROGRESS' or webinar.status.name() == 'SCHEDULED') and webinar.participants != null and webinar.participants.contains(#authentication.principal) and webinar.meetingUrl != null and !webinar.meetingUrl.empty}" 
+                               th:href="${webinar.meetingUrl}" 
+                               target="_blank"
+                               class="btn btn-warning">
                                 <i class="fas fa-video"></i>
                                 Войти в вебинар
+                                <i class="fas fa-external-link-alt"></i>
                             </a>
                         </div>
                         
@@ -307,6 +332,25 @@
             color: var(--accent-blue);
         }
         
+        .meeting-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .meeting-link:hover {
+            color: var(--accent-blue-hover);
+            text-decoration: underline;
+        }
+        
+        .meeting-link i {
+            font-size: 0.875rem;
+        }
+        
         .webinar-actions {
             display: flex;
             gap: 12px;
@@ -434,6 +478,155 @@
                 align-items: flex-start;
             }
         }
+        
+        /* Стили для лайков */
+        .like-btn.liked {
+            background: var(--accent-blue);
+            color: var(--primary-white);
+            border-color: var(--accent-blue);
+        }
+        
+        .like-btn.liked i {
+            color: var(--primary-white);
+        }
+        
+        .like-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        /* Стили для уведомлений */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-heavy);
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .notification-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .notification-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            margin-left: auto;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        
+        .notification-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обработка лайков
+            document.querySelectorAll('.like-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const entityType = this.dataset.entityType;
+                    const entityId = this.dataset.entityId;
+                    
+                    // Отключаем кнопку на время запроса
+                    this.disabled = true;
+                    
+                    fetch(`/api/likes/toggle/${entityType}/${entityId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Обновляем состояние кнопки
+                            if (data.liked) {
+                                this.classList.add('liked');
+                                this.querySelector('.like-text span').textContent = 'Убрать лайк';
+                            } else {
+                                this.classList.remove('liked');
+                                this.querySelector('.like-text span').textContent = 'Лайк';
+                            }
+                            
+                            // Обновляем счетчик
+                            this.querySelector('.like-count').textContent = `(${data.likesCount})`;
+                            
+                            // Показываем уведомление
+                            showNotification(data.message, 'success');
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification(error.message || 'Произошла ошибка при обработке лайка', 'error');
+                    })
+                    .finally(() => {
+                        // Включаем кнопку обратно
+                        this.disabled = false;
+                    });
+                });
+            });
+            
+            // Функция для показа уведомлений (аналогично courses.html)
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                        <span>${message}</span>
+                        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        });
+    </script>
 </body>
 </html> 

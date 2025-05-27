@@ -32,6 +32,10 @@ public class CourseService {
         return courseRepository.findById(id);
     }
 
+    public Optional<Course> findByIdWithDetails(Long id) {
+        return courseRepository.findByIdWithDetails(id);
+    }
+
     public List<Course> findByTeacher(User teacher) {
         return courseRepository.findByTeacher(teacher);
     }
@@ -127,5 +131,15 @@ public class CourseService {
 
     public boolean existsByTitleAndTeacher(String title, User teacher) {
         return courseRepository.existsByTitleAndTeacher(title, teacher);
+    }
+
+    public boolean isStudentEnrolled(Long courseId, String username) {
+        Optional<Course> course = findByIdWithDetails(courseId);
+        if (course.isEmpty()) {
+            return false;
+        }
+        
+        return course.get().getStudents().stream()
+                .anyMatch(student -> student.getUsername().equals(username));
     }
 } 

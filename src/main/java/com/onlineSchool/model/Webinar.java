@@ -29,7 +29,7 @@ public class Webinar {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 1000)
     private String description;
 
     @Column(name = "meeting_url")
@@ -85,6 +85,12 @@ public class Webinar {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> participants = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany
+    @JoinColumn(name = "entity_id", referencedColumnName = "id")
+    @SQLRestriction("entity_type = 'WEBINAR'")
+    private List<Like> likes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

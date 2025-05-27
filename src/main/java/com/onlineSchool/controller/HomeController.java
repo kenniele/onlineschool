@@ -7,6 +7,7 @@ import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -102,18 +103,32 @@ public class HomeController {
     }
 
     @GetMapping("/courses/{id}")
-    public String courseDetails(@PathVariable Long id, Model model) {
+    public String courseDetails(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            var course = courseService.findById(id)
+            var course = courseService.findByIdWithDetails(id)
                     .orElseThrow(() -> new RuntimeException("Course not found"));
             
+            // Загружаем вебинары отдельно
+            var webinars = webinarService.findByCourseId(id);
+            
+            // Проверяем, записан ли текущий пользователь на курс
+            boolean isEnrolled = false;
+            if (userDetails != null) {
+                // Получаем пользователя по username
+                var user = userService.findByUsername(userDetails.getUsername()).orElse(null);
+                if (user != null && user.getRole() == Role.STUDENT) {
+                    isEnrolled = courseService.isStudentEnrolled(id, user.getUsername());
+                }
+            }
+            
             model.addAttribute("course", course);
-            model.addAttribute("webinars", course.getWebinars() != null ? course.getWebinars() : Collections.emptyList());
+            model.addAttribute("webinars", webinars != null ? webinars : Collections.emptyList());
+            model.addAttribute("isEnrolled", isEnrolled);
+            
+            return "course-details";
         } catch (Exception e) {
             return "redirect:/courses";
         }
-        
-        return "course-details";
     }
 
     @GetMapping("/webinars")

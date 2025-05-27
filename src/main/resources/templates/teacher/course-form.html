@@ -1,129 +1,183 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="fragments/header :: head">
+<head th:replace="~{fragments/header :: head}">
     <title th:text="${course.id != null ? 'Редактировать курс' : 'Создать курс'} + ' - Online School'">Создать курс - Online School</title>
 </head>
 <body>
-    <div th:replace="fragments/header :: header"></div>
+    <header th:replace="~{fragments/header :: header}"></header>
     
-    <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h1 class="page-title">
-                    <i class="fas fa-book" th:if="${course.id == null}"></i>
-                    <i class="fas fa-edit" th:if="${course.id != null}"></i>
-                    <span th:text="${course.id != null ? 'Редактировать курс' : 'Создать новый курс'}">Создать новый курс</span>
-                </h1>
-                <p class="page-description" th:text="${course.id != null ? 'Измените информацию о курсе' : 'Заполните информацию о новом курсе'}">
-                    Заполните информацию о новом курсе
-                </p>
-            </div>
+    <main class="container mt-5">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <h1>
+                <i class="fas fa-book" th:if="${course.id == null}"></i>
+                <i class="fas fa-edit" th:if="${course.id != null}"></i>
+                <span th:text="${course.id != null ? 'Редактировать курс' : 'Создать новый курс'}">Создать новый курс</span>
+            </h1>
+            <p class="text-muted" th:text="${course.id != null ? 'Измените информацию о курсе' : 'Заполните информацию о новом курсе'}">
+                Заполните информацию о новом курсе
+            </p>
+        </div>
 
-            <div class="content-wrapper">
-                <div class="form-container">
-                    <form th:action="${course.id != null ? '/teacher/courses/' + course.id : '/teacher/courses'}" 
-                          method="post" 
-                          th:object="${course}" 
-                          class="course-form">
-                        
-                        <div class="form-group">
-                            <label for="title" class="form-label">
-                                <i class="fas fa-heading"></i>
-                                Название курса
-                            </label>
-                            <input type="text" 
-                                   id="title" 
-                                   th:field="*{title}" 
-                                   class="form-input"
-                                   placeholder="Введите название курса"
-                                   required>
-                            <div class="form-help">Выберите краткое и информативное название</div>
-                        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Информация о курсе</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="${course.id != null ? '/teacher/courses/' + course.id : '/teacher/courses'}" 
+                              method="post" 
+                              th:object="${course}" 
+                              class="course-form">
+                            
+                            <div class="form-group mb-4">
+                                <label for="title" class="form-label">
+                                    <i class="fas fa-heading"></i>
+                                    Название курса
+                                </label>
+                                <input type="text" 
+                                       id="title" 
+                                       th:field="*{title}" 
+                                       class="form-control"
+                                       placeholder="Введите название курса"
+                                       required>
+                                <div class="form-help">Выберите краткое и информативное название</div>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="description" class="form-label">
-                                <i class="fas fa-align-left"></i>
-                                Описание курса
-                            </label>
-                            <textarea id="description" 
-                                      th:field="*{description}" 
-                                      class="form-textarea"
-                                      rows="4"
-                                      placeholder="Опишите содержание курса, цели обучения и что получат студенты"
-                                      required></textarea>
-                            <div class="form-help">Подробно опишите курс, чтобы студенты понимали, что они изучат</div>
-                        </div>
+                            <div class="form-group mb-4">
+                                <label for="description" class="form-label">
+                                    <i class="fas fa-align-left"></i>
+                                    Описание курса
+                                </label>
+                                <textarea id="description" 
+                                          th:field="*{description}" 
+                                          class="form-control"
+                                          rows="6"
+                                          placeholder="Опишите содержание курса, цели обучения и что получат студенты"
+                                          required></textarea>
+                                <div class="form-help">Подробно опишите курс, чтобы студенты понимали, что они изучат</div>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="imageUrl" class="form-label">
-                                <i class="fas fa-image"></i>
-                                URL изображения курса
-                            </label>
-                            <input type="url" 
-                                   id="imageUrl" 
-                                   th:field="*{imageUrl}" 
-                                   class="form-input"
-                                   placeholder="https://example.com/image.jpg">
-                            <div class="form-help">Необязательно. Ссылка на изображение для обложки курса</div>
-                        </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="startDate" class="form-label">
+                                            <i class="fas fa-calendar-start"></i>
+                                            Дата начала
+                                        </label>
+                                        <input type="datetime-local" 
+                                               id="startDate" 
+                                               th:field="*{startDate}" 
+                                               class="form-control"
+                                               required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="endDate" class="form-label">
+                                            <i class="fas fa-calendar-check"></i>
+                                            Дата окончания
+                                        </label>
+                                        <input type="datetime-local" 
+                                               id="endDate" 
+                                               th:field="*{endDate}" 
+                                               class="form-control"
+                                               required>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-toggle-on"></i>
-                                Статус курса
-                            </label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-label">
+                            <div class="form-group mb-4">
+                                <label for="price" class="form-label">
+                                    <i class="fas fa-ruble-sign"></i>
+                                    Цена курса
+                                </label>
+                                <input type="number" 
+                                       id="price" 
+                                       th:field="*{price}" 
+                                       class="form-control"
+                                       placeholder="0"
+                                       min="0"
+                                       step="0.01">
+                                <div class="form-help">Оставьте пустым для бесплатного курса</div>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label for="imageUrl" class="form-label">
+                                    <i class="fas fa-image"></i>
+                                    URL изображения курса
+                                </label>
+                                <input type="url" 
+                                       id="imageUrl" 
+                                       th:field="*{imageUrl}" 
+                                       class="form-control"
+                                       placeholder="https://example.com/image.jpg">
+                                <div class="form-help">Необязательно. Ссылка на изображение для обложки курса</div>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <div class="form-check">
                                     <input type="checkbox" 
                                            th:field="*{active}" 
-                                           class="form-checkbox">
-                                    <span class="checkbox-text">Курс активен (доступен для записи студентов)</span>
-                                </label>
+                                           class="form-check-input"
+                                           id="active">
+                                    <label class="form-check-label" for="active">
+                                        <i class="fas fa-toggle-on"></i>
+                                        Курс активен (доступен для записи студентов)
+                                    </label>
+                                </div>
+                                <div class="form-help">Активные курсы отображаются в каталоге и доступны для записи</div>
                             </div>
-                            <div class="form-help">Активные курсы отображаются в каталоге и доступны для записи</div>
-                        </div>
 
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                <span th:text="${course.id != null ? 'Сохранить изменения' : 'Создать курс'}">Создать курс</span>
-                            </button>
-                            <a href="/teacher/courses" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i>
-                                Отменить
-                            </a>
-                        </div>
-                    </form>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    <span th:text="${course.id != null ? 'Сохранить изменения' : 'Создать курс'}">Создать курс</span>
+                                </button>
+                                <a href="/teacher/courses" class="btn btn-outline">
+                                    <i class="fas fa-times"></i>
+                                    Отменить
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Превью курса -->
-                <div class="preview-container" th:if="${course.id != null}">
-                    <h3 class="preview-title">
-                        <i class="fas fa-eye"></i>
-                        Превью курса
-                    </h3>
-                    <div class="course-preview">
-                        <div class="preview-image">
-                            <img th:src="${course.imageUrl != null ? course.imageUrl : '/images/default-course.jpg'}" 
-                                 th:alt="${course.title}" 
-                                 class="preview-img">
-                        </div>
-                        <div class="preview-content">
-                            <h4 th:text="${course.title}">Название курса</h4>
-                            <p th:text="${course.description}">Описание курса</p>
-                            <div class="preview-meta">
-                                <span class="meta-item">
-                                    <i class="fas fa-users"></i>
-                                    <span th:text="${course.students?.size() ?: 0} + ' студентов'">0 студентов</span>
-                                </span>
-                                <span class="meta-item">
-                                    <i class="fas fa-video"></i>
-                                    <span th:text="${course.webinars?.size() ?: 0} + ' вебинаров'">0 вебинаров</span>
-                                </span>
-                                <span class="meta-item" th:classappend="${course.active ? 'status-active' : 'status-inactive'}">
-                                    <i class="fas fa-circle"></i>
-                                    <span th:text="${course.active ? 'Активный' : 'Неактивный'}">Активный</span>
-                                </span>
+            <!-- Превью курса -->
+            <div class="col-lg-4" th:if="${course.id != null}">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-eye"></i>
+                            Превью курса
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="course-preview">
+                            <div class="preview-image mb-3">
+                                <img th:src="${course.imageUrl != null ? course.imageUrl : '/images/default-course.jpg'}" 
+                                     th:alt="${course.title}" 
+                                     class="preview-img">
+                            </div>
+                            <div class="preview-content">
+                                <h4 class="preview-title" th:text="${course.title}">Название курса</h4>
+                                <p class="preview-description" th:text="${course.description}">Описание курса</p>
+                                <div class="preview-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-users"></i>
+                                        <span th:text="${course.students?.size() ?: 0} + ' студентов'">0 студентов</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-video"></i>
+                                        <span th:text="${course.webinars?.size() ?: 0} + ' вебинаров'">0 вебинаров</span>
+                                    </div>
+                                    <div class="meta-item" th:classappend="${course.active ? 'status-active' : 'status-inactive'}">
+                                        <i class="fas fa-circle"></i>
+                                        <span th:text="${course.active ? 'Активный' : 'Неактивный'}">Активный</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -132,45 +186,212 @@
         </div>
     </main>
     
-    <div th:replace="fragments/footer :: footer"></div>
-    
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .page-header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border-gray);
+            margin-bottom: 40px;
+        }
+        
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--primary-black);
+        }
+        
+        .page-header .text-muted {
+            font-size: 1.125rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-black);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-label i {
+            color: var(--accent-blue);
+            width: 16px;
+        }
+        
+        .form-help {
+            font-size: 0.875rem;
+            color: var(--medium-gray);
+            margin-top: 6px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-gray);
+        }
+        
+        .preview-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-gray);
+        }
+        
+        .preview-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-black);
+        }
+        
+        .preview-description {
+            color: var(--dark-gray);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        
+        .preview-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--medium-gray);
+        }
+        
+        .meta-item i {
+            width: 14px;
+            color: var(--accent-blue);
+        }
+        
+        .status-active {
+            color: var(--success-green);
+        }
+        
+        .status-inactive {
+            color: var(--medium-gray);
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-gray);
+        }
+        
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+        }
+        
+        .form-check-label {
+            margin: 0;
+            font-weight: 500;
+            color: var(--primary-black);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+
     <script>
-        // Превью изображения при изменении URL
-        document.getElementById('imageUrl').addEventListener('input', function() {
-            const url = this.value;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Превью изображения при изменении URL
+            const imageUrlInput = document.getElementById('imageUrl');
             const previewImg = document.querySelector('.preview-img');
-            if (previewImg && url) {
-                previewImg.src = url;
-                previewImg.onerror = function() {
-                    this.src = '/images/default-course.jpg';
-                };
+            
+            if (imageUrlInput && previewImg) {
+                imageUrlInput.addEventListener('input', function() {
+                    const url = this.value;
+                    if (url) {
+                        previewImg.src = url;
+                        previewImg.onerror = function() {
+                            this.src = '/images/default-course.jpg';
+                        };
+                    } else {
+                        previewImg.src = '/images/default-course.jpg';
+                    }
+                });
             }
-        });
 
-        // Превью названия и описания
-        document.getElementById('title').addEventListener('input', function() {
-            const title = this.value;
-            const previewTitle = document.querySelector('.preview-content h4');
-            if (previewTitle) {
-                previewTitle.textContent = title || 'Название курса';
+            // Превью названия
+            const titleInput = document.getElementById('title');
+            const previewTitle = document.querySelector('.preview-title');
+            
+            if (titleInput && previewTitle) {
+                titleInput.addEventListener('input', function() {
+                    const title = this.value;
+                    previewTitle.textContent = title || 'Название курса';
+                });
             }
-        });
 
-        document.getElementById('description').addEventListener('input', function() {
-            const description = this.value;
-            const previewDescription = document.querySelector('.preview-content p');
-            if (previewDescription) {
-                previewDescription.textContent = description || 'Описание курса';
+            // Превью описания
+            const descriptionInput = document.getElementById('description');
+            const previewDescription = document.querySelector('.preview-description');
+            
+            if (descriptionInput && previewDescription) {
+                descriptionInput.addEventListener('input', function() {
+                    const description = this.value;
+                    previewDescription.textContent = description || 'Описание курса';
+                });
             }
-        });
 
-        // Превью статуса активности
-        document.querySelector('input[name="active"]').addEventListener('change', function() {
-            const isActive = this.checked;
+            // Превью статуса активности
+            const activeInput = document.querySelector('input[name="active"]');
             const statusElement = document.querySelector('.preview-meta .meta-item:last-child');
-            if (statusElement) {
-                statusElement.className = 'meta-item ' + (isActive ? 'status-active' : 'status-inactive');
-                statusElement.querySelector('span').textContent = isActive ? 'Активный' : 'Неактивный';
+            
+            if (activeInput && statusElement) {
+                activeInput.addEventListener('change', function() {
+                    const isActive = this.checked;
+                    statusElement.className = 'meta-item ' + (isActive ? 'status-active' : 'status-inactive');
+                    statusElement.querySelector('span').textContent = isActive ? 'Активный' : 'Неактивный';
+                });
+            }
+            
+            // Валидация дат
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            
+            if (startDateInput && endDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    endDateInput.min = this.value;
+                });
+                
+                endDateInput.addEventListener('change', function() {
+                    if (startDateInput.value && this.value < startDateInput.value) {
+                        alert('Дата окончания не может быть раньше даты начала');
+                        this.value = '';
+                    }
+                });
             }
         });
     </script>

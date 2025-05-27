@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: head}"></head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <main class="container mt-5">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>
+                        <i class="fas fa-video"></i>
+                        Управление вебинарами
+                    </h1>
+                    <p class="text-muted">Администрирование всех вебинаров платформы</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/admin" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i>
+                        Назад в админ панель
+                    </a>
+                    <a href="/admin/webinars/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Создать вебинар
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid mb-5">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" th:text="${webinars != null ? webinars.size() : 0}">0</span>
+                    <span class="stat-label">Всего вебинаров</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" th:text="${webinars != null ? webinars.stream().filter(w -> w.status.name() == 'SCHEDULED').count() : 0}">0</span>
+                    <span class="stat-label">Запланированных</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" th:text="${webinars != null ? webinars.stream().filter(w -> w.status.name() == 'IN_PROGRESS').count() : 0}">0</span>
+                    <span class="stat-label">В процессе</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" th:text="${webinars != null ? webinars.stream().filter(w -> w.status.name() == 'COMPLETED').count() : 0}">0</span>
+                    <span class="stat-label">Завершенных</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Webinars Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-list"></i>
+                    Список вебинаров
+                </h2>
+            </div>
+            <div class="card-body">
+                <div th:if="${webinars != null and !webinars.empty}" class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Преподаватель</th>
+                                <th>Дата и время</th>
+                                <th>Статус</th>
+                                <th>Участники</th>
+                                <th>Курс</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="webinar : ${webinars}">
+                                <td th:text="${webinar.id}">1</td>
+                                <td>
+                                    <div class="webinar-title">
+                                        <strong th:text="${webinar.title}">Название вебинара</strong>
+                                        <small class="text-muted d-block" th:text="${webinar.description}">Описание</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="teacher-info" th:if="${webinar.teacher != null}">
+                                        <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Имя преподавателя</span>
+                                        <small class="text-muted d-block" th:text="${webinar.teacher.email}">email@example.com</small>
+                                    </div>
+                                    <span th:if="${webinar.teacher == null}" class="text-muted">Не назначен</span>
+                                </td>
+                                <td>
+                                    <div th:if="${webinar.startTime != null}">
+                                        <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy')}">01.01.2024</span>
+                                        <small class="text-muted d-block" th:text="${#temporals.format(webinar.startTime, 'HH:mm')}">10:00</small>
+                                    </div>
+                                    <span th:if="${webinar.startTime == null}" class="text-muted">Не указана</span>
+                                </td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${webinar.status.name() == 'SCHEDULED'} ? 'badge-primary' : 
+                                                         (${webinar.status.name() == 'IN_PROGRESS'} ? 'badge-warning' : 
+                                                         (${webinar.status.name() == 'COMPLETED'} ? 'badge-success' : 'badge-danger'))"
+                                          th:text="${webinar.status.name() == 'SCHEDULED'} ? 'Запланирован' : 
+                                                   (${webinar.status.name() == 'IN_PROGRESS'} ? 'В процессе' : 
+                                                   (${webinar.status.name() == 'COMPLETED'} ? 'Завершен' : 'Отменен'))">
+                                        Статус
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:text="${webinar.participants != null ? webinar.participants.size() : 0}">0</span>
+                                    <span th:if="${webinar.maxParticipants != null}" th:text="'/' + ${webinar.maxParticipants}"> / 50</span>
+                                </td>
+                                <td>
+                                    <span th:if="${webinar.course != null}" th:text="${webinar.course.title}">Название курса</span>
+                                    <span th:if="${webinar.course == null}" class="text-muted">Не привязан</span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a th:href="@{/webinars/{id}(id=${webinar.id})}" 
+                                           class="btn btn-outline btn-sm" 
+                                           title="Просмотреть">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/admin/webinars/edit/{id}(id=${webinar.id})}" 
+                                           class="btn btn-primary btn-sm" 
+                                           title="Редактировать">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form th:action="@{/admin/webinars/delete/{id}(id=${webinar.id})}" 
+                                              method="post" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Вы уверены, что хотите удалить этот вебинар?')">
+                                            <button type="submit" 
+                                                    class="btn btn-danger btn-sm" 
+                                                    title="Удалить">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Empty State -->
+                <div th:if="${webinars == null or webinars.empty}" class="empty-state text-center">
+                    <div class="empty-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3>Вебинары не найдены</h3>
+                    <p>В системе пока нет созданных вебинаров</p>
+                    <a href="/admin/webinars/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Создать первый вебинар
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        
+        .webinar-title strong {
+            color: var(--primary-black);
+            font-weight: 600;
+        }
+        
+        .teacher-info {
+            min-width: 150px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .table th {
+            font-weight: 600;
+            color: var(--dark-gray);
+            border-bottom: 2px solid var(--border-gray);
+            padding: 16px 12px;
+        }
+        
+        .table td {
+            padding: 16px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        .table tbody tr:hover {
+            background: var(--hover-gray);
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header-actions {
+                justify-content: stretch;
+            }
+            
+            .header-actions .btn {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html> 

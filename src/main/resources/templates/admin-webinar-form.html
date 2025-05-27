@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: head}"></head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <main class="container mt-5">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>
+                        <i class="fas fa-video"></i>
+                        <span th:text="${webinar.id != null ? 'Редактировать вебинар' : 'Создать вебинар'}">Создать вебинар</span>
+                    </h1>
+                    <p class="text-muted">Заполните информацию о вебинаре</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/admin/webinars" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i>
+                        Назад к списку
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-edit"></i>
+                    Информация о вебинаре
+                </h2>
+            </div>
+            <div class="card-body">
+                <form th:action="${webinar.id != null ? '/admin/webinars/update' : '/admin/webinars/save'}" 
+                      method="post" 
+                      th:object="${webinar}" 
+                      class="webinar-form">
+                    
+                    <input type="hidden" th:field="*{id}" th:if="${webinar.id != null}">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title" class="form-label">
+                                <i class="fas fa-heading"></i>
+                                Название вебинара *
+                            </label>
+                            <input type="text" 
+                                   id="title" 
+                                   th:field="*{title}" 
+                                   class="form-control"
+                                   placeholder="Введите название вебинара"
+                                   required>
+                            <div class="form-help">Краткое и информативное название</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left"></i>
+                            Описание
+                        </label>
+                        <textarea id="description" 
+                                  th:field="*{description}" 
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="Опишите содержание и цели вебинара"></textarea>
+                        <div class="form-help">Подробное описание того, что будет рассматриваться на вебинаре</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacher" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Преподаватель *
+                            </label>
+                            <select id="teacher" 
+                                    th:field="*{teacher}" 
+                                    class="form-control form-select"
+                                    required>
+                                <option value="">Выберите преподавателя</option>
+                                <option th:each="teacher : ${teachers}" 
+                                        th:value="${teacher.id}" 
+                                        th:text="${teacher.firstName + ' ' + teacher.lastName + ' (' + teacher.email + ')'}"
+                                        th:selected="${webinar.teacher != null && webinar.teacher.id == teacher.id}">
+                                    Имя преподавателя
+                                </option>
+                            </select>
+                            <div class="form-help">Выберите преподавателя, который будет вести вебинар</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="course" class="form-label">
+                                <i class="fas fa-book"></i>
+                                Курс (необязательно)
+                            </label>
+                            <select id="course" 
+                                    th:field="*{course}" 
+                                    class="form-control form-select">
+                                <option value="">Не привязан к курсу</option>
+                                <option th:each="course : ${courses}" 
+                                        th:value="${course.id}" 
+                                        th:text="${course.title}"
+                                        th:selected="${webinar.course != null && webinar.course.id == course.id}">
+                                    Название курса
+                                </option>
+                            </select>
+                            <div class="form-help">Выберите курс, если вебинар является его частью</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime" class="form-label">
+                                <i class="fas fa-calendar"></i>
+                                Дата и время начала *
+                            </label>
+                            <input type="datetime-local" 
+                                   id="startTime" 
+                                   th:field="*{startTime}" 
+                                   class="form-control"
+                                   required>
+                            <div class="form-help">Укажите дату и время начала вебинара</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration" class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Продолжительность (минуты)
+                            </label>
+                            <input type="number" 
+                                   id="duration" 
+                                   th:field="*{duration}" 
+                                   class="form-control"
+                                   placeholder="90"
+                                   min="15"
+                                   max="480">
+                            <div class="form-help">Продолжительность в минутах (по умолчанию 90)</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maxParticipants" class="form-label">
+                                <i class="fas fa-users"></i>
+                                Максимум участников
+                            </label>
+                            <input type="number" 
+                                   id="maxParticipants" 
+                                   th:field="*{maxParticipants}" 
+                                   class="form-control"
+                                   placeholder="50"
+                                   min="1"
+                                   max="1000">
+                            <div class="form-help">Максимальное количество участников (по умолчанию 50)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status" class="form-label">
+                                <i class="fas fa-flag"></i>
+                                Статус
+                            </label>
+                            <select id="status" 
+                                    th:field="*{status}" 
+                                    class="form-control form-select">
+                                <option value="SCHEDULED">Запланирован</option>
+                                <option value="IN_PROGRESS">В процессе</option>
+                                <option value="COMPLETED">Завершен</option>
+                                <option value="CANCELLED">Отменен</option>
+                            </select>
+                            <div class="form-help">Текущий статус вебинара</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="meetingUrl" class="form-label">
+                            <i class="fas fa-link"></i>
+                            Ссылка на конференцию
+                        </label>
+                        <input type="url" 
+                               id="meetingUrl" 
+                               th:field="*{meetingUrl}" 
+                               class="form-control"
+                               placeholder="https://zoom.us/j/123456789">
+                        <div class="form-help">Ссылка на Zoom, Meet или другую платформу для проведения вебинара</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span th:text="${webinar.id != null ? 'Сохранить изменения' : 'Создать вебинар'}">Создать вебинар</span>
+                        </button>
+                        <a href="/admin/webinars" class="btn btn-outline">
+                            <i class="fas fa-times"></i>
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        
+        .webinar-form {
+            max-width: 800px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+        
+        .form-label i {
+            color: var(--accent-blue);
+            width: 16px;
+        }
+        
+        .form-help {
+            font-size: 0.875rem;
+            color: var(--medium-gray);
+            margin-top: 4px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-gray);
+            margin-top: 32px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header-actions {
+                justify-content: stretch;
+            }
+            
+            .header-actions .btn {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            
+            .form-group {
+                margin-bottom: 16px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html> 

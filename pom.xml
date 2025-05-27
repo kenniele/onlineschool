@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>com.onlineSchool</groupId>
-    <artifactId>fireStation</artifactId>
+    <artifactId>onlineschool</artifactId>
     <version>1.0.0</version>
     <name>Online School</name>
     <description>Online School Information System</description>

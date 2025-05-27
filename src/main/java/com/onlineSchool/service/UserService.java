@@ -1,6 +1,7 @@
 package com.onlineSchool.service;
 
 import com.onlineSchool.model.User;
+import com.onlineSchool.model.Role;
 import com.onlineSchool.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -111,5 +112,16 @@ public class UserService {
 
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    public List<User> findByRole(String roleName) {
+        try {
+            Role role = Role.valueOf(roleName.toUpperCase());
+            return userRepository.findAll().stream()
+                    .filter(user -> user.getRole() == role)
+                    .toList();
+        } catch (IllegalArgumentException e) {
+            return List.of();
+        }
     }
 }

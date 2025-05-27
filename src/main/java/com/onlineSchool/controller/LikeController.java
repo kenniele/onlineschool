@@ -2,6 +2,7 @@ package com.onlineSchool.controller;
 
 import com.onlineSchool.model.EntityType;
 import com.onlineSchool.model.Like;
+import com.onlineSchool.model.User;
 import com.onlineSchool.service.LikeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/likes")
@@ -84,5 +87,44 @@ public class LikeController {
             @PathVariable EntityType entityType,
             @PathVariable Long entityId) {
         return ResponseEntity.ok(likeService.hasLiked(userId, entityId, entityType));
+    }
+
+    @PostMapping("/toggle/{entityType}/{entityId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> toggleLike(
+            @PathVariable EntityType entityType,
+            @PathVariable Long entityId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            User user = (User) userDetails;
+            boolean hasLiked = likeService.hasLiked(user.getId(), entityId, entityType);
+            
+            Map<String, Object> response = new HashMap<>();
+            
+            if (hasLiked) {
+                // Убираем лайк
+                likeService.unlike(user.getId(), entityId, entityType);
+                response.put("liked", false);
+                response.put("message", "Лайк убран");
+            } else {
+                // Ставим лайк
+                likeService.like(user.getId(), entityId, entityType);
+                response.put("liked", true);
+                response.put("message", "Лайк поставлен");
+            }
+            
+            // Получаем новое количество лайков
+            long likesCount = likeService.countLikes(entityId, entityType);
+            response.put("likesCount", likesCount);
+            response.put("success", true);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Ошибка: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

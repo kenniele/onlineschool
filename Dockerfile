@@ -25,4 +25,4 @@ RUN ./mvnw clean package -DskipTests
 EXPOSE 8080
 
 # Запускаем приложение
-CMD ["java", "-jar", "target/fireStation-1.0.0.jar"] 
+CMD ["java", "-jar", "target/onlineschool-1.0.0.jar"] 

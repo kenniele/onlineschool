@@ -13,6 +13,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -26,17 +31,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**") // Отключаем CSRF для API
+            )
             .authorizeHttpRequests(auth -> auth
                 // Разрешить доступ ко всем статическим ресурсам
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/*.html", "/*.ico", "/favicon.ico").permitAll()
                 // Разрешить доступ к страницам авторизации и регистрации
                 .requestMatchers("/login", "/register", "/h2-console/**").permitAll()
                 // Разрешить доступ к главной странице и публичным страницам
-                .requestMatchers("/", "/courses", "/courses/**").permitAll()
+                .requestMatchers("/", "/courses", "/courses/**", "/webinars", "/webinars/**").permitAll()
+                // Разрешить публичный доступ к просмотру курсов и вебинаров через API
+                .requestMatchers("GET", "/api/courses/**", "/api/webinars/**").permitAll()
                 // Профиль требует аутентификации
                 .requestMatchers("/profile").authenticated()
-                // Вебинары только для аутентифицированных пользователей
-                .requestMatchers("/webinars", "/webinars/**").authenticated()
                 // Дашборд требует аутентификации
                 .requestMatchers("/dashboard").authenticated()
                 // Административные страницы только для админов
@@ -45,7 +54,7 @@ public class SecurityConfig {
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 // Страницы студентов только для студентов
                 .requestMatchers("/student/**").hasRole("STUDENT")
-                // API endpoints требуют аутентификации
+                // API endpoints требуют аутентификации (кроме GET для курсов и вебинаров)
                 .requestMatchers("/api/**").authenticated()
                 // Все остальные запросы разрешены
                 .anyRequest().permitAll()
@@ -65,6 +74,18 @@ public class SecurityConfig {
             .userDetailsService(customUserDetailsService);
 
         return http.build();
+    }
+    
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(false);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
     
     @Bean

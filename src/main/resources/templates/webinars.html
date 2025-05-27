@@ -123,6 +123,13 @@
                                 <i class="fas fa-users"></i>
                                 <span th:text="${webinar.participants != null ? webinar.participants.size() : 0} + ' / ' + ${webinar.maxParticipants ?: 50} + ' участников'">Участники</span>
                             </div>
+                            <div class="meta-item" th:if="${webinar.meetingUrl != null and !webinar.meetingUrl.empty}">
+                                <i class="fas fa-video"></i>
+                                <a th:href="${webinar.meetingUrl}" target="_blank" class="meeting-link">
+                                    Видеоконференция
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                     
@@ -152,9 +159,12 @@
                                 </span>
                                 
                                 <a th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS' and webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
-                                   href="#" class="btn btn-warning btn-sm">
+                                   th:href="${webinar.meetingUrl != null and !webinar.meetingUrl.empty ? webinar.meetingUrl : '#'}" 
+                                   target="_blank"
+                                   class="btn btn-warning btn-sm">
                                     <i class="fas fa-video"></i>
                                     Войти в вебинар
+                                    <i class="fas fa-external-link-alt" th:if="${webinar.meetingUrl != null and !webinar.meetingUrl.empty}"></i>
                                 </a>
                             </div>
                         </div>
@@ -283,6 +293,25 @@
                 width: 100%;
                 justify-content: center;
             }
+        }
+        
+        .meeting-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .meeting-link:hover {
+            color: var(--accent-blue-hover);
+            text-decoration: underline;
+        }
+        
+        .meeting-link i {
+            font-size: 0.75rem;
         }
     </style>
 

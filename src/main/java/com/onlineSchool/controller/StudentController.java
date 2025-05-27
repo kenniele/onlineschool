@@ -7,13 +7,16 @@ import com.onlineSchool.service.CourseService;
 import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/student")
@@ -66,6 +69,30 @@ public class StudentController {
         courseService.enrollStudent(id, student);
         
         return "redirect:/courses/" + id;
+    }
+
+    @PostMapping("/api/courses/{id}/enroll")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> enrollInCourseAjax(@PathVariable Long id, Authentication authentication) {
+        try {
+            User student = userService.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+            
+            courseService.enrollStudent(id, student);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Вы успешно записались на курс!");
+            response.put("enrolled", true);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Ошибка при записи на курс: " + e.getMessage());
+            
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @PostMapping("/courses/{id}/unenroll")

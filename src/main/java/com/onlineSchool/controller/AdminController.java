@@ -1,7 +1,10 @@
 package com.onlineSchool.controller;
 
 import com.onlineSchool.model.User;
+import com.onlineSchool.model.Webinar;
 import com.onlineSchool.service.UserService;
+import com.onlineSchool.service.WebinarService;
+import com.onlineSchool.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,10 +24,14 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
+    private final WebinarService webinarService;
+    private final CourseService courseService;
 
     @Autowired
-    public AdminController(UserService userService) {
+    public AdminController(UserService userService, WebinarService webinarService, CourseService courseService) {
         this.userService = userService;
+        this.webinarService = webinarService;
+        this.courseService = courseService;
     }
 
     @GetMapping
@@ -163,6 +170,65 @@ public class AdminController {
     }
 
     // TODO: Добавить метод для /users/delete/{id}
+
+    @GetMapping("/webinars")
+    public String manageWebinars(Model model) {
+        List<Webinar> webinars = webinarService.findAll();
+        model.addAttribute("webinars", webinars);
+        return "admin-webinars";
+    }
+
+    @GetMapping("/webinars/new")
+    public String showCreateWebinarForm(Model model) {
+        model.addAttribute("webinar", new Webinar());
+        model.addAttribute("courses", courseService.findAll());
+        model.addAttribute("teachers", userService.findByRole("TEACHER"));
+        return "admin-webinar-form";
+    }
+
+    @PostMapping("/webinars/save")
+    public String saveWebinar(@Valid @ModelAttribute("webinar") Webinar webinar,
+                             BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("webinar", webinar);
+            model.addAttribute("courses", courseService.findAll());
+            model.addAttribute("teachers", userService.findByRole("TEACHER"));
+            return "admin-webinar-form";
+        }
+
+        webinarService.save(webinar);
+        return "redirect:/admin/webinars";
+    }
+
+    @GetMapping("/webinars/edit/{id}")
+    public String showEditWebinarForm(@PathVariable("id") Long id, Model model) {
+        Webinar webinar = webinarService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Вебинар с ID:" + id + " не найден"));
+        model.addAttribute("webinar", webinar);
+        model.addAttribute("courses", courseService.findAll());
+        model.addAttribute("teachers", userService.findByRole("TEACHER"));
+        return "admin-webinar-form";
+    }
+
+    @PostMapping("/webinars/update")
+    public String updateWebinar(@Valid @ModelAttribute("webinar") Webinar webinar,
+                               BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("webinar", webinar);
+            model.addAttribute("courses", courseService.findAll());
+            model.addAttribute("teachers", userService.findByRole("TEACHER"));
+            return "admin-webinar-form";
+        }
+
+        webinarService.update(webinar.getId(), webinar);
+        return "redirect:/admin/webinars";
+    }
+
+    @PostMapping("/webinars/delete/{id}")
+    public String deleteWebinar(@PathVariable("id") Long id) {
+        webinarService.deleteById(id);
+        return "redirect:/admin/webinars";
+    }
 
     // Здесь можно будет добавить методы для управления пользователями, курсами и т.д.
     // Например:

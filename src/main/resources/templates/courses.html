@@ -109,7 +109,9 @@
                     </div>
                     
                     <div class="card-body">
-                        <p class="card-subtitle" th:text="${course.description ?: 'Описание курса'}">Описание курса</p>
+                        <div class="course-description">
+                            <p th:text="${course.description ?: 'Описание курса'}">Описание курса</p>
+                        </div>
                         
                         <div class="course-meta mt-3">
                             <div class="meta-item" th:if="${course.startDate != null}">
@@ -152,17 +154,22 @@
                             <!-- Enrollment button for students -->
                             <div sec:authorize="hasRole('STUDENT')">
                                 <form th:if="${course.students != null and !course.students.contains(#authentication.principal)}" 
-                                      th:action="@{/student/courses/{id}/enroll(id=${course.id})}" 
+                                      class="enroll-form"
+                                      th:data-course-id="${course.id}"
                                       method="post" 
                                       style="display: inline;">
-                                    <button type="submit" class="btn btn-outline btn-sm">
+                                    <button type="submit" class="btn btn-outline btn-sm enroll-btn">
                                         <i class="fas fa-plus"></i>
-                                        Записаться
+                                        <span class="btn-text">Записаться</span>
+                                        <span class="btn-loading" style="display: none;">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            Записываемся...
+                                        </span>
                                     </button>
                                 </form>
                                 
                                 <span th:if="${course.students != null and course.students.contains(#authentication.principal)}" 
-                                      class="badge badge-success">
+                                      class="badge badge-success enrolled-badge">
                                     <i class="fas fa-check"></i>
                                     Записан
                                 </span>
@@ -316,6 +323,17 @@
             flex-wrap: wrap;
         }
         
+        .course-description {
+            margin-bottom: 20px;
+        }
+        
+        .course-description p {
+            color: var(--dark-gray);
+            line-height: 1.6;
+            margin: 0;
+            font-size: 0.9375rem;
+        }
+        
         .course-meta {
             border-top: 1px solid var(--border-gray);
             padding-top: 16px;
@@ -411,6 +429,74 @@
             padding-top: 40px;
         }
         
+        /* Стили для уведомлений */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-heavy);
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .notification-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .notification-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            margin-left: auto;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        
+        .notification-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Стили для состояний кнопок */
+        .enroll-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .btn-loading {
+            color: var(--medium-gray);
+        }
+        
         @media (max-width: 768px) {
             .page-header {
                 padding: 40px 0 24px;
@@ -468,5 +554,84 @@
             }
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обработка записи на курс через AJAX
+            document.querySelectorAll('.enroll-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const courseId = this.dataset.courseId;
+                    const button = this.querySelector('.enroll-btn');
+                    const btnText = button.querySelector('.btn-text');
+                    const btnLoading = button.querySelector('.btn-loading');
+                    
+                    // Показываем состояние загрузки
+                    button.disabled = true;
+                    btnText.style.display = 'none';
+                    btnLoading.style.display = 'inline';
+                    
+                    // Отправляем AJAX запрос
+                    fetch(`/student/api/courses/${courseId}/enroll`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Заменяем форму на бейдж "Записан"
+                            const enrolledBadge = document.createElement('span');
+                            enrolledBadge.className = 'badge badge-success enrolled-badge';
+                            enrolledBadge.innerHTML = '<i class="fas fa-check"></i> Записан';
+                            
+                            this.parentNode.replaceChild(enrolledBadge, this);
+                            
+                            // Показываем уведомление
+                            showNotification(data.message, 'success');
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification(error.message || 'Произошла ошибка при записи на курс', 'error');
+                        
+                        // Возвращаем кнопку в исходное состояние
+                        button.disabled = false;
+                        btnText.style.display = 'inline';
+                        btnLoading.style.display = 'none';
+                    });
+                });
+            });
+            
+            // Функция для показа уведомлений
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                        <span>${message}</span>
+                        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Автоматически убираем уведомление через 5 секунд
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        });
+    </script>
 </body>
 </html> 
