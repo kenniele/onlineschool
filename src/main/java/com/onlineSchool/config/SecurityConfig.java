@@ -27,14 +27,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // Разрешить доступ к главной странице и публичным страницам (высший приоритет)
-                .requestMatchers("/", "/courses", "/courses/**").permitAll()
                 // Разрешить доступ ко всем статическим ресурсам
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/*.html", "/*.ico").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/*.html", "/*.ico", "/favicon.ico").permitAll()
                 // Разрешить доступ к страницам авторизации и регистрации
                 .requestMatchers("/login", "/register", "/h2-console/**").permitAll()
+                // Разрешить доступ к главной странице и публичным страницам
+                .requestMatchers("/", "/courses", "/courses/**").permitAll()
+                // Профиль требует аутентификации
+                .requestMatchers("/profile").authenticated()
                 // Вебинары только для аутентифицированных пользователей
                 .requestMatchers("/webinars", "/webinars/**").authenticated()
+                // Дашборд требует аутентификации
+                .requestMatchers("/dashboard").authenticated()
                 // Административные страницы только для админов
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Страницы учителей только для учителей
@@ -43,8 +47,8 @@ public class SecurityConfig {
                 .requestMatchers("/student/**").hasRole("STUDENT")
                 // API endpoints требуют аутентификации
                 .requestMatchers("/api/**").authenticated()
-                // Все остальные запросы требуют аутентификации
-                .anyRequest().authenticated()
+                // Все остальные запросы разрешены
+                .anyRequest().permitAll()
             )
             .formLogin(form -> form
                 .loginPage("/login")

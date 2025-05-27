@@ -1,212 +1,472 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Курсы - Online School</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link th:href="@{/css/modern-style.css}" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/header :: head}"></head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
-
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    <i class="fas fa-graduation-cap"></i>
-                    Наши курсы
-                </h1>
-                <p class="hero-subtitle">
-                    Выберите курс и начните свое обучение уже сегодня
-                </p>
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <span class="stat-number" th:text="${totalCourses}">0</span>
-                        <span class="stat-label">Активных курсов</span>
-                    </div>
-                </div>
-            </div>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <main class="container mt-5">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <h1>Курсы</h1>
+            <p class="text-muted">Изучайте новые навыки с нашими экспертными курсами</p>
         </div>
-    </section>
 
-    <!-- Courses Section -->
-    <section class="courses-section">
-        <div class="container">
-            <!-- Filters -->
-            <div class="filters-section">
-                <div class="filters-header">
-                    <h2>Все курсы</h2>
-                    <div class="view-toggle">
-                        <button class="view-btn active" data-view="grid">
-                            <i class="fas fa-th-large"></i>
-                        </button>
-                        <button class="view-btn" data-view="list">
-                            <i class="fas fa-list"></i>
-                        </button>
+        <!-- Search and Filter Controls -->
+        <div class="search-controls">
+            <form method="get" action="/courses" class="search-form">
+                <div class="search-row">
+                    <div class="search-input">
+                        <label for="search" class="form-label">Поиск курсов</label>
+                        <input type="text" 
+                               id="search" 
+                               name="search" 
+                               class="form-control" 
+                               placeholder="Введите название курса или ключевые слова..."
+                               th:value="${param.search}">
                     </div>
-                </div>
-                
-                <div class="filters-controls">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="courseSearch" placeholder="Поиск курсов...">
-                    </div>
-                    <select id="sortSelect" class="sort-select">
-                        <option value="title">По названию</option>
-                        <option value="teacher">По преподавателю</option>
-                        <option value="date">По дате</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Courses Grid -->
-            <div class="courses-grid" id="coursesGrid">
-                <div th:if="${courses.empty}" class="empty-state">
-                    <i class="fas fa-book-open"></i>
-                    <h3>Курсы не найдены</h3>
-                    <p>В данный момент нет доступных курсов</p>
-                </div>
-
-                <div th:each="course : ${courses}" class="course-card" 
-                     th:data-title="${course.title}" 
-                     th:data-teacher="${course.teacher.firstName + ' ' + course.teacher.lastName}">
-                    <div class="course-header">
-                        <div class="course-image">
-                            <i class="fas fa-book"></i>
+                    
+                    <div class="filter-group">
+                        <div class="form-group">
+                            <label for="category" class="form-label">Категория</label>
+                            <select id="category" name="category" class="form-control form-select">
+                                <option value="">Все категории</option>
+                                <option value="programming" th:selected="${param.category == 'programming'}">Программирование</option>
+                                <option value="design" th:selected="${param.category == 'design'}">Дизайн</option>
+                                <option value="business" th:selected="${param.category == 'business'}">Бизнес</option>
+                                <option value="languages" th:selected="${param.category == 'languages'}">Языки</option>
+                                <option value="marketing" th:selected="${param.category == 'marketing'}">Маркетинг</option>
+                                <option value="data" th:selected="${param.category == 'data'}">Анализ данных</option>
+                            </select>
                         </div>
-                        <div class="course-badge" th:if="${course.active}">
-                            <i class="fas fa-check-circle"></i>
-                            Активный
+                        
+                        <div class="form-group">
+                            <label for="sort" class="form-label">Сортировка</label>
+                            <select id="sort" name="sort" class="form-control form-select">
+                                <option value="newest" th:selected="${param.sort == 'newest'}">Новые</option>
+                                <option value="popular" th:selected="${param.sort == 'popular'}">Популярные</option>
+                                <option value="price_low" th:selected="${param.sort == 'price_low'}">Цена: по возрастанию</option>
+                                <option value="price_high" th:selected="${param.sort == 'price_high'}">Цена: по убыванию</option>
+                                <option value="rating" th:selected="${param.sort == 'rating'}">По рейтингу</option>
+                            </select>
+                        </div>
+                        
+                        <div class="search-actions">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i>
+                                Найти
+                            </button>
+                            
+                            <a href="/courses" class="filter-btn" th:if="${param.search != null and param.search != '' or param.category != null and param.category != '' or param.sort != null and param.sort != ''}">
+                                <i class="fas fa-times"></i>
+                                Сбросить
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filter Tags -->
+        <div class="filter-tags mb-4" th:if="${param.search != null and param.search != '' or param.category != null and param.category != '' or param.sort != null and param.sort != ''}">
+            <span class="filter-tag" th:if="${param.search != null and param.search != ''}">
+                <i class="fas fa-search"></i>
+                Поиск: <span th:text="${param.search}"></span>
+                <a th:href="@{/courses(category=${param.category}, sort=${param.sort})}" class="remove-tag">×</a>
+            </span>
+            <span class="filter-tag" th:if="${param.category != null and param.category != ''}">
+                <i class="fas fa-tag"></i>
+                Категория: <span th:text="${param.category}"></span>
+                <a th:href="@{/courses(search=${param.search}, sort=${param.sort})}" class="remove-tag">×</a>
+            </span>
+            <span class="filter-tag" th:if="${param.sort != null and param.sort != ''}">
+                <i class="fas fa-sort"></i>
+                Сортировка: <span th:text="${param.sort}"></span>
+                <a th:href="@{/courses(search=${param.search}, category=${param.category})}" class="remove-tag">×</a>
+            </span>
+        </div>
+
+        <!-- Results Info -->
+        <div class="results-info mb-4">
+            <p class="results-count">
+                Найдено <strong th:text="${courses != null ? courses.size() : 0}">0</strong> курсов
+                <span th:if="${param.search != null and param.search != '' or param.category != null and param.category != '' or param.sort != null and param.sort != ''}" class="filter-applied">
+                    по вашему запросу
+                </span>
+            </p>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="courses-section">
+            <div class="grid grid-3" th:if="${courses != null and !courses.empty}">
+                <div class="card course-card" th:each="course : ${courses}">
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="${course.title ?: 'Название курса'}">Название курса</h3>
+                        <div class="course-badges">
+                            <span class="badge badge-primary" th:text="${course.teacher != null ? (course.teacher.firstName ?: '') + ' ' + (course.teacher.lastName ?: '') : 'Преподаватель'}">Преподаватель</span>
+                            <span class="badge badge-success" th:if="${course.active}">Активный</span>
+                            <span class="badge badge-warning" th:if="${!course.active}">Неактивный</span>
                         </div>
                     </div>
                     
-                    <div class="course-content">
-                        <h3 class="course-title" th:text="${course.title}">Название курса</h3>
-                        <p class="course-description" th:text="${course.description}">Описание курса</p>
+                    <div class="card-body">
+                        <p class="card-subtitle" th:text="${course.description ?: 'Описание курса'}">Описание курса</p>
                         
-                        <div class="course-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-user"></i>
-                                <span th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Преподаватель</span>
+                        <div class="course-meta mt-3">
+                            <div class="meta-item" th:if="${course.startDate != null}">
+                                <i class="fas fa-calendar-start"></i>
+                                <span>Начало: <span th:text="${#temporals.format(course.startDate, 'dd.MM.yyyy')}">Дата начала</span></span>
                             </div>
-                            <div class="meta-item">
-                                <i class="fas fa-calendar"></i>
-                                <span th:text="${#temporals.format(course.startDate, 'dd.MM.yyyy')}">Дата начала</span>
-                            </div>
-                            <div class="meta-item" th:if="${course.price != null}">
-                                <i class="fas fa-ruble-sign"></i>
-                                <span th:text="${course.price}">Цена</span>
+                            <div class="meta-item" th:if="${course.endDate != null}">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Окончание: <span th:text="${#temporals.format(course.endDate, 'dd.MM.yyyy')}">Дата окончания</span></span>
                             </div>
                             <div class="meta-item">
                                 <i class="fas fa-users"></i>
-                                <span th:text="${course.students.size()}">0</span> студентов
+                                <span th:text="${course.students != null ? course.students.size() : 0} + ' студентов'">Студенты</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress bar for course duration -->
+                        <div class="course-progress mt-3" th:if="${course.startDate != null and course.startDate.isBefore(T(java.time.LocalDateTime).now())}">
+                            <div class="progress-label">Прогресс курса</div>
+                            <div class="progress">
+                                <div class="progress-bar" 
+                                     th:style="'width: ' + ${course.endDate != null and course.endDate.isBefore(T(java.time.LocalDateTime).now()) ? 100 : 
+                                               (course.endDate != null ? T(java.time.temporal.ChronoUnit).DAYS.between(course.startDate, T(java.time.LocalDateTime).now()) * 100 / 
+                                                T(java.time.temporal.ChronoUnit).DAYS.between(course.startDate, course.endDate) : 0)} + '%'">
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="course-actions">
-                        <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-primary">
-                            <i class="fas fa-eye"></i>
-                            Подробнее
-                        </a>
-                        
-                        <!-- Кнопка записи для студентов -->
-                        <div sec:authorize="hasRole('STUDENT')">
-                            <form th:if="${!course.students.contains(#authentication.principal)}" 
-                                  th:action="@{/student/courses/{id}/enroll(id=${course.id})}" 
-                                  method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-plus"></i>
-                                    Записаться
-                                </button>
-                            </form>
-                            <span th:if="${course.students.contains(#authentication.principal)}" 
-                                  class="enrolled-badge">
-                                <i class="fas fa-check"></i>
-                                Вы записаны
-                            </span>
+                    <div class="card-footer">
+                        <div class="price">
+                            <span class="price-value" th:text="${course.price != null ? course.price + ' ₽' : 'Бесплатно'}">Цена</span>
+                        </div>
+                        <div class="course-actions">
+                            <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i>
+                                Подробнее
+                            </a>
+                            
+                            <!-- Enrollment button for students -->
+                            <div sec:authorize="hasRole('STUDENT')">
+                                <form th:if="${course.students != null and !course.students.contains(#authentication.principal)}" 
+                                      th:action="@{/student/courses/{id}/enroll(id=${course.id})}" 
+                                      method="post" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-outline btn-sm">
+                                        <i class="fas fa-plus"></i>
+                                        Записаться
+                                    </button>
+                                </form>
+                                
+                                <span th:if="${course.students != null and course.students.contains(#authentication.principal)}" 
+                                      class="badge badge-success">
+                                    <i class="fas fa-check"></i>
+                                    Записан
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Load More Button -->
-            <div class="load-more-section" style="display: none;">
-                <button class="btn btn-outline-primary load-more-btn">
-                    <i class="fas fa-plus"></i>
-                    Загрузить еще
-                </button>
+            
+            <!-- Empty State -->
+            <div class="empty-state text-center" th:if="${courses == null or #lists.isEmpty(courses)}">
+                <div class="empty-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Курсы не найдены</h3>
+                <p th:if="${param.search != null and param.search != '' or param.category != null and param.category != '' or param.sort != null and param.sort != ''}">
+                    Попробуйте изменить параметры поиска или 
+                    <a href="/courses" class="btn btn-outline btn-sm">сбросить фильтры</a>
+                </p>
+                <p th:if="${param.search == null or param.search == '' and param.category == null or param.category == '' and param.sort == null or param.sort == ''}">
+                    Курсы пока не добавлены. Скоро здесь появятся интересные курсы!
+                </p>
             </div>
         </div>
-    </section>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+        <!-- Quick Actions for Teachers -->
+        <div class="quick-actions mt-5" sec:authorize="hasRole('TEACHER')">
+            <div class="card cta-card">
+                <div class="card-body text-center">
+                    <h4>Преподавателям</h4>
+                    <p>Создайте свой курс и поделитесь знаниями со студентами</p>
+                    <a href="/teacher/courses/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Создать курс
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    <script>
-        // Search functionality
-        document.getElementById('courseSearch').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const courseCards = document.querySelectorAll('.course-card');
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .page-header {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+        
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+        
+        .page-header .text-muted {
+            font-size: 1.125rem;
+        }
+        
+        .search-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tags {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--accent-blue);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9375rem;
+            border: 1px solid rgba(0, 122, 255, 0.2);
+            font-weight: 500;
+        }
+        
+        .remove-tag {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 8px;
+            padding: 0 4px;
+            border-radius: 50%;
+            transition: var(--transition);
+            opacity: 0.7;
+        }
+        
+        .remove-tag:hover {
+            background: var(--accent-blue);
+            color: var(--primary-white);
+            opacity: 1;
+        }
+        
+        .results-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        .results-count {
+            margin: 0;
+            color: var(--dark-gray);
+            font-size: 1rem;
+        }
+        
+        .filter-applied {
+            font-style: italic;
+            color: var(--medium-gray);
+        }
+        
+        .course-card {
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .course-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .course-card:hover::before {
+            left: 100%;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-heavy);
+            border-color: rgba(0, 122, 255, 0.3);
+        }
+        
+        .course-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .course-meta {
+            border-top: 1px solid var(--border-gray);
+            padding-top: 16px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--medium-gray);
+            font-size: 0.9375rem;
+            margin-bottom: 8px;
+        }
+        
+        .meta-item i {
+            width: 16px;
+            text-align: center;
+            color: var(--accent-blue);
+        }
+        
+        .course-progress {
+            margin-top: 16px;
+        }
+        
+        .progress-label {
+            font-size: 0.9375rem;
+            color: var(--medium-gray);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .course-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .price-value {
+            font-size: 1.375rem;
+            font-weight: 600;
+            color: var(--primary-black);
+        }
+        
+        .empty-state {
+            padding: 80px 40px;
+            color: var(--medium-gray);
+        }
+        
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(134, 134, 139, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: var(--medium-gray);
+            font-size: 2rem;
+        }
+        
+        .cta-card {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, #0056cc 100%);
+            color: var(--primary-white);
+            border: none;
+        }
+        
+        .cta-card h4 {
+            color: var(--primary-white);
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+        
+        .cta-card p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 24px;
+        }
+        
+        .cta-card .btn-primary {
+            background: var(--primary-white);
+            color: var(--accent-blue);
+            border: none;
+        }
+        
+        .cta-card .btn-primary:hover {
+            background: var(--light-gray);
+            transform: translateY(-2px);
+        }
+        
+        .quick-actions {
+            border-top: 1px solid var(--border-gray);
+            padding-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 40px 0 24px;
+            }
             
-            courseCards.forEach(card => {
-                const title = card.dataset.title.toLowerCase();
-                const teacher = card.dataset.teacher.toLowerCase();
-                
-                if (title.includes(searchTerm) || teacher.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-
-        // Sort functionality
-        document.getElementById('sortSelect').addEventListener('change', function(e) {
-            const sortBy = e.target.value;
-            const coursesGrid = document.getElementById('coursesGrid');
-            const courseCards = Array.from(document.querySelectorAll('.course-card'));
+            .page-header h1 {
+                font-size: 2.25rem;
+            }
             
-            courseCards.sort((a, b) => {
-                let aValue, bValue;
-                
-                switch(sortBy) {
-                    case 'title':
-                        aValue = a.dataset.title;
-                        bValue = b.dataset.title;
-                        break;
-                    case 'teacher':
-                        aValue = a.dataset.teacher;
-                        bValue = b.dataset.teacher;
-                        break;
-                    default:
-                        return 0;
-                }
-                
-                return aValue.localeCompare(bValue);
-            });
+            .search-actions {
+                width: 100%;
+                margin-top: 16px;
+            }
             
-            courseCards.forEach(card => coursesGrid.appendChild(card));
-        });
-
-        // View toggle
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                const view = this.dataset.view;
-                const coursesGrid = document.getElementById('coursesGrid');
-                
-                if (view === 'list') {
-                    coursesGrid.classList.add('list-view');
-                } else {
-                    coursesGrid.classList.remove('list-view');
-                }
-            });
-        });
-    </script>
+            .search-actions .search-btn,
+            .search-actions .filter-btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .results-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .course-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .course-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .empty-state {
+                padding: 60px 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .filter-tags {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-tag {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
 </body>
 </html> 

@@ -124,9 +124,20 @@ public class StudentController {
         List<Course> enrolledCourses = courseService.findByStudent(student);
         List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
         
+        // Подсчет статистики
+        int totalCourses = enrolledCourses.size();
+        int completedCourses = (int) enrolledCourses.stream()
+                .filter(course -> course.getEndDate().isBefore(java.time.LocalDateTime.now()))
+                .count();
+        int totalWebinars = attendedWebinars.size();
+        
         model.addAttribute("student", student);
         model.addAttribute("enrolledCourses", enrolledCourses);
         model.addAttribute("attendedWebinars", attendedWebinars);
+        model.addAttribute("totalCourses", totalCourses);
+        model.addAttribute("completedCourses", completedCourses);
+        model.addAttribute("totalWebinars", totalWebinars);
+        model.addAttribute("progressPercentage", totalCourses > 0 ? (completedCourses * 100 / totalCourses) : 0);
         
         return "student/progress";
     }

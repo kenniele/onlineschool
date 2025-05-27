@@ -1,256 +1,638 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="fragments/header :: head">
-    <title>Профиль - Online School</title>
-</head>
+<head th:replace="~{fragments/header :: head}"></head>
 <body>
-    <div th:replace="fragments/header :: header"></div>
+    <header th:replace="~{fragments/header :: header}"></header>
     
-    <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h1 class="page-title">
-                    <i class="fas fa-user"></i>
-                    Мой профиль
-                </h1>
-                <p class="page-description">Управление личными данными и настройками</p>
-            </div>
+    <main class="container mt-5">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <h1>Профиль пользователя</h1>
+            <p class="text-muted">Управляйте своими личными данными и настройками аккаунта</p>
+        </div>
 
-            <div class="content-wrapper">
-                <!-- Информация о пользователе -->
-                <div class="profile-section">
-                    <div class="profile-header">
-                        <div class="profile-avatar">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="profile-info">
-                            <h2 sec:authentication="name">Имя пользователя</h2>
-                            <div class="profile-role">
-                                <span class="role-badge" sec:authentication="principal.authorities" th:classappend="${#authentication.principal.authorities.contains('ROLE_ADMIN') ? 'admin' : (#authentication.principal.authorities.contains('ROLE_TEACHER') ? 'teacher' : 'student')}">
-                                    <i class="fas fa-user-tag"></i>
-                                    <span th:text="${#authentication.principal.authorities.contains('ROLE_ADMIN') ? 'Администратор' : (#authentication.principal.authorities.contains('ROLE_TEACHER') ? 'Преподаватель' : 'Студент')}">Роль</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${success}">Успешно</span>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error}">Ошибка</span>
+        </div>
 
-                <!-- Форма редактирования профиля -->
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-edit"></i>
-                        Редактировать профиль
+        <div class="grid grid-2">
+            <!-- Profile Information -->
+            <div class="card profile-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user"></i>
+                        Личная информация
                     </h3>
-                    
-                    <form action="/api/users/me" method="put" class="profile-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="firstName" class="form-label">
-                                    <i class="fas fa-user"></i>
-                                    Имя
-                                </label>
-                                <input type="text" 
-                                       id="firstName" 
-                                       name="firstName" 
-                                       class="form-input"
-                                       placeholder="Введите имя">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="lastName" class="form-label">
-                                    <i class="fas fa-user"></i>
-                                    Фамилия
-                                </label>
-                                <input type="text" 
-                                       id="lastName" 
-                                       name="lastName" 
-                                       class="form-input"
-                                       placeholder="Введите фамилию">
-                            </div>
-                        </div>
-
+                </div>
+                
+                <div class="card-body">
+                    <form th:action="@{/profile}" method="post" th:object="${user}">
                         <div class="form-group">
-                            <label for="email" class="form-label">
-                                <i class="fas fa-envelope"></i>
-                                Email
-                            </label>
-                            <input type="email" 
-                                   id="email" 
-                                   name="email" 
-                                   class="form-input"
-                                   placeholder="email@example.com"
-                                   required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="username" class="form-label">
-                                <i class="fas fa-at"></i>
-                                Имя пользователя
-                            </label>
+                            <label for="username" class="form-label">Имя пользователя</label>
                             <input type="text" 
                                    id="username" 
-                                   name="username" 
-                                   class="form-input"
-                                   placeholder="username"
+                                   th:field="*{username}" 
+                                   class="form-control disabled-input" 
+                                   readonly>
+                            <small class="form-text">Имя пользователя нельзя изменить</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" 
+                                   id="email" 
+                                   th:field="*{email}" 
+                                   class="form-control" 
                                    required>
                         </div>
-
+                        
+                        <div class="form-group">
+                            <label for="firstName" class="form-label">Имя</label>
+                            <input type="text" 
+                                   id="firstName" 
+                                   th:field="*{firstName}" 
+                                   class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName" class="form-label">Фамилия</label>
+                            <input type="text" 
+                                   id="lastName" 
+                                   th:field="*{lastName}" 
+                                   class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="role" class="form-label">Роль</label>
+                            <input type="text" 
+                                   id="role" 
+                                   th:value="${user.role}" 
+                                   class="form-control disabled-input" 
+                                   readonly>
+                            <small class="form-text">Роль назначается администратором</small>
+                        </div>
+                        
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i>
                                 Сохранить изменения
                             </button>
-                            <button type="reset" class="btn btn-outline-secondary">
-                                <i class="fas fa-undo"></i>
-                                Отменить
-                            </button>
+                            <a href="/dashboard" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i>
+                                Назад
+                            </a>
                         </div>
                     </form>
                 </div>
+            </div>
 
-                <!-- Изменение пароля -->
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-lock"></i>
-                        Изменить пароль
+            <!-- Account Information -->
+            <div class="card account-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        Информация об аккаунте
                     </h3>
-                    
-                    <form action="/change-password" method="post" class="password-form">
-                        <div class="form-group">
-                            <label for="currentPassword" class="form-label">
-                                <i class="fas fa-key"></i>
-                                Текущий пароль
-                            </label>
-                            <input type="password" 
-                                   id="currentPassword" 
-                                   name="currentPassword" 
-                                   class="form-input"
-                                   required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="newPassword" class="form-label">
-                                <i class="fas fa-lock"></i>
-                                Новый пароль
-                            </label>
-                            <input type="password" 
-                                   id="newPassword" 
-                                   name="newPassword" 
-                                   class="form-input"
-                                   minlength="6"
-                                   required>
-                            <div class="form-help">Пароль должен содержать минимум 6 символов</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="confirmPassword" class="form-label">
-                                <i class="fas fa-lock"></i>
-                                Подтвердите пароль
-                            </label>
-                            <input type="password" 
-                                   id="confirmPassword" 
-                                   name="confirmPassword" 
-                                   class="form-input"
-                                   required>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-key"></i>
-                                Изменить пароль
-                            </button>
-                        </div>
-                    </form>
                 </div>
-
-                <!-- Статистика пользователя -->
-                <div class="stats-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-chart-line"></i>
-                        Моя активность
-                    </h3>
-                    
-                    <div class="stats-cards">
-                        <div class="stat-card" sec:authorize="hasRole('STUDENT')">
-                            <div class="stat-icon">
-                                <i class="fas fa-book"></i>
+                
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-calendar-plus"></i>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Курсов</div>
+                            <div class="info-content">
+                                <div class="info-label">Дата регистрации</div>
+                                <div class="info-value" th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm') : 'Не указана'}">
+                                    Не указана
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="stat-card" sec:authorize="hasRole('TEACHER')">
-                            <div class="stat-icon">
-                                <i class="fas fa-chalkboard-teacher"></i>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-shield-alt"></i>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Курсов создано</div>
+                            <div class="info-content">
+                                <div class="info-label">Статус аккаунта</div>
+                                <div class="info-value">
+                                    <span th:if="${user.active}" class="badge badge-success">
+                                        <i class="fas fa-check"></i>
+                                        Активен
+                                    </span>
+                                    <span th:if="${!user.active}" class="badge badge-danger">
+                                        <i class="fas fa-times"></i>
+                                        Заблокирован
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-video"></i>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-user-tag"></i>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Вебинаров</div>
+                            <div class="info-content">
+                                <div class="info-label">Роль в системе</div>
+                                <div class="info-value">
+                                    <span class="badge badge-primary" th:text="${user.role}">Роль</span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-calendar"></i>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope"></i>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Дней на платформе</div>
+                            <div class="info-content">
+                                <div class="info-label">Email подтвержден</div>
+                                <div class="info-value">
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check"></i>
+                                        Подтвержден
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Действия -->
-                <div class="actions-section">
-                    <a href="/dashboard" class="btn btn-primary">
-                        <i class="fas fa-tachometer-alt"></i>
-                        Вернуться к дашборду
-                    </a>
+        <!-- Role-specific Information -->
+        <div class="role-specific-info mt-4">
+            <!-- Student Information -->
+            <div sec:authorize="hasRole('STUDENT')" class="card stats-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-graduate"></i>
+                        Статистика обучения
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Записан на курсов</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Завершено курсов</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Участие в вебинарах</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0%</span>
+                            <span class="stat-label">Общий прогресс</span>
+                        </div>
+                    </div>
                     
-                    <form action="/logout" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-outline-danger">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Выйти из системы
-                        </button>
-                    </form>
+                    <div class="quick-actions">
+                        <a href="/student/courses" class="btn btn-outline">
+                            <i class="fas fa-book"></i>
+                            Мои курсы
+                        </a>
+                        <a href="/student/progress" class="btn btn-outline">
+                            <i class="fas fa-chart-line"></i>
+                            Прогресс
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher Information -->
+            <div sec:authorize="hasRole('TEACHER')" class="card stats-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        Статистика преподавания
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Создано курсов</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Проведено вебинаров</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Всего студентов</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Средний рейтинг</span>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <a href="/teacher/courses" class="btn btn-outline">
+                            <i class="fas fa-book"></i>
+                            Мои курсы
+                        </a>
+                        <a href="/teacher/webinars" class="btn btn-outline">
+                            <i class="fas fa-video"></i>
+                            Мои вебинары
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Information -->
+            <div sec:authorize="hasRole('ADMIN')" class="card stats-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cog"></i>
+                        Административные функции
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Всего пользователей</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Активных курсов</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Запланированных вебинаров</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">Доступность системы</span>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <a href="/admin" class="btn btn-outline">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Панель администратора
+                        </a>
+                        <a href="/admin/users" class="btn btn-outline">
+                            <i class="fas fa-users"></i>
+                            Управление пользователями
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Section -->
+        <div class="security-section mt-4">
+            <div class="card security-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-lock"></i>
+                        Безопасность
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <div class="security-grid">
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="security-content">
+                                <h4>Пароль</h4>
+                                <p>Последнее изменение: давно</p>
+                                <button class="btn btn-outline btn-sm" onclick="showPasswordModal()">
+                                    <i class="fas fa-edit"></i>
+                                    Изменить пароль
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </div>
+                            <div class="security-content">
+                                <h4>Выход из аккаунта</h4>
+                                <p>Завершить сеанс на всех устройствах</p>
+                                <form th:action="@{/logout}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        Выйти
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
-    
-    <div th:replace="fragments/footer :: footer"></div>
-    
-    <script>
-        // Валидация формы смены пароля
-        document.querySelector('.password-form').addEventListener('submit', function(e) {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (newPassword !== confirmPassword) {
-                e.preventDefault();
-                alert('Пароли не совпадают');
-                return false;
-            }
-        });
 
-        // Загрузка данных пользователя (заглушка)
-        document.addEventListener('DOMContentLoaded', function() {
-            // TODO: Загрузить данные текущего пользователя через API
-            // и заполнить форму редактирования профиля
-        });
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .page-header {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+        
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+        
+        .page-header .text-muted {
+            font-size: 1.125rem;
+        }
+        
+        .profile-card,
+        .account-card,
+        .stats-card,
+        .security-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), #0056cc);
+        }
+        
+        .account-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--success-green), #28a745);
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--warning-orange), #ff6b35);
+        }
+        
+        .security-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--error-red), #d70015);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+            color: var(--medium-gray);
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        .disabled-input {
+            background-color: var(--light-gray) !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 122, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .info-content {
+            flex: 1;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: var(--dark-gray);
+            margin-bottom: 4px;
+            font-size: 0.9375rem;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: var(--primary-black);
+            font-size: 1rem;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-gray);
+        }
+        
+        .security-grid {
+            display: grid;
+            gap: 32px;
+        }
+        
+        .security-item {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 24px;
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-gray);
+            transition: var(--transition);
+        }
+        
+        .security-item:hover {
+            background: var(--hover-gray);
+            border-color: var(--medium-gray);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .security-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            border: 2px solid var(--border-gray);
+        }
+        
+        .security-content h4 {
+            margin-bottom: 8px;
+            color: var(--primary-black);
+            font-size: 1.125rem;
+        }
+        
+        .security-content p {
+            margin-bottom: 16px;
+            color: var(--medium-gray);
+            font-size: 0.9375rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 0;
+        }
+        
+        .stat-card {
+            background: var(--primary-white);
+            border: 1px solid var(--border-gray);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+            border-color: var(--accent-blue);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            display: block;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: var(--medium-gray);
+            font-size: 0.875rem;
+            margin-top: 8px;
+            font-weight: 400;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 40px 0 24px;
+            }
+            
+            .page-header h1 {
+                font-size: 2.25rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+            }
+            
+            .quick-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                text-align: center;
+            }
+            
+            .info-icon {
+                align-self: center;
+            }
+            
+            .security-item {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .security-item {
+                padding: 20px;
+            }
+        }
+    </style>
+
+    <script>
+        function showPasswordModal() {
+            alert('Функция смены пароля будет добавлена в следующих версиях');
+        }
     </script>
 </body>
 </html> 
