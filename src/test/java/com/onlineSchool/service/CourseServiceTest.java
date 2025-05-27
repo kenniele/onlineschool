@@ -28,7 +28,7 @@ class CourseServiceTest extends BaseIntegrationTest {
     private LocalDateTime now;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         now = LocalDateTime.now();
 
         testTeacher = User.builder()

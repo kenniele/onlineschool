@@ -31,7 +31,7 @@ class UserControllerTest extends BaseIntegrationTest {
     private User testUser;
     
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         testUser = createTestUser();
         testUser.setRole(Role.STUDENT);
     }
@@ -147,8 +147,8 @@ class UserControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void updateUser_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
+        long nonExistentId = 999999L; // Используем большой ID, который точно не существует
         User nonExistentUser = new User();
-        nonExistentUser.setId(999L);
         nonExistentUser.setUsername("nonexistent");
         nonExistentUser.setEmail("nonexistent@onlineSchool.com");
         nonExistentUser.setPassword("password");
@@ -156,7 +156,7 @@ class UserControllerTest extends BaseIntegrationTest {
         nonExistentUser.setLastName("User");
         nonExistentUser.setRole(Role.STUDENT);
         
-        mockMvc.perform(put("/api/users/999")
+        mockMvc.perform(put("/api/users/" + nonExistentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(nonExistentUser)))
                 .andExpect(status().isNotFound());

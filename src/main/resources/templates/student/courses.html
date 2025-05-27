@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title>Мои курсы - Online School</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-book"></i>
+                    Мои курсы
+                </h1>
+                <p class="page-description">Здесь вы можете просматривать курсы, на которые записаны</p>
+            </div>
+
+            <div class="content-wrapper">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${courses.size()}">0</div>
+                            <div class="stat-label">Активных курсов</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="courses-grid" th:if="${not #lists.isEmpty(courses)}">
+                    <div class="course-card" th:each="course : ${courses}">
+                        <div class="course-image">
+                            <img th:src="${course.imageUrl != null ? course.imageUrl : '/images/default-course.jpg'}" 
+                                 th:alt="${course.title}" 
+                                 class="course-img">
+                            <div class="course-status" th:classappend="${course.active ? 'status-active' : 'status-inactive'}">
+                                <span th:text="${course.active ? 'Активный' : 'Неактивный'}"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="course-content">
+                            <h3 class="course-title" th:text="${course.title}">Название курса</h3>
+                            <p class="course-description" th:text="${course.description}">Описание курса</p>
+                            
+                            <div class="course-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Преподаватель</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-users"></i>
+                                    <span th:text="${course.students.size()} + ' студентов'">0 студентов</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-video"></i>
+                                    <span th:text="${course.webinars.size()} + ' вебинаров'">0 вебинаров</span>
+                                </div>
+                            </div>
+                            
+                            <div class="course-actions">
+                                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                    Просмотреть
+                                </a>
+                                <form th:action="@{/student/courses/{id}/unenroll(id=${course.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                            onclick="return confirm('Вы уверены, что хотите отписаться от курса?')">
+                                        <i class="fas fa-times"></i>
+                                        Отписаться
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" th:if="${#lists.isEmpty(courses)}">
+                    <div class="empty-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3>У вас пока нет курсов</h3>
+                    <p>Перейдите в каталог курсов, чтобы записаться на интересующие вас курсы</p>
+                    <a href="/courses" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                        Найти курсы
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
+</body>
+</html> 

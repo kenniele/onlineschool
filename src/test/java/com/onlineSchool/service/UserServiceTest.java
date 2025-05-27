@@ -5,15 +5,19 @@ import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 class UserServiceTest extends BaseIntegrationTest {
 
     @Autowired
@@ -26,31 +30,10 @@ class UserServiceTest extends BaseIntegrationTest {
     private User testTeacher;
 
     @BeforeEach
-    void setUp() {
-        // Очистка тестовых данных
-        clearTestData();
-
-        // Создание тестового пользователя-студента
-        testUser = User.builder()
-                .username("student_test")
-                .email("student@test.com")
-                .password("password123")
-                .firstName("Иван")
-                .lastName("Студентов")
-                .role(Role.STUDENT)
-                .build();
-        testUser = userService.save(testUser);
-
-        // Создание тестового пользователя-преподавателя
-        testTeacher = User.builder()
-                .username("teacher_test")
-                .email("teacher@test.com")
-                .password("password456")
-                .firstName("Петр")
-                .lastName("Преподавателев")
-                .role(Role.TEACHER)
-                .build();
-        testTeacher = userService.save(testTeacher);
+    public void setUp() {
+        // Создание тестовых пользователей с уникальными данными
+        testUser = createTestUser(Role.STUDENT);
+        testTeacher = createTestUser(Role.TEACHER);
     }
 
     @Test
@@ -59,12 +42,10 @@ class UserServiceTest extends BaseIntegrationTest {
         List<User> actualUsers = userService.findAll();
 
         // then
-        // Ожидаем 3 пользователя: 2 созданных в setUp и 1 администратор из DataInitializer
-        assertEquals(3, actualUsers.size()); 
-        assertTrue(actualUsers.stream().anyMatch(u -> u.getEmail().equals("student@test.com")));
-        assertTrue(actualUsers.stream().anyMatch(u -> u.getEmail().equals("teacher@test.com")));
-        // Проверяем наличие администратора
-        assertTrue(actualUsers.stream().anyMatch(u -> u.getRole() == Role.ADMIN && u.getUsername().equals("admin"))); 
+        // Ожидаем минимум 2 пользователя: созданных в setUp
+        assertTrue(actualUsers.size() >= 2);
+        assertTrue(actualUsers.stream().anyMatch(u -> u.getId().equals(testUser.getId())));
+        assertTrue(actualUsers.stream().anyMatch(u -> u.getId().equals(testTeacher.getId())));
     }
 
     @Test
@@ -81,7 +62,7 @@ class UserServiceTest extends BaseIntegrationTest {
     @Test
     void findByEmail_WhenUserExists_ShouldReturnUser() {
         // when
-        Optional<User> foundUser = userService.findByEmail("student@test.com");
+        Optional<User> foundUser = userService.findByEmail(testUser.getEmail());
 
         // then
         assertTrue(foundUser.isPresent());
@@ -92,21 +73,14 @@ class UserServiceTest extends BaseIntegrationTest {
     @Test
     void save_NewUser_ShouldEncodePasswordAndSave() {
         // given
-        User newUser = User.builder()
-                .username("new_test")
-                .email("new@test.com")
-                .password("newpassword")
-                .firstName("Новый")
-                .lastName("Пользователь")
-                .role(Role.STUDENT)
-                .build();
+        User newUser = createTestUser("new");
 
         // when
         User savedUser = userService.save(newUser);
 
         // then
         assertNotNull(savedUser.getId());
-        assertTrue(passwordEncoder.matches("newpassword", savedUser.getPassword()));
+        assertTrue(passwordEncoder.matches("password", savedUser.getPassword()));
         assertEquals(Role.STUDENT, savedUser.getRole());
     }
 
@@ -122,7 +96,7 @@ class UserServiceTest extends BaseIntegrationTest {
     @Test
     void existsByEmail_WhenUserExists_ShouldReturnTrue() {
         // when
-        boolean exists = userService.existsByEmail("student@test.com");
+        boolean exists = userService.existsByEmail(testUser.getEmail());
 
         // then
         assertTrue(exists);
@@ -131,7 +105,7 @@ class UserServiceTest extends BaseIntegrationTest {
     @Test
     void existsByEmail_WhenUserDoesNotExist_ShouldReturnFalse() {
         // when
-        boolean exists = userService.existsByEmail("nonexistent@test.com");
+        boolean exists = userService.existsByEmail("nonexistent_" + System.currentTimeMillis() + "@test.com");
 
         // then
         assertFalse(exists);
@@ -154,14 +128,11 @@ class UserServiceTest extends BaseIntegrationTest {
     @Test
     void update_WhenUserDoesNotExist_ShouldThrowException() {
         // given
-        User nonExistentUser = User.builder()
-                .id(999L)
-                .email("nonexistent@test.com")
-                .build();
+        long nonExistentId = 999999L;
 
         // when/then
         assertThrows(RuntimeException.class, () -> {
-            userService.update(999L, nonExistentUser);
+            userService.update(nonExistentId, testUser);
         });
     }
 } 

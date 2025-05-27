@@ -4,13 +4,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.onlineSchool.config.TestSecurityConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.onlineSchool.model.Comment;
@@ -20,6 +24,7 @@ import com.onlineSchool.model.Like;
 import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
 import com.onlineSchool.model.Webinar;
+import com.onlineSchool.model.WebinarStatus;
 import com.onlineSchool.service.CommentService;
 import com.onlineSchool.service.CourseService;
 import com.onlineSchool.service.LikeService;
@@ -30,6 +35,8 @@ import com.onlineSchool.service.WebinarService;
 @SpringBootTest(classes = {OnlineSchoolApplication.class, TestSecurityConfig.class})
 @ActiveProfiles("test")
 @Transactional
+@Rollback
+@Sql(scripts = "classpath:schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public abstract class BaseIntegrationTest {
 
     @Autowired
@@ -47,15 +54,27 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected LikeService likeService;
     
+    // Счетчики для уникальных значений
+    private static final AtomicLong userCounter = new AtomicLong(0);
+    private static final AtomicLong courseCounter = new AtomicLong(0);
+    private static final AtomicLong webinarCounter = new AtomicLong(0);
+    
+    @BeforeEach
+    protected void setUpBase() {
+        // Очистка данных перед каждым тестом
+        clearTestData();
+    }
+    
     /**
-     * Создает тестового пользователя
+     * Создает тестового пользователя с уникальными данными
      */
     protected User createTestUser() {
+        long counter = userCounter.incrementAndGet();
         User user = new User();
-        user.setUsername("testuser");
-        user.setEmail("test@example.com");
+        user.setUsername("testuser_" + counter + "_" + System.currentTimeMillis());
+        user.setEmail("test_" + counter + "_" + System.currentTimeMillis() + "@example.com");
         user.setPassword("password");
-        user.setRole(Role.USER);
+        user.setRole(Role.STUDENT);
         user.setActive(true);
         return userService.save(user);
     }
@@ -64,11 +83,27 @@ public abstract class BaseIntegrationTest {
      * Создает тестового пользователя с указанным суффиксом
      */
     protected User createTestUser(String suffix) {
+        long timestamp = System.currentTimeMillis();
         User user = new User();
-        user.setUsername("testuser_" + suffix);
-        user.setEmail("test_" + suffix + "@example.com");
+        user.setUsername("testuser_" + suffix + "_" + timestamp);
+        user.setEmail("test_" + suffix + "_" + timestamp + "@example.com");
         user.setPassword("password");
-        user.setRole(Role.USER);
+        user.setRole(Role.STUDENT);
+        user.setActive(true);
+        return userService.save(user);
+    }
+    
+    /**
+     * Создает тестового пользователя с указанной ролью
+     */
+    protected User createTestUser(Role role) {
+        long counter = userCounter.incrementAndGet();
+        long timestamp = System.currentTimeMillis();
+        User user = new User();
+        user.setUsername(role.name().toLowerCase() + "_" + counter + "_" + timestamp);
+        user.setEmail(role.name().toLowerCase() + "_" + counter + "_" + timestamp + "@example.com");
+        user.setPassword("password");
+        user.setRole(role);
         user.setActive(true);
         return userService.save(user);
     }
@@ -77,46 +112,61 @@ public abstract class BaseIntegrationTest {
      * Создает тестового преподавателя
      */
     protected User createTestTeacher() {
-        User teacher = new User();
-        teacher.setUsername("testteacher");
-        teacher.setEmail("teacher@example.com");
-        teacher.setPassword("password");
-        teacher.setRole(Role.TEACHER);
-        teacher.setActive(true);
-        return userService.save(teacher);
+        return createTestUser(Role.TEACHER);
     }
     
     /**
-     * Создает тестовый курс
+     * Создает тестового администратора
+     */
+    protected User createTestAdmin() {
+        return createTestUser(Role.ADMIN);
+    }
+    
+    /**
+     * Создает тестовый курс с уникальными данными
      */
     protected Course createTestCourse(User teacher) {
+        long counter = courseCounter.incrementAndGet();
+        long timestamp = System.currentTimeMillis();
+        
         Course course = new Course();
-        course.setTitle("Test Course");
-        course.setDescription("This is a test course");
-        course.setPrice(199.99);
+        course.setTitle("Test Course " + counter + " " + timestamp);
+        course.setDescription("This is a test course " + counter);
+        course.setPrice(199.99 + counter);
         course.setTeacher(teacher);
-        course.setStartDate(LocalDateTime.now());
-        course.setEndDate(LocalDateTime.now().plusMonths(3));
+        course.setStartDate(LocalDateTime.now().plusDays(counter));
+        course.setEndDate(LocalDateTime.now().plusMonths(3).plusDays(counter));
         course.setActive(true);
-        course.setCreatedAt(LocalDateTime.now());
-        course.setUpdatedAt(LocalDateTime.now());
         course.setWebinars(new ArrayList<>());
         course.setStudents(new HashSet<>());
         return courseService.save(course);
     }
     
     /**
-     * Создает тестовый вебинар
+     * Создает тестовый курс для указанного преподавателя
+     */
+    protected Course createTestCourse() {
+        User teacher = createTestTeacher();
+        return createTestCourse(teacher);
+    }
+    
+    /**
+     * Создает тестовый вебинар с уникальными данными
      */
     protected Webinar createTestWebinar(Course course, User teacher) {
+        long counter = webinarCounter.incrementAndGet();
+        long timestamp = System.currentTimeMillis();
+        
         Webinar webinar = new Webinar();
-        webinar.setTitle("Test Webinar");
-        webinar.setDescription("This is a test webinar");
+        webinar.setTitle("Test Webinar " + counter + " " + timestamp);
+        webinar.setDescription("This is a test webinar " + counter);
         webinar.setCourse(course);
         webinar.setTeacher(teacher);
-        webinar.setStartTime(LocalDateTime.now().plusDays(1));
-        webinar.setDuration(120);
+        webinar.setStartTime(LocalDateTime.now().plusDays(1).plusHours(counter));
+        webinar.setDuration(60 + (int)(counter % 120));
+        webinar.setMaxParticipants(50 + (int)(counter % 50));
         webinar.setActive(true);
+        webinar.setStatus(WebinarStatus.SCHEDULED);
         return webinarService.save(webinar);
     }
     
@@ -124,47 +174,64 @@ public abstract class BaseIntegrationTest {
      * Создает тестовый вебинар для курса
      */
     protected Webinar createTestWebinar(Course course) {
-        Webinar webinar = new Webinar();
-        webinar.setTitle("Test Webinar");
-        webinar.setDescription("This is a test webinar");
-        webinar.setCourse(course);
-        webinar.setTeacher(course.getTeacher());
-        webinar.setStartTime(LocalDateTime.now().plusDays(1));
-        webinar.setDuration(120);
-        webinar.setActive(true);
-        return webinarService.save(webinar);
+        return createTestWebinar(course, course.getTeacher());
+    }
+    
+    /**
+     * Создает независимый тестовый вебинар
+     */
+    protected Webinar createTestWebinar() {
+        Course course = createTestCourse();
+        return createTestWebinar(course);
     }
     
     /**
      * Создает тестовый комментарий
      */
-    protected Comment createTestComment(User user, Webinar webinar) {
+    protected Comment createTestComment(User user, Long entityId, EntityType entityType) {
+        long timestamp = System.currentTimeMillis();
         Comment comment = new Comment();
-        comment.setContent("Test Comment");
+        comment.setContent("Test Comment " + timestamp);
         comment.setUser(user);
-        comment.setEntityId(webinar.getId());
-        comment.setEntityType(EntityType.WEBINAR);
-        comment.setCreatedAt(LocalDateTime.now());
+        comment.setEntityId(entityId);
+        comment.setEntityType(entityType);
         return commentService.create(comment);
+    }
+    
+    /**
+     * Создает тестовый комментарий для вебинара
+     */
+    protected Comment createTestComment(User user, Webinar webinar) {
+        return createTestComment(user, webinar.getId(), EntityType.WEBINAR);
     }
     
     /**
      * Создает тестовый лайк
      */
-    protected Like createTestLike(User user, Webinar webinar) {
+    protected Like createTestLike(User user, Long entityId, EntityType entityType) {
         Like like = new Like();
         like.setUser(user);
-        like.setEntityId(webinar.getId());
-        like.setEntityType(EntityType.WEBINAR);
-        like.setCreatedAt(LocalDateTime.now());
+        like.setEntityId(entityId);
+        like.setEntityType(entityType);
         return likeService.createLike(like);
     }
     
     /**
+     * Создает тестовый лайк для вебинара
+     */
+    protected Like createTestLike(User user, Webinar webinar) {
+        return createTestLike(user, webinar.getId(), EntityType.WEBINAR);
+    }
+    
+    /**
      * Очищает тестовые данные
-     * Можно реализовать при необходимости
      */
     protected void clearTestData() {
-        // Реализация при необходимости
+        try {
+            // Транзакция автоматически откатится после теста
+            // благодаря @Rollback аннотации
+        } catch (Exception e) {
+            // Игнорируем ошибки очистки
+        }
     }
 } 

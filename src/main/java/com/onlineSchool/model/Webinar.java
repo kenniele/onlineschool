@@ -32,6 +32,9 @@ public class Webinar {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "meeting_url")
+    private String meetingUrl;
+
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 

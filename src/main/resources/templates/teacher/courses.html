@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title>Мои курсы - Преподаватель - Online School</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <div class="header-content">
+                    <h1 class="page-title">
+                        <i class="fas fa-book"></i>
+                        Мои курсы
+                    </h1>
+                    <p class="page-description">Управляйте своими курсами</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/teacher/courses/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Создать курс
+                    </a>
+                </div>
+            </div>
+
+            <div class="content-wrapper">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${courses.size()}">0</div>
+                            <div class="stat-label">Всего курсов</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${courses.stream().mapToInt(course -> course.students.size()).sum()}">0</div>
+                            <div class="stat-label">Всего студентов</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="courses-grid" th:if="${not #lists.isEmpty(courses)}">
+                    <div class="course-card teacher-course" th:each="course : ${courses}">
+                        <div class="course-image">
+                            <img th:src="${course.imageUrl != null ? course.imageUrl : '/images/default-course.jpg'}" 
+                                 th:alt="${course.title}" 
+                                 class="course-img">
+                            <div class="course-status" th:classappend="${course.active ? 'status-active' : 'status-inactive'}">
+                                <span th:text="${course.active ? 'Активный' : 'Неактивный'}"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="course-content">
+                            <h3 class="course-title" th:text="${course.title}">Название курса</h3>
+                            <p class="course-description" th:text="${course.description}">Описание курса</p>
+                            
+                            <div class="course-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-users"></i>
+                                    <span th:text="${course.students.size()} + ' студентов'">0 студентов</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-video"></i>
+                                    <span th:text="${course.webinars.size()} + ' вебинаров'">0 вебинаров</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span th:text="${#temporals.format(course.createdAt, 'dd.MM.yyyy')}">Дата создания</span>
+                                </div>
+                            </div>
+                            
+                            <div class="course-actions">
+                                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                    Просмотреть
+                                </a>
+                                <a th:href="@{/teacher/courses/{id}/edit(id=${course.id})}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                    Редактировать
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" onclick="toggleDropdown(event)">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a th:href="@{/teacher/webinars/new?courseId={id}(id=${course.id})}" class="dropdown-item">
+                                            <i class="fas fa-video"></i>
+                                            Создать вебинар
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="#" class="dropdown-item text-danger" 
+                                           onclick="if(confirm('Вы уверены, что хотите удалить курс?')) { /* TODO: добавить удаление */ }">
+                                            <i class="fas fa-trash"></i>
+                                            Удалить курс
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" th:if="${#lists.isEmpty(courses)}">
+                    <div class="empty-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3>У вас пока нет курсов</h3>
+                    <p>Создайте свой первый курс, чтобы начать преподавание</p>
+                    <a href="/teacher/courses/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Создать курс
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
+    
+    <script>
+        function toggleDropdown(event) {
+            event.preventDefault();
+            const dropdown = event.target.closest('.dropdown');
+            dropdown.classList.toggle('active');
+        }
+        
+        // Закрытие dropdown при клике вне его
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

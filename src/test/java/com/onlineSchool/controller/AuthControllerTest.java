@@ -36,16 +36,20 @@ class AuthControllerTest extends BaseIntegrationTest {
     private EntityManager entityManager;
 
     @BeforeEach
-    void setUp() {
-        // Очистка тестовых данных перед каждым тестом, если это необходимо
-        // clearTestData(); // Предполагается, что этот метод есть в BaseIntegrationTest
+    public void setUp() {
+        // Очистка тестовых данных перед каждым тестом
+        clearTestData();
     }
 
     @Test
     void registerUser_Success() throws Exception {
+        long timestamp = System.currentTimeMillis();
+        String username = "testuserReg_" + timestamp;
+        String email = "testuserReg_" + timestamp + "@example.com";
+        
         mockMvc.perform(post("/register")
-                .param("username", "testuserReg")
-                .param("email", "testuserReg@example.com")
+                .param("username", username)
+                .param("email", email)
                 .param("password", "password123")
                 .param("confirmPassword", "password123"))
                 .andExpect(status().is3xxRedirection()) // Ожидаем редирект
@@ -55,9 +59,9 @@ class AuthControllerTest extends BaseIntegrationTest {
         entityManager.clear();
 
         // Проверяем, что пользователь действительно сохранен в базе
-        User savedUser = userService.findByUsername("testuserReg").orElse(null);
+        User savedUser = userService.findByUsername(username).orElse(null);
         assertNotNull(savedUser);
-        assertEquals("testuserReg@example.com", savedUser.getEmail());
+        assertEquals(email, savedUser.getEmail());
         assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()));
         assertEquals(Role.STUDENT, savedUser.getRole());
         assertTrue(savedUser.isActive());
@@ -65,9 +69,13 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Test
     void registerUser_PasswordMismatch() throws Exception {
+        long timestamp = System.currentTimeMillis();
+        String username = "testuserRegMismatch_" + timestamp;
+        String email = "testuserRegMismatch_" + timestamp + "@example.com";
+        
         mockMvc.perform(post("/register")
-                .param("username", "testuserRegMismatch")
-                .param("email", "testuserRegMismatch@example.com")
+                .param("username", username)
+                .param("email", email)
                 .param("password", "password123")
                 .param("confirmPassword", "password456")) // Несовпадающий пароль
                 .andExpect(status().isOk()) // Остаемся на странице регистрации
@@ -78,13 +86,15 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Test
     void registerUser_EmailExists() throws Exception {
-        // Сначала создадим пользователя с таким email
-        User existingUser = User.builder().username("existingUserMail").email("exists@example.com").password(passwordEncoder.encode("password")).role(Role.STUDENT).active(true).build(); // Пароль нужно кодировать
-        userService.save(existingUser);
+        // Сначала создадим пользователя с помощью BaseIntegrationTest
+        User existingUser = createTestUser("existing");
 
+        long timestamp = System.currentTimeMillis();
+        String newUsername = "newUserEmail_" + timestamp;
+        
         mockMvc.perform(post("/register")
-                .param("username", "newUserEmail")
-                .param("email", "exists@example.com") // Существующий email
+                .param("username", newUsername)
+                .param("email", existingUser.getEmail()) // Существующий email
                 .param("password", "password123")
                 .param("confirmPassword", "password123"))
                 .andExpect(status().isOk())
@@ -95,13 +105,15 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Test
     void registerUser_UsernameExists() throws Exception {
-        // Сначала создадим пользователя с таким username
-        User existingUser = User.builder().username("existingUsername").email("someother@example.com").password(passwordEncoder.encode("password")).role(Role.STUDENT).active(true).build(); // Пароль нужно кодировать
-        userService.save(existingUser);
+        // Сначала создадим пользователя с помощью BaseIntegrationTest
+        User existingUser = createTestUser("existing2");
 
+        long timestamp = System.currentTimeMillis();
+        String newEmail = "newemail_" + timestamp + "@example.com";
+        
         mockMvc.perform(post("/register")
-                .param("username", "existingUsername") // Существующий username
-                .param("email", "newemail@example.com")
+                .param("username", existingUser.getUsername()) // Существующий username
+                .param("email", newEmail)
                 .param("password", "password123")
                 .param("confirmPassword", "password123"))
                 .andExpect(status().isOk())

@@ -53,7 +53,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     private LocalDateTime now;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         now = LocalDateTime.now();
         
         // Создаем тестового преподавателя

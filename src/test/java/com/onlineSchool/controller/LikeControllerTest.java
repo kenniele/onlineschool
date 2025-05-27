@@ -56,48 +56,14 @@ public class LikeControllerTest extends BaseIntegrationTest {
     private User testTeacher;
 
     @BeforeEach
-    void setUp() {
-        // Создаем тестового пользователя
-        testUser = User.builder()
-                .username("testuser")
-                .password("password")
-                .email("user@example.com")
-                .firstName("Test")
-                .lastName("User")
-                .role(Role.USER)
-                .build();
-        testUser = userService.save(testUser);
-
-        // Создаем тестового преподавателя
-        testTeacher = User.builder()
-                .username("testteacher")
-                .password("password")
-                .email("teacher@example.com")
-                .firstName("Test")
-                .lastName("Teacher")
-                .role(Role.TEACHER)
-                .build();
-        testTeacher = userService.save(testTeacher);
-
-        // Создаем тестовый курс
-        testCourse = Course.builder()
-                .title("Test Course")
-                .description("Test Description")
-                .price(100.0)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusMonths(1))
-                .teacher(testTeacher)
-                .active(true)
-                .build();
-        testCourse = courseService.save(testCourse);
+    public void setUp() {
+        // Используем методы BaseIntegrationTest для создания уникальных данных
+        testUser = createTestUser();
+        testTeacher = createTestTeacher();
+        testCourse = createTestCourse(testTeacher);
 
         // Создаем тестовый лайк
-        testLike = Like.builder()
-                .user(testUser)
-                .entityType(EntityType.COURSE)
-                .entityId(testCourse.getId())
-                .build();
-        testLike = likeService.createLike(testLike);
+        testLike = createTestLike(testUser, testCourse.getId(), EntityType.COURSE);
     }
 
     @Test
@@ -204,15 +170,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     @WithMockUser(roles = "ADMIN")
     void hasLiked_WhenUserNotLiked_ShouldReturnFalse() throws Exception {
         // Создаем другого пользователя, который не ставил лайк
-        User otherUser = User.builder()
-                .username("otheruser")
-                .password("password")
-                .email("other@example.com")
-                .firstName("Other")
-                .lastName("User")
-                .role(Role.USER)
-                .build();
-        otherUser = userService.save(otherUser);
+        User otherUser = createTestUser("other");
 
         mockMvc.perform(get("/api/likes/has-liked/{userId}/{entityType}/{entityId}", 
                 otherUser.getId(), testLike.getEntityType(), testLike.getEntityId()))

@@ -1,96 +1,203 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статистика вебинаров - Онлайн Школа</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title>Статистика вебинара - Online School</title>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
-
-    <main class="container">
-        <section class="statistics-section">
-            <h1>Статистика вебинаров</h1>
-
-            <!-- Статистика посещаемости для преподавателей и администраторов -->
-            <div sec:authorize="hasAnyRole('TEACHER', 'ADMIN')" class="statistics-block">
-                <h2>Статистика посещаемости</h2>
-                <div class="statistics-grid">
-                    <div class="stat-card">
-                        <h3>Общая посещаемость</h3>
-                        <p class="stat-value" th:text="${statistics.attendance.totalAttendance}"></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Средняя посещаемость</h3>
-                        <p class="stat-value" th:text="${statistics.attendance.averageAttendance}"></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Максимальная посещаемость</h3>
-                        <p class="stat-value" th:text="${statistics.attendance.maxAttendance}"></p>
-                    </div>
-                </div>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Статистика вебинара
+                </h1>
+                <p class="page-description" th:text="${webinar.title}">Название вебинара</p>
             </div>
 
-            <!-- Статистика преподавателя -->
-            <div sec:authorize="hasRole('TEACHER')" class="statistics-block">
-                <h2>Моя статистика</h2>
-                <div class="statistics-grid">
-                    <div class="stat-card">
-                        <h3>Проведено вебинаров</h3>
-                        <p class="stat-value" th:text="${statistics.teacher.totalWebinars}"></p>
+            <div class="content-wrapper">
+                <!-- Основная информация о вебинаре -->
+                <div class="webinar-info-card">
+                    <div class="webinar-header">
+                        <h2 th:text="${webinar.title}">Название вебинара</h2>
+                        <div class="webinar-status" th:classappend="${webinar.status.name().toLowerCase()}">
+                            <span th:text="${webinar.status}">Статус</span>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Средняя оценка</h3>
-                        <p class="stat-value" th:text="${statistics.teacher.averageRating}"></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Общее количество участников</h3>
-                        <p class="stat-value" th:text="${statistics.teacher.totalParticipants}"></p>
+                    
+                    <div class="webinar-details">
+                        <div class="detail-item">
+                            <i class="fas fa-calendar"></i>
+                            <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата и время</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span th:text="${webinar.duration ?: 60} + ' мин'">60 мин</span>
+                        </div>
+                        <div class="detail-item" th:if="${webinar.course}">
+                            <i class="fas fa-book"></i>
+                            <span th:text="${webinar.course.title}">Курс</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Преподаватель</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Статистика студента -->
-            <div sec:authorize="hasRole('STUDENT')" class="statistics-block">
-                <h2>Моя статистика</h2>
-                <div class="statistics-grid">
+                <!-- Статистические карточки -->
+                <div class="stats-cards">
                     <div class="stat-card">
-                        <h3>Посещено вебинаров</h3>
-                        <p class="stat-value" th:text="${statistics.student.attendedWebinars}"></p>
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${webinar.participants.size()}">0</div>
+                            <div class="stat-label">Участников</div>
+                        </div>
                     </div>
+                    
                     <div class="stat-card">
-                        <h3>Пропущено вебинаров</h3>
-                        <p class="stat-value" th:text="${statistics.student.missedWebinars}"></p>
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${webinar.comments.size()}">0</div>
+                            <div class="stat-label">Комментариев</div>
+                        </div>
                     </div>
+                    
                     <div class="stat-card">
-                        <h3>Процент посещаемости</h3>
-                        <p class="stat-value" th:text="${statistics.student.attendancePercentage} + '%'"></p>
+                        <div class="stat-icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${webinar.materials.size()}">0</div>
+                            <div class="stat-label">Материалов</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">
+                                <span th:if="${webinar.maxParticipants != null}" 
+                                      th:text="${#numbers.formatDecimal((webinar.participants.size() * 100.0 / webinar.maxParticipants), 0, 0)}">0</span>
+                                <span th:unless="${webinar.maxParticipants != null}">∞</span>%
+                            </div>
+                            <div class="stat-label">Заполненность</div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Общая статистика для администраторов -->
-            <div sec:authorize="hasRole('ADMIN')" class="statistics-block">
-                <h2>Общая статистика</h2>
-                <div class="statistics-grid">
-                    <div class="stat-card">
-                        <h3>Всего вебинаров</h3>
-                        <p class="stat-value" th:text="${statistics.overall.totalWebinars}"></p>
+                <!-- Список участников -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Участники вебинара
+                    </h2>
+                    
+                    <div class="participants-list" th:if="${not #lists.isEmpty(webinar.participants)}">
+                        <div class="participant-card" th:each="participant : ${webinar.participants}">
+                            <div class="participant-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="participant-info">
+                                <h4 th:text="${participant.firstName != null ? participant.firstName + ' ' + participant.lastName : participant.username}">Имя участника</h4>
+                                <p th:text="${participant.email}">email@example.com</p>
+                                <div class="participant-role">
+                                    <span class="role-badge" th:classappend="${participant.role.name().toLowerCase()}" th:text="${participant.role}">Роль</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Активных вебинаров</h3>
-                        <p class="stat-value" th:text="${statistics.overall.activeWebinars}"></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Средняя посещаемость</h3>
-                        <p class="stat-value" th:text="${statistics.overall.averageAttendance}"></p>
+                    
+                    <div class="empty-state" th:if="${#lists.isEmpty(webinar.participants)}">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <h3>Нет участников</h3>
+                        <p>На данный вебинар пока никто не записался</p>
                     </div>
                 </div>
+
+                <!-- Комментарии -->
+                <div class="section" th:if="${not #lists.isEmpty(webinar.comments)}">
+                    <h2 class="section-title">
+                        <i class="fas fa-comments"></i>
+                        Комментарии
+                    </h2>
+                    
+                    <div class="comments-list">
+                        <div class="comment-item" th:each="comment : ${webinar.comments}">
+                            <div class="comment-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <h5 th:text="${comment.user.firstName != null ? comment.user.firstName + ' ' + comment.user.lastName : comment.user.username}">Автор</h5>
+                                    <span class="comment-date" th:text="${#temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</span>
+                                </div>
+                                <p th:text="${comment.content}">Текст комментария</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Материалы -->
+                <div class="section" th:if="${not #lists.isEmpty(webinar.materials)}">
+                    <h2 class="section-title">
+                        <i class="fas fa-file"></i>
+                        Материалы вебинара
+                    </h2>
+                    
+                    <div class="materials-list">
+                        <div class="material-item" th:each="material : ${webinar.materials}">
+                            <div class="material-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="material-info">
+                                <h4 th:text="${material.title}">Название материала</h4>
+                                <p th:text="${material.description}" th:if="${material.description}">Описание материала</p>
+                                <div class="material-meta">
+                                    <span th:if="${material.fileSize}">
+                                        <i class="fas fa-weight"></i>
+                                        <span th:text="${material.fileSize}">Размер файла</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="material-actions">
+                                <a th:href="${material.fileUrl}" class="btn btn-outline-primary btn-sm" target="_blank" th:if="${material.fileUrl}">
+                                    <i class="fas fa-download"></i>
+                                    Скачать
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Действия -->
+                <div class="section-actions">
+                    <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i>
+                        Вернуться к вебинару
+                    </a>
+                    <a href="/teacher/webinars" class="btn btn-outline-secondary" sec:authorize="hasRole('TEACHER')">
+                        <i class="fas fa-list"></i>
+                        Мои вебинары
+                    </a>
+                    <a href="/admin" class="btn btn-outline-secondary" sec:authorize="hasRole('ADMIN')">
+                        <i class="fas fa-cog"></i>
+                        Панель администратора
+                    </a>
+                </div>
             </div>
-        </section>
+        </div>
     </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
 </body>
 </html> 

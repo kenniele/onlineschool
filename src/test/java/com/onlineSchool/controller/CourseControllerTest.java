@@ -47,7 +47,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     private Course testCourse;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         // Создаем преподавателя
         testTeacher = createTestTeacher();
         

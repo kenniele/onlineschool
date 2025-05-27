@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title>Профиль - Online School</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-user"></i>
+                    Мой профиль
+                </h1>
+                <p class="page-description">Управление личными данными и настройками</p>
+            </div>
+
+            <div class="content-wrapper">
+                <!-- Информация о пользователе -->
+                <div class="profile-section">
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h2 sec:authentication="name">Имя пользователя</h2>
+                            <div class="profile-role">
+                                <span class="role-badge" sec:authentication="principal.authorities" th:classappend="${#authentication.principal.authorities.contains('ROLE_ADMIN') ? 'admin' : (#authentication.principal.authorities.contains('ROLE_TEACHER') ? 'teacher' : 'student')}">
+                                    <i class="fas fa-user-tag"></i>
+                                    <span th:text="${#authentication.principal.authorities.contains('ROLE_ADMIN') ? 'Администратор' : (#authentication.principal.authorities.contains('ROLE_TEACHER') ? 'Преподаватель' : 'Студент')}">Роль</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Форма редактирования профиля -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-edit"></i>
+                        Редактировать профиль
+                    </h3>
+                    
+                    <form action="/api/users/me" method="put" class="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Имя
+                                </label>
+                                <input type="text" 
+                                       id="firstName" 
+                                       name="firstName" 
+                                       class="form-input"
+                                       placeholder="Введите имя">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Фамилия
+                                </label>
+                                <input type="text" 
+                                       id="lastName" 
+                                       name="lastName" 
+                                       class="form-input"
+                                       placeholder="Введите фамилию">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </label>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
+                                   class="form-input"
+                                   placeholder="email@example.com"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-at"></i>
+                                Имя пользователя
+                            </label>
+                            <input type="text" 
+                                   id="username" 
+                                   name="username" 
+                                   class="form-input"
+                                   placeholder="username"
+                                   required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Сохранить изменения
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo"></i>
+                                Отменить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Изменение пароля -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-lock"></i>
+                        Изменить пароль
+                    </h3>
+                    
+                    <form action="/change-password" method="post" class="password-form">
+                        <div class="form-group">
+                            <label for="currentPassword" class="form-label">
+                                <i class="fas fa-key"></i>
+                                Текущий пароль
+                            </label>
+                            <input type="password" 
+                                   id="currentPassword" 
+                                   name="currentPassword" 
+                                   class="form-input"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newPassword" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Новый пароль
+                            </label>
+                            <input type="password" 
+                                   id="newPassword" 
+                                   name="newPassword" 
+                                   class="form-input"
+                                   minlength="6"
+                                   required>
+                            <div class="form-help">Пароль должен содержать минимум 6 символов</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Подтвердите пароль
+                            </label>
+                            <input type="password" 
+                                   id="confirmPassword" 
+                                   name="confirmPassword" 
+                                   class="form-input"
+                                   required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-key"></i>
+                                Изменить пароль
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Статистика пользователя -->
+                <div class="stats-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Моя активность
+                    </h3>
+                    
+                    <div class="stats-cards">
+                        <div class="stat-card" sec:authorize="hasRole('STUDENT')">
+                            <div class="stat-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Курсов</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card" sec:authorize="hasRole('TEACHER')">
+                            <div class="stat-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Курсов создано</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Вебинаров</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Дней на платформе</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Действия -->
+                <div class="actions-section">
+                    <a href="/dashboard" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Вернуться к дашборду
+                    </a>
+                    
+                    <form action="/logout" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Выйти из системы
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
+    
+    <script>
+        // Валидация формы смены пароля
+        document.querySelector('.password-form').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Пароли не совпадают');
+                return false;
+            }
+        });
+
+        // Загрузка данных пользователя (заглушка)
+        document.addEventListener('DOMContentLoaded', function() {
+            // TODO: Загрузить данные текущего пользователя через API
+            // и заполнить форму редактирования профиля
+        });
+    </script>
+</body>
+</html> 

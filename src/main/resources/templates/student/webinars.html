@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title>Мои вебинары - Online School</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-video"></i>
+                    Мои вебинары
+                </h1>
+                <p class="page-description">Управляйте участием в вебинарах</p>
+            </div>
+
+            <div class="content-wrapper">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${participatingWebinars.size()}">0</div>
+                            <div class="stat-label">Записан на вебинары</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${availableWebinars.size()}">0</div>
+                            <div class="stat-label">Доступно для записи</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Мои вебинары -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-check"></i>
+                        Записан на вебинары
+                    </h2>
+                    
+                    <div class="webinars-grid" th:if="${not #lists.isEmpty(participatingWebinars)}">
+                        <div class="webinar-card" th:each="webinar : ${participatingWebinars}">
+                            <div class="webinar-header">
+                                <h3 class="webinar-title" th:text="${webinar.title}">Название вебинара</h3>
+                                <div class="webinar-status" th:classappend="${webinar.status.name().toLowerCase()}">
+                                    <span th:text="${webinar.status}">Статус</span>
+                                </div>
+                            </div>
+                            
+                            <div class="webinar-content">
+                                <p class="webinar-description" th:text="${webinar.description}">Описание вебинара</p>
+                                
+                                <div class="webinar-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-calendar"></i>
+                                        <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата и время</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                        <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Преподаватель</span>
+                                    </div>
+                                    <div class="meta-item" th:if="${webinar.course}">
+                                        <i class="fas fa-book"></i>
+                                        <span th:text="${webinar.course.title}">Курс</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-users"></i>
+                                        <span th:text="${webinar.participants.size()} + ' участников'">0 участников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="webinar-actions">
+                                    <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                        Подробнее
+                                    </a>
+                                    <form th:action="@{/student/webinars/{id}/leave(id=${webinar.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                onclick="return confirm('Вы уверены, что хотите отменить участие в вебинаре?')">
+                                            <i class="fas fa-times"></i>
+                                            Отменить участие
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state" th:if="${#lists.isEmpty(participatingWebinars)}">
+                        <div class="empty-icon">
+                            <i class="fas fa-calendar-times"></i>
+                        </div>
+                        <h3>Вы не записаны ни на один вебинар</h3>
+                        <p>Ниже представлены доступные для записи вебинары</p>
+                    </div>
+                </div>
+
+                <!-- Доступные вебинары -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-calendar-plus"></i>
+                        Доступные вебинары
+                    </h2>
+                    
+                    <div class="webinars-grid" th:if="${not #lists.isEmpty(availableWebinars)}">
+                        <div class="webinar-card available" th:each="webinar : ${availableWebinars}">
+                            <div class="webinar-header">
+                                <h3 class="webinar-title" th:text="${webinar.title}">Название вебинара</h3>
+                                <div class="webinar-status" th:classappend="${webinar.status.name().toLowerCase()}">
+                                    <span th:text="${webinar.status}">Статус</span>
+                                </div>
+                            </div>
+                            
+                            <div class="webinar-content">
+                                <p class="webinar-description" th:text="${webinar.description}">Описание вебинара</p>
+                                
+                                <div class="webinar-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-calendar"></i>
+                                        <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата и время</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                        <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Преподаватель</span>
+                                    </div>
+                                    <div class="meta-item" th:if="${webinar.course}">
+                                        <i class="fas fa-book"></i>
+                                        <span th:text="${webinar.course.title}">Курс</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-users"></i>
+                                        <span th:text="${webinar.participants.size()} + ' участников'">0 участников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="webinar-actions">
+                                    <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                        Подробнее
+                                    </a>
+                                    <form th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-plus"></i>
+                                            Записаться
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state" th:if="${#lists.isEmpty(availableWebinars)}">
+                        <div class="empty-icon">
+                            <i class="fas fa-calendar-times"></i>
+                        </div>
+                        <h3>Нет доступных вебинаров</h3>
+                        <p>В настоящее время нет запланированных вебинаров для записи</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
+</body>
+</html> 

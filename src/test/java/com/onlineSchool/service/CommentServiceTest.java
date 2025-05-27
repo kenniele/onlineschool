@@ -32,7 +32,7 @@ class CommentServiceTest extends BaseIntegrationTest {
     private Course testCourse;
     
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         // Используем методы из BaseIntegrationTest
         testUser = createTestUser("testUser");
         testCourse = createTestCourse(testUser);

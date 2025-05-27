@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CommentControllerTest extends BaseIntegrationTest {
 
     @Autowired
@@ -55,52 +57,16 @@ class CommentControllerTest extends BaseIntegrationTest {
     private LocalDateTime now;
 
     @BeforeEach
-    void setUp() {
-        now = LocalDateTime.now();
+    public void setUp() {
+        // Создаем тестовых пользователей с уникальными данными
+        testUser = createTestUser(Role.STUDENT);
+        testTeacher = createTestTeacher();
         
-        // Создаем тестового пользователя
-        testUser = User.builder()
-                .username("testuser")
-                .password("password")
-                .email("user@example.com")
-                .firstName("Test")
-                .lastName("User")
-                .role(Role.USER)
-                .build();
-        testUser = userService.save(testUser);
-        
-        // Создаем тестового преподавателя
-        testTeacher = User.builder()
-                .username("testteacher")
-                .password("password")
-                .email("teacher@example.com")
-                .firstName("Test")
-                .lastName("Teacher")
-                .role(Role.TEACHER)
-                .build();
-        testTeacher = userService.save(testTeacher);
-
         // Создаем тестовый вебинар
-        testWebinar = Webinar.builder()
-                .title("Test Webinar")
-                .description("Test Description")
-                .startTime(now.plusDays(1))
-                .duration(60)
-                .maxParticipants(100)
-                .status(WebinarStatus.SCHEDULED)
-                .active(true)
-                .teacher(testTeacher)
-                .build();
-        testWebinar = webinarService.save(testWebinar);
-
+        testWebinar = createTestWebinar();
+        
         // Создаем тестовый комментарий
-        testComment = Comment.builder()
-                .content("Test comment")
-                .user(testUser)
-                .entityType(EntityType.WEBINAR)
-                .entityId(testWebinar.getId())
-                .build();
-        testComment = commentService.create(testComment);
+        testComment = createTestComment(testUser, testWebinar);
     }
 
     @Test
@@ -109,7 +75,7 @@ class CommentControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/comments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].content", is("Test comment")));
+                .andExpect(jsonPath("$[0].content", containsString("Test Comment")));
     }
 
     @Test
@@ -118,14 +84,14 @@ class CommentControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/comments/{id}", testComment.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(testComment.getId().intValue())))
-                .andExpect(jsonPath("$.content", is("Test comment")))
+                .andExpect(jsonPath("$.content", containsString("Test Comment")))
                 .andExpect(jsonPath("$.user.id", is(testUser.getId().intValue())));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void getCommentById_WhenCommentNotExists_ShouldReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/comments/999"))
+        mockMvc.perform(get("/api/comments/999999"))
                 .andExpect(status().isNotFound());
     }
 
@@ -135,7 +101,7 @@ class CommentControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/comments/webinar/{webinarId}", testWebinar.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].content", is("Test comment")));
+                .andExpect(jsonPath("$[0].content", containsString("Test Comment")));
     }
 
     @Test
@@ -144,7 +110,7 @@ class CommentControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/comments/user/{userId}", testUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].content", is("Test comment")));
+                .andExpect(jsonPath("$[0].content", containsString("Test Comment")));
     }
 
     @Test

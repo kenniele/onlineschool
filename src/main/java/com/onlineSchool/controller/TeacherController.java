@@ -119,6 +119,39 @@ public class TeacherController {
         return "redirect:/teacher/webinars";
     }
 
+    @GetMapping("/webinars/{id}/edit")
+    public String editWebinarForm(@PathVariable Long id, Model model, Authentication authentication) {
+        Webinar webinar = webinarService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        
+        // Проверяем, что вебинар принадлежит текущему учителю
+        User teacher = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+        
+        if (!webinar.getTeacher().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+        
+        List<Course> teacherCourses = courseService.findByTeacher(teacher);
+        
+        model.addAttribute("webinar", webinar);
+        model.addAttribute("courses", teacherCourses);
+        
+        return "teacher/webinar-form";
+    }
+
+    @PostMapping("/webinars/{id}")
+    public String updateWebinar(@PathVariable Long id, @ModelAttribute Webinar webinar, Authentication authentication) {
+        User teacher = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+        
+        webinar.setId(id);
+        webinar.setTeacher(teacher);
+        webinarService.update(id, webinar);
+        
+        return "redirect:/teacher/webinars";
+    }
+
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
         User teacher = userService.findByUsername(authentication.getName())

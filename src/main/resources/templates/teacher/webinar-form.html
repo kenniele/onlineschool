@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title th:text="${webinar.id != null ? 'Редактировать вебинар' : 'Создать вебинар'} + ' - Online School'">Создать вебинар - Online School</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-video" th:if="${webinar.id == null}"></i>
+                    <i class="fas fa-edit" th:if="${webinar.id != null}"></i>
+                    <span th:text="${webinar.id != null ? 'Редактировать вебинар' : 'Создать новый вебинар'}">Создать новый вебинар</span>
+                </h1>
+                <p class="page-description" th:text="${webinar.id != null ? 'Измените информацию о вебинаре' : 'Заполните информацию о новом вебинаре'}">
+                    Заполните информацию о новом вебинаре
+                </p>
+            </div>
+
+            <div class="content-wrapper">
+                <div class="form-container">
+                    <form th:action="${webinar.id != null ? '/teacher/webinars/' + webinar.id : '/teacher/webinars'}" 
+                          method="post" 
+                          th:object="${webinar}" 
+                          class="webinar-form">
+                        
+                        <div class="form-group">
+                            <label for="title" class="form-label">
+                                <i class="fas fa-heading"></i>
+                                Название вебинара
+                            </label>
+                            <input type="text" 
+                                   id="title" 
+                                   th:field="*{title}" 
+                                   class="form-input"
+                                   placeholder="Введите название вебинара"
+                                   required>
+                            <div class="form-help">Выберите краткое и информативное название</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left"></i>
+                                Описание вебинара
+                            </label>
+                            <textarea id="description" 
+                                      th:field="*{description}" 
+                                      class="form-textarea"
+                                      rows="4"
+                                      placeholder="Опишите содержание вебинара, что будет изучаться"
+                                      required></textarea>
+                            <div class="form-help">Подробно опишите программу вебинара</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="startTime" class="form-label">
+                                    <i class="fas fa-calendar"></i>
+                                    Дата и время проведения
+                                </label>
+                                <input type="datetime-local" 
+                                       id="startTime" 
+                                       th:field="*{startTime}" 
+                                       class="form-input"
+                                       required>
+                                <div class="form-help">Выберите дату и время начала вебинара</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="duration" class="form-label">
+                                    <i class="fas fa-clock"></i>
+                                    Продолжительность (минуты)
+                                </label>
+                                <input type="number" 
+                                       id="duration" 
+                                       th:field="*{duration}" 
+                                       class="form-input"
+                                       min="15"
+                                       max="480"
+                                       value="60"
+                                       placeholder="60">
+                                <div class="form-help">От 15 минут до 8 часов</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" th:if="${not #lists.isEmpty(courses)}">
+                            <label for="course" class="form-label">
+                                <i class="fas fa-book"></i>
+                                Курс (необязательно)
+                            </label>
+                            <select id="course" 
+                                    th:field="*{course}" 
+                                    class="form-select">
+                                <option value="">Не привязан к курсу</option>
+                                <option th:each="course : ${courses}" 
+                                        th:value="${course.id}" 
+                                        th:text="${course.title}"
+                                        th:selected="${webinar.course != null && webinar.course.id == course.id}">
+                                    Название курса
+                                </option>
+                            </select>
+                            <div class="form-help">Выберите курс, если вебинар является его частью</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="meetingUrl" class="form-label">
+                                <i class="fas fa-link"></i>
+                                Ссылка на конференцию
+                            </label>
+                            <input type="url" 
+                                   id="meetingUrl" 
+                                   th:field="*{meetingUrl}" 
+                                   class="form-input"
+                                   placeholder="https://zoom.us/j/123456789">
+                            <div class="form-help">Ссылка на Zoom, Meet или другую платформу для проведения вебинара</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="maxParticipants" class="form-label">
+                                <i class="fas fa-users"></i>
+                                Максимальное количество участников
+                            </label>
+                            <input type="number" 
+                                   id="maxParticipants" 
+                                   th:field="*{maxParticipants}" 
+                                   class="form-input"
+                                   min="1"
+                                   max="1000"
+                                   placeholder="100">
+                            <div class="form-help">Оставьте пустым для неограниченного количества</div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                <span th:text="${webinar.id != null ? 'Сохранить изменения' : 'Создать вебинар'}">Создать вебинар</span>
+                            </button>
+                            <a href="/teacher/webinars" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                                Отменить
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Превью вебинара -->
+                <div class="preview-container" th:if="${webinar.id != null}">
+                    <h3 class="preview-title">
+                        <i class="fas fa-eye"></i>
+                        Превью вебинара
+                    </h3>
+                    <div class="webinar-preview">
+                        <div class="preview-header">
+                            <h4 th:text="${webinar.title}">Название вебинара</h4>
+                            <div class="preview-status">
+                                <span class="status-badge" th:classappend="${webinar.status?.name()?.toLowerCase()}" th:text="${webinar.status}">Запланирован</span>
+                            </div>
+                        </div>
+                        <div class="preview-content">
+                            <p th:text="${webinar.description}">Описание вебинара</p>
+                            <div class="preview-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span th:text="${webinar.startTime != null ? #temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm') : 'Не указано'}">Дата и время</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span th:text="${webinar.duration ?: 60} + ' мин'">60 мин</span>
+                                </div>
+                                <div class="meta-item" th:if="${webinar.course}">
+                                    <i class="fas fa-book"></i>
+                                    <span th:text="${webinar.course.title}">Курс</span>
+                                </div>
+                                <div class="meta-item" th:if="${webinar.maxParticipants}">
+                                    <i class="fas fa-users"></i>
+                                    <span th:text="'До ' + ${webinar.maxParticipants} + ' участников'">До 100 участников</span>
+                                </div>
+                            </div>
+                            <div class="preview-actions" th:if="${webinar.meetingUrl}">
+                                <a th:href="${webinar.meetingUrl}" class="btn btn-success btn-sm" target="_blank">
+                                    <i class="fas fa-video"></i>
+                                    Присоединиться
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Информационные карточки -->
+                <div class="info-cards">
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>Советы по проведению вебинара</h4>
+                            <ul>
+                                <li>Подготовьте план и материалы заранее</li>
+                                <li>Проверьте техническое оборудование</li>
+                                <li>Начните вебинар за 5-10 минут до времени</li>
+                                <li>Взаимодействуйте с участниками через чат</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
+    
+    <script>
+        // Превью названия и описания в реальном времени
+        document.getElementById('title').addEventListener('input', function() {
+            const title = this.value;
+            const previewTitle = document.querySelector('.preview-header h4');
+            if (previewTitle) {
+                previewTitle.textContent = title || 'Название вебинара';
+            }
+        });
+
+        document.getElementById('description').addEventListener('input', function() {
+            const description = this.value;
+            const previewDescription = document.querySelector('.preview-content p');
+            if (previewDescription) {
+                previewDescription.textContent = description || 'Описание вебинара';
+            }
+        });
+
+        // Превью даты и времени
+        document.getElementById('startTime').addEventListener('input', function() {
+            const dateTime = this.value;
+            const previewDate = document.querySelector('.preview-meta .meta-item:first-child span');
+            if (previewDate && dateTime) {
+                const date = new Date(dateTime);
+                const formatted = date.toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                previewDate.textContent = formatted;
+            }
+        });
+
+        // Превью продолжительности
+        document.getElementById('duration').addEventListener('input', function() {
+            const duration = this.value;
+            const previewDuration = document.querySelector('.preview-meta .meta-item:nth-child(2) span');
+            if (previewDuration) {
+                previewDuration.textContent = (duration || 60) + ' мин';
+            }
+        });
+
+        // Превью ссылки на встречу
+        document.getElementById('meetingUrl').addEventListener('input', function() {
+            const url = this.value;
+            const previewActions = document.querySelector('.preview-actions');
+            const joinButton = previewActions?.querySelector('a');
+            
+            if (url && previewActions) {
+                if (joinButton) {
+                    joinButton.href = url;
+                    joinButton.style.display = 'inline-flex';
+                } else {
+                    previewActions.innerHTML = `
+                        <a href="${url}" class="btn btn-success btn-sm" target="_blank">
+                            <i class="fas fa-video"></i>
+                            Присоединиться
+                        </a>
+                    `;
+                }
+            } else if (joinButton) {
+                joinButton.style.display = 'none';
+            }
+        });
+
+        // Валидация формы
+        document.querySelector('.webinar-form').addEventListener('submit', function(e) {
+            const startTime = document.getElementById('startTime').value;
+            if (startTime) {
+                const selectedDate = new Date(startTime);
+                const now = new Date();
+                
+                if (selectedDate <= now) {
+                    e.preventDefault();
+                    alert('Дата и время вебинара должны быть в будущем');
+                    return false;
+                }
+            }
+        });
+
+        // Установка минимальной даты на сегодня
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('startTime').min = now.toISOString().slice(0, 16);
+        });
+    </script>
+</body>
+</html> 

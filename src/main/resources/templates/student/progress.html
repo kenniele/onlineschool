@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head">
+    <title>Мой прогресс - Online School</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-line"></i>
+                    Мой прогресс
+                </h1>
+                <p class="page-description">Отслеживайте свой прогресс в изучении курсов и участии в вебинарах</p>
+            </div>
+
+            <div class="content-wrapper">
+                <!-- Общая статистика -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${enrolledCourses.size()}">0</div>
+                            <div class="stat-label">Изучаемых курсов</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" th:text="${attendedWebinars.size()}">0</div>
+                            <div class="stat-label">Посещенных вебинаров</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Завершенных курсов</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">0%</div>
+                            <div class="stat-label">Средний прогресс</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Профиль студента -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Профиль студента
+                    </h2>
+                    
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h3 th:text="${student.firstName != null ? student.firstName + ' ' + student.lastName : student.username}">Имя студента</h3>
+                            <p class="profile-email" th:text="${student.email}">email@example.com</p>
+                            <div class="profile-badges">
+                                <span class="badge badge-primary">
+                                    <i class="fas fa-user-graduate"></i>
+                                    Студент
+                                </span>
+                                <span class="badge badge-success" th:if="${student.active}">
+                                    <i class="fas fa-check-circle"></i>
+                                    Активный
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Прогресс по курсам -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-graduation-cap"></i>
+                        Прогресс по курсам
+                    </h2>
+                    
+                    <div class="progress-list" th:if="${not #lists.isEmpty(enrolledCourses)}">
+                        <div class="progress-item" th:each="course : ${enrolledCourses}">
+                            <div class="progress-header">
+                                <h4 th:text="${course.title}">Название курса</h4>
+                                <span class="progress-percentage">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Преподаватель</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-video"></i>
+                                    <span th:text="${course.webinars.size()} + ' вебинаров'">0 вебинаров</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-users"></i>
+                                    <span th:text="${course.students.size()} + ' студентов'">0 студентов</span>
+                                </div>
+                            </div>
+                            <div class="progress-actions">
+                                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                    Перейти к курсу
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state" th:if="${#lists.isEmpty(enrolledCourses)}">
+                        <div class="empty-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h3>Нет активных курсов</h3>
+                        <p>Запишитесь на курсы, чтобы отслеживать свой прогресс</p>
+                        <a href="/courses" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Найти курсы
+                        </a>
+                    </div>
+                </div>
+
+                <!-- История вебинаров -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-history"></i>
+                        История участия в вебинарах
+                    </h2>
+                    
+                    <div class="webinar-history" th:if="${not #lists.isEmpty(attendedWebinars)}">
+                        <div class="history-item" th:each="webinar : ${attendedWebinars}">
+                            <div class="history-date">
+                                <div class="date-day" th:text="${#temporals.format(webinar.startTime, 'dd')}">01</div>
+                                <div class="date-month" th:text="${#temporals.format(webinar.startTime, 'MMM')}">янв</div>
+                            </div>
+                            <div class="history-content">
+                                <h4 th:text="${webinar.title}">Название вебинара</h4>
+                                <p th:text="${webinar.description}">Описание вебинара</p>
+                                <div class="history-meta">
+                                    <span class="meta-item">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                        <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Преподаватель</span>
+                                    </span>
+                                    <span class="meta-item" th:if="${webinar.course}">
+                                        <i class="fas fa-book"></i>
+                                        <span th:text="${webinar.course.title}">Курс</span>
+                                    </span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span th:text="${#temporals.format(webinar.startTime, 'HH:mm')}">00:00</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="history-status">
+                                <span class="status-badge" th:classappend="${webinar.status.name().toLowerCase()}" th:text="${webinar.status}">Статус</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state" th:if="${#lists.isEmpty(attendedWebinars)}">
+                        <div class="empty-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h3>Нет записей об участии в вебинарах</h3>
+                        <p>Принимайте участие в вебинарах, чтобы увидеть их здесь</p>
+                        <a href="/webinars" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Найти вебинары
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Достижения (заглушка для будущего функционала) -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-medal"></i>
+                        Достижения
+                    </h2>
+                    
+                    <div class="achievements-grid">
+                        <div class="achievement-card locked">
+                            <div class="achievement-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h4>Первый курс</h4>
+                            <p>Запишитесь на свой первый курс</p>
+                            <span class="achievement-status" th:classappend="${#lists.isEmpty(enrolledCourses) ? 'locked' : 'unlocked'}">
+                                <span th:text="${#lists.isEmpty(enrolledCourses) ? 'Заблокировано' : 'Получено'}"></span>
+                            </span>
+                        </div>
+                        
+                        <div class="achievement-card locked">
+                            <div class="achievement-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <h4>Участник</h4>
+                            <p>Примите участие в вебинаре</p>
+                            <span class="achievement-status" th:classappend="${#lists.isEmpty(attendedWebinars) ? 'locked' : 'unlocked'}">
+                                <span th:text="${#lists.isEmpty(attendedWebinars) ? 'Заблокировано' : 'Получено'}"></span>
+                            </span>
+                        </div>
+                        
+                        <div class="achievement-card locked">
+                            <div class="achievement-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h4>Завершитель</h4>
+                            <p>Завершите свой первый курс</p>
+                            <span class="achievement-status locked">Заблокировано</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="fragments/footer :: footer"></div>
+</body>
+</html> 

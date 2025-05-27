@@ -28,7 +28,7 @@ class LikeServiceTest extends BaseIntegrationTest {
     private Like testLike;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         testUser = User.builder()
                 .username("testuser")
                 .password("password")
