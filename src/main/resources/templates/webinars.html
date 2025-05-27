@@ -1,116 +1,119 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вебинары - Online School</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link th:href="@{/css/modern-style.css}" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/header :: head}"></head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <main class="container mt-5">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <h1>Вебинары</h1>
+            <p class="text-muted">Присоединяйтесь к интерактивным онлайн-занятиям с лучшими преподавателями</p>
+        </div>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    <i class="fas fa-video"></i>
-                    Вебинары
-                </h1>
-                <p class="hero-subtitle">
-                    Присоединяйтесь к интерактивным онлайн-занятиям с лучшими преподавателями
-                </p>
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <span class="stat-number" th:text="${totalWebinars}">0</span>
-                        <span class="stat-label">Предстоящих вебинаров</span>
+        <!-- Statistics -->
+        <div class="stats-grid mb-5">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalWebinars ?: 0}">0</span>
+                <span class="stat-label">Предстоящих вебинаров</span>
+            </div>
+        </div>
+
+        <!-- Search and Filter Controls -->
+        <div class="search-controls">
+            <div class="search-row">
+                <div class="search-input">
+                    <label for="webinarSearch" class="form-label">Поиск вебинаров</label>
+                    <input type="text" 
+                           id="webinarSearch" 
+                           class="form-control" 
+                           placeholder="Введите название вебинара или преподавателя...">
+                </div>
+                
+                <div class="filter-group">
+                    <div class="form-group">
+                        <label for="statusFilter" class="form-label">Статус</label>
+                        <select id="statusFilter" class="form-control form-select">
+                            <option value="all">Все статусы</option>
+                            <option value="SCHEDULED">Запланированные</option>
+                            <option value="IN_PROGRESS">В процессе</option>
+                            <option value="COMPLETED">Завершенные</option>
+                            <option value="CANCELLED">Отмененные</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sortSelect" class="form-label">Сортировка</label>
+                        <select id="sortSelect" class="form-control form-select">
+                            <option value="date">По дате</option>
+                            <option value="title">По названию</option>
+                            <option value="teacher">По преподавателю</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-actions">
+                        <button type="button" class="search-btn" onclick="filterWebinars()">
+                            <i class="fas fa-search"></i>
+                            Найти
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Webinars Section -->
-    <section class="webinars-section">
-        <div class="container">
-            <!-- Filters -->
-            <div class="filters-section">
-                <div class="filters-header">
-                    <h2>Все вебинары</h2>
-                    <div class="view-toggle">
-                        <button class="view-btn active" data-view="grid">
-                            <i class="fas fa-th-large"></i>
-                        </button>
-                        <button class="view-btn" data-view="list">
-                            <i class="fas fa-list"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="filters-controls">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="webinarSearch" placeholder="Поиск вебинаров...">
-                    </div>
-                    <select id="statusFilter" class="sort-select">
-                        <option value="all">Все статусы</option>
-                        <option value="SCHEDULED">Запланированные</option>
-                        <option value="IN_PROGRESS">В процессе</option>
-                        <option value="COMPLETED">Завершенные</option>
-                        <option value="CANCELLED">Отмененные</option>
-                    </select>
-                    <select id="sortSelect" class="sort-select">
-                        <option value="date">По дате</option>
-                        <option value="title">По названию</option>
-                        <option value="teacher">По преподавателю</option>
-                    </select>
-                </div>
-            </div>
+        <!-- Results Info -->
+        <div class="results-info mb-4">
+            <p class="results-count">
+                Найдено <strong id="webinarCount" th:text="${webinars != null ? webinars.size() : 0}">0</strong> вебинаров
+            </p>
+        </div>
 
-            <!-- Webinars Grid -->
-            <div class="webinars-grid" id="webinarsGrid">
-                <div th:if="${webinars.empty}" class="empty-state">
-                    <i class="fas fa-video"></i>
-                    <h3>Вебинары не найдены</h3>
-                    <p>В данный момент нет запланированных вебинаров</p>
-                </div>
-
-                <div th:each="webinar : ${webinars}" class="webinar-card" 
+        <!-- Webinars Grid -->
+        <div class="webinars-section">
+            <div class="grid grid-3" id="webinarsGrid" th:if="${webinars != null and !webinars.empty}">
+                <div th:each="webinar : ${webinars}" class="card webinar-card" 
                      th:data-title="${webinar.title}" 
-                     th:data-teacher="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}"
+                     th:data-teacher="${webinar.teacher != null ? webinar.teacher.firstName + ' ' + webinar.teacher.lastName : ''}"
                      th:data-status="${webinar.status}"
                      th:data-date="${webinar.startTime}">
                     
-                    <div class="webinar-header">
-                        <div class="webinar-status" 
-                             th:classappend="${webinar.status.name()}">
-                            <i th:class="${webinar.status.name() == 'SCHEDULED'} ? 'fas fa-clock' : 
-                                         ${webinar.status.name() == 'IN_PROGRESS'} ? 'fas fa-play' :
-                                         ${webinar.status.name() == 'COMPLETED'} ? 'fas fa-check' : 'fas fa-times'"></i>
-                            <span th:text="${webinar.status.name() == 'SCHEDULED'} ? 'Запланирован' : 
-                                           ${webinar.status.name() == 'IN_PROGRESS'} ? 'В процессе' :
-                                           ${webinar.status.name() == 'COMPLETED'} ? 'Завершен' : 'Отменен'">Статус</span>
-                        </div>
-                        <div class="webinar-duration">
-                            <i class="fas fa-clock"></i>
-                            <span th:text="${webinar.duration}">90</span> мин
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="${webinar.title ?: 'Название вебинара'}">Название вебинара</h3>
+                        <div class="webinar-badges">
+                            <span class="badge badge-success" th:if="${webinar.status != null and webinar.status.name() == 'SCHEDULED'}">
+                                <i class="fas fa-clock"></i>
+                                Запланирован
+                            </span>
+                            <span class="badge badge-primary" th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS'}">
+                                <i class="fas fa-play"></i>
+                                В процессе
+                            </span>
+                            <span class="badge badge-secondary" th:if="${webinar.status != null and webinar.status.name() == 'COMPLETED'}">
+                                <i class="fas fa-check"></i>
+                                Завершен
+                            </span>
+                            <span class="badge badge-danger" th:if="${webinar.status != null and webinar.status.name() == 'CANCELLED'}">
+                                <i class="fas fa-times"></i>
+                                Отменен
+                            </span>
                         </div>
                     </div>
                     
-                    <div class="webinar-content">
-                        <h3 class="webinar-title" th:text="${webinar.title}">Название вебинара</h3>
-                        <p class="webinar-description" th:text="${webinar.description}">Описание вебинара</p>
+                    <div class="card-body">
+                        <p class="card-subtitle" th:text="${webinar.description ?: 'Описание вебинара'}">Описание вебинара</p>
                         
-                        <div class="webinar-meta">
+                        <div class="webinar-meta mt-3">
                             <div class="meta-item">
                                 <i class="fas fa-user"></i>
-                                <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Преподаватель</span>
+                                <span th:text="${webinar.teacher != null ? webinar.teacher.firstName + ' ' + webinar.teacher.lastName : 'Преподаватель'}">Преподаватель</span>
                             </div>
-                            <div class="meta-item">
+                            <div class="meta-item" th:if="${webinar.startTime != null}">
                                 <i class="fas fa-calendar"></i>
                                 <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата и время</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span th:text="${webinar.duration ?: 90} + ' мин'">90 мин</span>
                             </div>
                             <div class="meta-item" th:if="${webinar.course != null}">
                                 <i class="fas fa-book"></i>
@@ -118,58 +121,174 @@
                             </div>
                             <div class="meta-item">
                                 <i class="fas fa-users"></i>
-                                <span th:text="${webinar.participants.size()}">0</span> / <span th:text="${webinar.maxParticipants}">50</span> участников
+                                <span th:text="${webinar.participants != null ? webinar.participants.size() : 0} + ' / ' + ${webinar.maxParticipants ?: 50} + ' участников'">Участники</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="webinar-actions">
-                        <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-primary">
-                            <i class="fas fa-eye"></i>
-                            Подробнее
-                        </a>
-                        
-                        <!-- Кнопки для студентов -->
-                        <div sec:authorize="hasRole('STUDENT')">
-                            <form th:if="${!webinar.participants.contains(#authentication.principal) && webinar.status.name() == 'SCHEDULED'}" 
-                                  th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" 
-                                  method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-plus"></i>
-                                    Присоединиться
-                                </button>
-                            </form>
-                            <span th:if="${webinar.participants.contains(#authentication.principal)}" 
-                                  class="enrolled-badge">
-                                <i class="fas fa-check"></i>
-                                Вы участвуете
-                            </span>
-                            <a th:if="${webinar.status.name() == 'IN_PROGRESS' && webinar.participants.contains(#authentication.principal)}" 
-                               href="#" class="btn btn-warning">
-                                <i class="fas fa-video"></i>
-                                Войти в вебинар
+                    <div class="card-footer">
+                        <div class="webinar-actions">
+                            <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i>
+                                Подробнее
                             </a>
+                            
+                            <!-- Кнопки для студентов -->
+                            <div sec:authorize="hasRole('STUDENT')">
+                                <form th:if="${webinar.participants != null and !webinar.participants.contains(#authentication.principal) and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                                      th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" 
+                                      method="post" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-outline btn-sm">
+                                        <i class="fas fa-plus"></i>
+                                        Присоединиться
+                                    </button>
+                                </form>
+                                
+                                <span th:if="${webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
+                                      class="badge badge-success">
+                                    <i class="fas fa-check"></i>
+                                    Вы участвуете
+                                </span>
+                                
+                                <a th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS' and webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
+                                   href="#" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-video"></i>
+                                    Войти в вебинар
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Create Webinar Button for Teachers -->
-            <div sec:authorize="hasRole('TEACHER')" class="create-section">
-                <a href="/teacher/webinars/new" class="btn btn-primary btn-lg">
-                    <i class="fas fa-plus"></i>
-                    Создать вебинар
-                </a>
+            
+            <!-- Empty State -->
+            <div class="empty-state text-center" th:if="${webinars == null or #lists.isEmpty(webinars)}">
+                <div class="empty-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>Вебинары не найдены</h3>
+                <p>В данный момент нет запланированных вебинаров. Скоро здесь появятся интересные вебинары!</p>
             </div>
         </div>
-    </section>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+        <!-- Create Webinar Button for Teachers -->
+        <div class="quick-actions mt-5" sec:authorize="hasRole('TEACHER')">
+            <div class="card cta-card">
+                <div class="card-body text-center">
+                    <h4>Преподавателям</h4>
+                    <p>Создайте свой вебинар и поделитесь знаниями со студентами</p>
+                    <a href="/teacher/webinars/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Создать вебинар
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .page-header {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+        
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+        
+        .page-header .text-muted {
+            font-size: 1.125rem;
+        }
+        
+        .webinar-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .webinar-meta {
+            border-top: 1px solid var(--border-gray);
+            padding-top: 16px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--medium-gray);
+            font-size: 0.9375rem;
+            margin-bottom: 8px;
+        }
+        
+        .meta-item i {
+            width: 16px;
+            text-align: center;
+            color: var(--accent-blue);
+        }
+        
+        .webinar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .webinar-card {
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .webinar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--success-green), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .webinar-card:hover::before {
+            left: 100%;
+        }
+        
+        .webinar-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-heavy);
+            border-color: rgba(48, 209, 88, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 40px 0 24px;
+            }
+            
+            .page-header h1 {
+                font-size: 2.25rem;
+            }
+            
+            .webinar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .webinar-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 
     <script>
         // Search functionality
         document.getElementById('webinarSearch').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
             filterWebinars();
         });
 
@@ -208,6 +327,7 @@
             });
             
             webinarCards.forEach(card => webinarsGrid.appendChild(card));
+            updateWebinarCount();
         });
 
         // Filter function
@@ -215,6 +335,7 @@
             const searchTerm = document.getElementById('webinarSearch').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
             const webinarCards = document.querySelectorAll('.webinar-card');
+            let visibleCount = 0;
             
             webinarCards.forEach(card => {
                 const title = card.dataset.title.toLowerCase();
@@ -226,28 +347,24 @@
                 
                 if (matchesSearch && matchesStatus) {
                     card.style.display = 'block';
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+            
+            updateWebinarCount(visibleCount);
         }
-
-        // View toggle
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                const view = this.dataset.view;
-                const webinarsGrid = document.getElementById('webinarsGrid');
-                
-                if (view === 'list') {
-                    webinarsGrid.classList.add('list-view');
-                } else {
-                    webinarsGrid.classList.remove('list-view');
-                }
-            });
-        });
+        
+        function updateWebinarCount(count) {
+            const webinarCount = document.getElementById('webinarCount');
+            if (count !== undefined) {
+                webinarCount.textContent = count;
+            } else {
+                const visibleCards = document.querySelectorAll('.webinar-card[style="display: block"], .webinar-card:not([style*="display: none"])');
+                webinarCount.textContent = visibleCards.length;
+            }
+        }
     </script>
 </body>
 </html> 

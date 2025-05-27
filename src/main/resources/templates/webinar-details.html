@@ -1,98 +1,439 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${webinar.title} + ' - Онлайн Школа'">Вебинар - Онлайн Школа</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: head}"></head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+    <header th:replace="~{fragments/header :: header}"></header>
 
-    <main class="container">
-        <section class="webinar-details">
-            <h1 th:text="${webinar.title}"></h1>
-            
-            <div class="webinar-info">
-                <div class="meta">
-                    <span class="date" th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}"></span>
-                    <span class="status" th:text="${webinar.status}"></span>
-                    <span class="likes">
-                        <i class="fas fa-heart"></i> <span th:text="${webinar.likesCount}"></span>
-                    </span>
-                </div>
-                
-                <p class="description" th:text="${webinar.description}"></p>
-                
-                <div class="actions">
-                    <form th:action="@{/webinars/{id}/like(id=${webinar.id})}" method="post" style="display: inline;">
-                        <button type="submit" class="btn like-btn" th:classappend="${webinar.liked} ? 'liked'">
-                            <i class="fas fa-heart"></i> <span th:text="${webinar.liked} ? 'Убрать лайк' : 'Лайк'"></span>
-                        </button>
-                    </form>
-                    
-                    <form th:if="${webinar.status == 'SCHEDULED'}" 
-                          th:action="@{/webinars/{id}/join(id=${webinar.id})}" 
-                          method="post" 
-                          style="display: inline;"
-                          sec:authorize="hasRole('STUDENT')">
-                        <button type="submit" class="btn">Присоединиться</button>
-                    </form>
-                    
-                    <div th:if="${#authorization.expression('hasRole(\'TEACHER\')')}" class="teacher-actions">
-                        <form th:if="${webinar.status == 'SCHEDULED'}" 
-                              th:action="@{/webinars/{id}/start(id=${webinar.id})}" 
-                              method="post" 
-                              style="display: inline;">
-                            <button type="submit" class="btn">Начать вебинар</button>
-                        </form>
-                        
-                        <form th:if="${webinar.status == 'IN_PROGRESS'}" 
-                              th:action="@{/webinars/{id}/complete(id=${webinar.id})}" 
-                              method="post" 
-                              style="display: inline;">
-                            <button type="submit" class="btn">Завершить вебинар</button>
-                        </form>
-                        
-                        <form th:if="${webinar.status == 'SCHEDULED'}" 
-                              th:action="@{/webinars/{id}/cancel(id=${webinar.id})}" 
-                              method="post" 
-                              style="display: inline;">
-                            <button type="submit" class="btn">Отменить вебинар</button>
-                        </form>
+    <main class="container mt-5">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-nav mb-4">
+            <a href="/" class="breadcrumb-link">
+                <i class="fas fa-home"></i>
+                Главная
+            </a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="/webinars" class="breadcrumb-link">Вебинары</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="breadcrumb-current" th:text="${webinar.title ?: 'Название вебинара'}">Название вебинара</span>
+        </nav>
+
+        <!-- Webinar Hero Section -->
+        <div class="webinar-hero mb-5">
+            <div class="card">
+                <div class="card-header">
+                    <div class="webinar-category mb-3">
+                        <span class="badge badge-success" th:if="${webinar.status != null and webinar.status.name() == 'SCHEDULED'}">
+                            <i class="fas fa-clock"></i>
+                            Запланирован
+                        </span>
+                        <span class="badge badge-primary" th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS'}">
+                            <i class="fas fa-play"></i>
+                            В процессе
+                        </span>
+                        <span class="badge badge-secondary" th:if="${webinar.status != null and webinar.status.name() == 'COMPLETED'}">
+                            <i class="fas fa-check"></i>
+                            Завершен
+                        </span>
+                        <span class="badge badge-danger" th:if="${webinar.status != null and webinar.status.name() == 'CANCELLED'}">
+                            <i class="fas fa-times"></i>
+                            Отменен
+                        </span>
                     </div>
+                    
+                    <h1 class="webinar-title" th:text="${webinar.title ?: 'Название вебинара'}">Название вебинара</h1>
                 </div>
-            </div>
-            
-            <div class="webinar-materials" th:if="${not #lists.isEmpty(webinar.materials)}">
-                <h2>Материалы</h2>
-                <ul class="materials-list">
-                    <li th:each="material : ${webinar.materials}">
-                        <a th:href="@{/materials/{id}(id=${material.id})}" th:text="${material.title}"></a>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="webinar-comments">
-                <h2>Комментарии</h2>
-                <div class="comments-list">
-                    <div th:each="comment : ${webinar.comments}" class="comment">
-                        <div class="comment-header">
-                            <span class="author" th:text="${comment.author.username}"></span>
-                            <span class="date" th:text="${#temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}"></span>
+                
+                <div class="card-body">
+                    <p class="webinar-description" th:text="${webinar.description ?: 'Описание вебинара'}">Описание вебинара</p>
+                    
+                    <div class="webinar-meta">
+                        <div class="meta-item" th:if="${webinar.teacher != null}">
+                            <i class="fas fa-user"></i>
+                            <span th:text="${webinar.teacher.firstName + ' ' + webinar.teacher.lastName}">Преподаватель</span>
                         </div>
-                        <p class="text" th:text="${comment.text}"></p>
+                        <div class="meta-item" th:if="${webinar.startTime != null}">
+                            <i class="fas fa-calendar"></i>
+                            <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата и время</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span th:text="${webinar.duration ?: 90} + ' мин'">90 мин</span>
+                        </div>
+                        <div class="meta-item" th:if="${webinar.course != null}">
+                            <i class="fas fa-book"></i>
+                            <span th:text="${webinar.course.title}">Курс</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-users"></i>
+                            <span th:text="${webinar.participants != null ? webinar.participants.size() : 0} + ' / ' + ${webinar.maxParticipants ?: 50} + ' участников'">Участники</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-heart"></i>
+                            <span th:text="${webinar.likes != null ? webinar.likes.size() : 0} + ' лайков'">0 лайков</span>
+                        </div>
                     </div>
                 </div>
                 
-                <form th:action="@{/webinars/{id}/comments(id=${webinar.id})}" method="post" class="comment-form">
-                    <textarea name="text" placeholder="Оставьте комментарий..." required></textarea>
-                    <button type="submit" class="btn">Отправить</button>
-                </form>
+                <div class="card-footer">
+                    <div class="webinar-actions">
+                        <!-- Лайк -->
+                        <form th:action="@{/api/webinars/{id}/like(id=${webinar.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-outline" th:classappend="${webinar.likes != null and webinar.likes.contains(#authentication.principal)} ? 'liked'">
+                                <i class="fas fa-heart"></i>
+                                <span th:text="${webinar.likes != null and webinar.likes.contains(#authentication.principal)} ? 'Убрать лайк' : 'Лайк'">Лайк</span>
+                            </button>
+                        </form>
+                        
+                        <!-- Действия для студентов -->
+                        <div sec:authorize="hasRole('STUDENT')">
+                            <form th:if="${webinar.participants != null and !webinar.participants.contains(#authentication.principal) and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                                  th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    Присоединиться
+                                </button>
+                            </form>
+                            
+                            <span th:if="${webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
+                                  class="badge badge-success">
+                                <i class="fas fa-check"></i>
+                                Вы участвуете
+                            </span>
+                            
+                            <a th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS' and webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
+                               href="#" class="btn btn-warning">
+                                <i class="fas fa-video"></i>
+                                Войти в вебинар
+                            </a>
+                        </div>
+                        
+                        <!-- Действия для преподавателей -->
+                        <div sec:authorize="hasRole('TEACHER')" th:if="${webinar.teacher != null and webinar.teacher.username == #authentication.name}">
+                            <form th:if="${webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                                  th:action="@{/teacher/webinars/{id}/start(id=${webinar.id})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-play"></i>
+                                    Начать вебинар
+                                </button>
+                            </form>
+                            
+                            <form th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS'}" 
+                                  th:action="@{/teacher/webinars/{id}/complete(id=${webinar.id})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-secondary">
+                                    <i class="fas fa-stop"></i>
+                                    Завершить вебинар
+                                </button>
+                            </form>
+                            
+                            <form th:if="${webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                                  th:action="@{/teacher/webinars/{id}/cancel(id=${webinar.id})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i>
+                                    Отменить вебинар
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
+
+        <!-- Webinar Materials -->
+        <div class="webinar-materials mb-5" th:if="${webinar.materials != null and !webinar.materials.empty}">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-file-alt"></i>
+                        Материалы
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="materials-list">
+                        <div th:each="material : ${webinar.materials}" class="material-item">
+                            <a th:href="@{/materials/{id}(id=${material.id})}" class="material-link">
+                                <i class="fas fa-download"></i>
+                                <span th:text="${material.title}">Материал</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="webinar-comments">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-comments"></i>
+                        Комментарии
+                        <span class="badge badge-secondary" th:text="${webinar.comments != null ? webinar.comments.size() : 0}">0</span>
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <!-- Comments List -->
+                    <div class="comments-list mb-4" th:if="${webinar.comments != null and !webinar.comments.empty}">
+                        <div th:each="comment : ${webinar.comments}" class="comment-item">
+                            <div class="comment-header">
+                                <div class="comment-author">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span th:text="${comment.author != null ? comment.author.username : 'Пользователь'}">Пользователь</span>
+                                </div>
+                                <div class="comment-date">
+                                    <i class="fas fa-clock"></i>
+                                    <span th:text="${comment.createdAt != null ? #temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm') : 'Дата'}">Дата</span>
+                                </div>
+                            </div>
+                            <div class="comment-text" th:text="${comment.text ?: 'Текст комментария'}">Текст комментария</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div class="empty-state text-center" th:if="${webinar.comments == null or webinar.comments.empty}">
+                        <div class="empty-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3>Комментариев пока нет</h3>
+                        <p>Станьте первым, кто оставит комментарий к этому вебинару!</p>
+                    </div>
+                    
+                    <!-- Comment Form -->
+                    <div class="comment-form" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/api/webinars/{id}/comments(id=${webinar.id})}" method="post">
+                            <div class="form-group">
+                                <label for="commentText" class="form-label">Ваш комментарий</label>
+                                <textarea id="commentText" 
+                                          name="text" 
+                                          class="form-control" 
+                                          rows="3"
+                                          placeholder="Поделитесь своими мыслями о вебинаре..."
+                                          required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Отправить комментарий
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Login prompt for guests -->
+                    <div class="login-prompt text-center" sec:authorize="!isAuthenticated()">
+                        <p class="text-muted">
+                            <a href="/login" class="btn btn-outline">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Войдите
+                            </a>
+                            чтобы оставить комментарий
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9375rem;
+            color: var(--medium-gray);
+        }
+        
+        .breadcrumb-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .breadcrumb-link:hover {
+            color: var(--accent-blue-hover);
+        }
+        
+        .breadcrumb-current {
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+        
+        .webinar-category {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .webinar-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--primary-black);
+        }
+        
+        .webinar-description {
+            font-size: 1.125rem;
+            color: var(--dark-gray);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        
+        .webinar-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border-gray);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--medium-gray);
+            font-size: 0.9375rem;
+        }
+        
+        .meta-item i {
+            width: 16px;
+            text-align: center;
+            color: var(--accent-blue);
+        }
+        
+        .webinar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn.liked {
+            background: var(--error-red);
+            color: var(--primary-white);
+            border-color: var(--error-red);
+        }
+        
+        .materials-list {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .material-item {
+            padding: 16px;
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-gray);
+            transition: var(--transition);
+        }
+        
+        .material-item:hover {
+            background: var(--hover-gray);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .material-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .material-link:hover {
+            color: var(--accent-blue-hover);
+        }
+        
+        .comments-list {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .comment-item {
+            padding: 20px;
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-gray);
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: var(--primary-black);
+        }
+        
+        .comment-author i {
+            color: var(--accent-blue);
+            font-size: 1.125rem;
+        }
+        
+        .comment-date {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--medium-gray);
+            font-size: 0.875rem;
+        }
+        
+        .comment-text {
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+        
+        .comment-form {
+            border-top: 1px solid var(--border-gray);
+            padding-top: 24px;
+        }
+        
+        .login-prompt {
+            border-top: 1px solid var(--border-gray);
+            padding-top: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .webinar-title {
+                font-size: 2rem;
+            }
+            
+            .webinar-meta {
+                grid-template-columns: 1fr;
+            }
+            
+            .webinar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .webinar-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .comment-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </body>
 </html> 
