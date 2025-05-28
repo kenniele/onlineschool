@@ -156,6 +156,7 @@
                                 <form th:if="${course.students != null and !course.students.contains(#authentication.principal)}" 
                                       class="enroll-form"
                                       th:data-course-id="${course.id}"
+                                      th:action="@{/student/courses/{id}/enroll(id=${course.id})}"
                                       method="post" 
                                       style="display: inline;">
                                     <button type="submit" class="btn btn-outline btn-sm enroll-btn">
@@ -557,6 +558,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Получаем CSRF токен
+            const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+            
             // Обработка записи на курс через AJAX
             document.querySelectorAll('.enroll-form').forEach(form => {
                 form.addEventListener('submit', function(e) {
@@ -572,13 +577,21 @@
                     btnText.style.display = 'none';
                     btnLoading.style.display = 'inline';
                     
+                    // Подготавливаем заголовки
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    };
+                    
+                    // Добавляем CSRF токен если он есть
+                    if (token && header) {
+                        headers[header] = token;
+                    }
+                    
                     // Отправляем AJAX запрос
                     fetch(`/student/api/courses/${courseId}/enroll`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
+                        headers: headers
                     })
                     .then(response => response.json())
                     .then(data => {

@@ -40,10 +40,13 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/*.html", "/*.ico", "/favicon.ico").permitAll()
                 // Разрешить доступ к страницам авторизации и регистрации
                 .requestMatchers("/login", "/register", "/h2-console/**").permitAll()
-                // Разрешить доступ к главной странице и публичным страницам
-                .requestMatchers("/", "/courses", "/courses/**", "/webinars", "/webinars/**").permitAll()
-                // Разрешить публичный доступ к просмотру курсов и вебинаров через API
-                .requestMatchers("GET", "/api/courses/**", "/api/webinars/**").permitAll()
+                // Разрешить доступ к главной странице и курсам для всех
+                .requestMatchers("/", "/courses", "/courses/**").permitAll()
+                // Разрешить публичный доступ к курсам через API, но вебинары только для авторизованных
+                .requestMatchers("GET", "/api/courses/**").permitAll()
+                .requestMatchers("GET", "/api/webinars/**").authenticated()
+                // Вебинары доступны только авторизованным пользователям
+                .requestMatchers("/webinars", "/webinars/**").authenticated()
                 // Профиль требует аутентификации
                 .requestMatchers("/profile").authenticated()
                 // Дашборд требует аутентификации
@@ -54,10 +57,10 @@ public class SecurityConfig {
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 // Страницы студентов только для студентов
                 .requestMatchers("/student/**").hasRole("STUDENT")
-                // API endpoints требуют аутентификации (кроме GET для курсов и вебинаров)
+                // API endpoints требуют аутентификации (кроме GET для курсов)
                 .requestMatchers("/api/**").authenticated()
-                // Все остальные запросы разрешены
-                .anyRequest().permitAll()
+                // Все остальные запросы требуют аутентификации
+                .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")

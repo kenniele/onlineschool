@@ -34,9 +34,24 @@ public class StudentController {
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
         List<Course> enrolledCourses = courseService.findByStudent(student);
+        
+        // Получаем ID курсов студента для более безопасного сравнения
+        List<Long> enrolledCourseIds = enrolledCourses.stream()
+                .map(Course::getId)
+                .toList();
+        
         List<Webinar> upcomingWebinars = webinarService.findUpcoming().stream()
-                .filter(webinar -> webinar.getParticipants().contains(student) || 
-                        enrolledCourses.contains(webinar.getCourse()))
+                .filter(webinar -> {
+                    // Проверяем участие в вебинаре или запись на курс
+                    boolean isParticipant = webinar.getParticipants() != null && 
+                                          webinar.getParticipants().stream()
+                                                  .anyMatch(participant -> participant.getId().equals(student.getId()));
+                    
+                    boolean isEnrolledInCourse = webinar.getCourse() != null && 
+                                               enrolledCourseIds.contains(webinar.getCourse().getId());
+                    
+                    return isParticipant || isEnrolledInCourse;
+                })
                 .limit(5)
                 .toList();
         
@@ -112,7 +127,9 @@ public class StudentController {
         
         List<Webinar> participatingWebinars = webinarService.findByParticipant(student);
         List<Webinar> availableWebinars = webinarService.findUpcoming().stream()
-                .filter(webinar -> !webinar.getParticipants().contains(student))
+                .filter(webinar -> webinar.getParticipants() != null && 
+                                 !webinar.getParticipants().stream()
+                                         .anyMatch(participant -> participant.getId().equals(student.getId())))
                 .limit(10)
                 .toList();
         

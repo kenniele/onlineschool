@@ -210,14 +210,14 @@
                             <div class="comment-header">
                                 <div class="comment-author">
                                     <i class="fas fa-user-circle"></i>
-                                    <span th:text="${comment.author != null ? comment.author.username : 'Пользователь'}">Пользователь</span>
+                                    <span th:text="${comment.user != null ? comment.user.username : 'Пользователь'}">Пользователь</span>
                                 </div>
                                 <div class="comment-date">
                                     <i class="fas fa-clock"></i>
                                     <span th:text="${comment.createdAt != null ? #temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm') : 'Дата'}">Дата</span>
                                 </div>
                             </div>
-                            <div class="comment-text" th:text="${comment.text ?: 'Текст комментария'}">Текст комментария</div>
+                            <div class="comment-text" th:text="${comment.content ?: 'Текст комментария'}">Текст комментария</div>
                         </div>
                     </div>
                     

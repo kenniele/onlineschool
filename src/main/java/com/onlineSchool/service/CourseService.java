@@ -96,7 +96,18 @@ public class CourseService {
     @Transactional
     public Course enrollStudent(Long courseId, User student) {
         Course course = findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new RuntimeException("Курс не найден"));
+        
+        // Проверяем, что курс активен
+        if (!course.isActive()) {
+            throw new RuntimeException("Курс неактивен");
+        }
+        
+        // Проверяем, что студент еще не записан
+        if (course.getStudents().contains(student)) {
+            throw new RuntimeException("Вы уже записаны на этот курс");
+        }
+        
         course.getStudents().add(student);
         return courseRepository.save(course);
     }

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -54,20 +55,40 @@ public class WebinarService {
 
     @Transactional(readOnly = true)
     public List<Webinar> findUpcoming() {
-        return webinarRepository.findByStartTimeAfter(LocalDateTime.now());
+        try {
+            return webinarRepository.findByStartTimeAfter(LocalDateTime.now())
+                    .stream()
+                    .filter(webinar -> webinar != null && webinar.isActive())
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error finding upcoming webinars: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     @Transactional(readOnly = true)
     public List<Webinar> findPast() {
-        LocalDateTime now = LocalDateTime.now();
-        return webinarRepository.findAll().stream()
-                .filter(webinar -> webinar.getEndTime() != null && webinar.getEndTime().isBefore(now))
-                .collect(Collectors.toList());
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            return webinarRepository.findAll().stream()
+                    .filter(webinar -> webinar != null && 
+                                     webinar.getEndTime() != null && 
+                                     webinar.getEndTime().isBefore(now))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error finding past webinars: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     @Transactional(readOnly = true)
     public List<Webinar> findByParticipantId(Long userId) {
-        return webinarRepository.findByParticipantId(userId);
+        try {
+            return webinarRepository.findByParticipantId(userId);
+        } catch (Exception e) {
+            System.err.println("Error finding webinars by participant: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     @Transactional

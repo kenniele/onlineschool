@@ -136,11 +136,23 @@ public class HomeController {
         try {
             // Получаем все предстоящие вебинары
             var upcomingWebinars = webinarService.findUpcoming();
-            model.addAttribute("webinars", upcomingWebinars != null ? upcomingWebinars : Collections.emptyList());
+            System.out.println("Found upcoming webinars: " + (upcomingWebinars != null ? upcomingWebinars.size() : "null"));
             
-            // Статистика
-            model.addAttribute("totalWebinars", upcomingWebinars != null ? upcomingWebinars.size() : 0);
+            // Фильтруем только активные вебинары
+            if (upcomingWebinars != null) {
+                var activeWebinars = upcomingWebinars.stream()
+                        .filter(webinar -> webinar != null && webinar.isActive())
+                        .toList();
+                System.out.println("Active webinars: " + activeWebinars.size());
+                model.addAttribute("webinars", activeWebinars);
+                model.addAttribute("totalWebinars", activeWebinars.size());
+            } else {
+                model.addAttribute("webinars", Collections.emptyList());
+                model.addAttribute("totalWebinars", 0);
+            }
         } catch (Exception e) {
+            System.err.println("Error in webinars handler: " + e.getMessage());
+            e.printStackTrace();
             model.addAttribute("webinars", Collections.emptyList());
             model.addAttribute("totalWebinars", 0);
         }
