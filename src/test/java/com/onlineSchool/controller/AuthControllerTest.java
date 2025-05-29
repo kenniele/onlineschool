@@ -51,7 +51,9 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .param("username", username)
                 .param("email", email)
                 .param("password", "password123")
-                .param("confirmPassword", "password123"))
+                .param("confirmPassword", "password123")
+                .param("firstName", "Test")
+                .param("lastName", "User"))
                 .andExpect(status().is3xxRedirection()) // Ожидаем редирект
                 .andExpect(redirectedUrl("/login?registered"));
 
@@ -62,9 +64,11 @@ class AuthControllerTest extends BaseIntegrationTest {
         User savedUser = userService.findByUsername(username).orElse(null);
         assertNotNull(savedUser);
         assertEquals(email, savedUser.getEmail());
+        assertEquals(username, savedUser.getUsername());
         assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()));
         assertEquals(Role.STUDENT, savedUser.getRole());
-        assertTrue(savedUser.isActive());
+        // Проверяем что пользователь сохранен в базе
+        assertTrue(userService.findById(savedUser.getId()).isPresent());
     }
 
     @Test
@@ -77,7 +81,9 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .param("username", username)
                 .param("email", email)
                 .param("password", "password123")
-                .param("confirmPassword", "password456")) // Несовпадающий пароль
+                .param("confirmPassword", "password456") // Несовпадающий пароль
+                .param("firstName", "Test")
+                .param("lastName", "User"))
                 .andExpect(status().isOk()) // Остаемся на странице регистрации
                 .andExpect(view().name("register"))
                 .andExpect(model().attributeExists("error"))
@@ -96,7 +102,9 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .param("username", newUsername)
                 .param("email", existingUser.getEmail()) // Существующий email
                 .param("password", "password123")
-                .param("confirmPassword", "password123"))
+                .param("confirmPassword", "password123")
+                .param("firstName", "Test")
+                .param("lastName", "User"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("register"))
                 .andExpect(model().attributeExists("error"))
@@ -115,7 +123,9 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .param("username", existingUser.getUsername()) // Существующий username
                 .param("email", newEmail)
                 .param("password", "password123")
-                .param("confirmPassword", "password123"))
+                .param("confirmPassword", "password123")
+                .param("firstName", "Test")
+                .param("lastName", "User"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("register"))
                 .andExpect(model().attributeExists("error"))

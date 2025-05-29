@@ -45,10 +45,11 @@ public class LikeService {
             throw new IllegalStateException("User has already liked this entity");
         }
 
-        Like like = new Like();
-        like.setUser(user);
-        like.setEntityId(entityId);
-        like.setEntityType(entityType);
+        Like like = Like.builder()
+                .user(user)
+                .entityId(entityId)
+                .entityType(entityType)
+                .build();
 
         return likeRepository.save(like);
     }
@@ -109,5 +110,16 @@ public class LikeService {
 
     public boolean isUserLikedEntity(Long userId, EntityType entityType, Long entityId) {
         return !getLikesByUserAndEntity(userId, entityType, entityId).isEmpty();
+    }
+
+    /**
+     * Удаляет все лайки для определенной сущности
+     * @param entityType тип сущности
+     * @param entityId ID сущности
+     */
+    @Transactional
+    public void deleteByEntityTypeAndEntityId(EntityType entityType, Long entityId) {
+        List<Like> likesToDelete = likeRepository.findByEntityTypeAndEntityId(entityType, entityId);
+        likeRepository.deleteAll(likesToDelete);
     }
 } 

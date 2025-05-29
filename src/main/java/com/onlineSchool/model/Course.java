@@ -75,18 +75,6 @@ public class Course {
     )
     private Set<User> students = new HashSet<>();
 
-    @Builder.Default
-    @OneToMany
-    @JoinColumn(name = "entity_id", referencedColumnName = "id")
-    @SQLRestriction("entity_type = 'COURSE'")
-    private List<Comment> comments = new ArrayList<>();
-
-    @Builder.Default
-    @OneToMany
-    @JoinColumn(name = "entity_id", referencedColumnName = "id")
-    @SQLRestriction("entity_type = 'COURSE'")
-    private List<Like> likes = new ArrayList<>();
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

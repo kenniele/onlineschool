@@ -296,10 +296,12 @@ public class CourseControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(username="teststudent", roles = "STUDENT")
     void unenrollFromCourse_WithStudentRole_ShouldUnenrollSuccessfully() throws Exception {
-        // Given - сначала записываемся
-        courseService.enrollStudent(testCourse.getId(), testStudent);
+        // Given - сначала записываемся через API
+        mockMvc.perform(post("/api/courses/{id}/enroll", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
-        // When
+        // When - отписываемся
         ResultActions result = mockMvc.perform(delete("/api/courses/{id}/enroll", testCourse.getId())
                 .contentType(MediaType.APPLICATION_JSON));
 

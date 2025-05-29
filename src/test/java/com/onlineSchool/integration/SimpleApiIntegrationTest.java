@@ -56,9 +56,11 @@ public class SimpleApiIntegrationTest {
     private ObjectMapper objectMapper;
 
     private User testStudent;
+    private User testTeacher;
     private Webinar testWebinar;
     private String baseUrl;
     private HttpClient httpClient;
+    private String csrfToken;
 
     @BeforeEach
     void setUp() {
@@ -73,26 +75,23 @@ public class SimpleApiIntegrationTest {
         webinarRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Создаем тестового студента
+        // Создаем тестовых пользователей
         testStudent = new User();
         testStudent.setUsername("teststudent");
+        testStudent.setEmail("teststudent@example.com");
         testStudent.setPassword(passwordEncoder.encode("password"));
-        testStudent.setEmail("test@example.com");
         testStudent.setFirstName("Test");
         testStudent.setLastName("Student");
         testStudent.setRole(Role.STUDENT);
-        testStudent.setActive(true);
         testStudent = userRepository.save(testStudent);
 
-        // Создаем тестового преподавателя
-        User testTeacher = new User();
+        testTeacher = new User();
         testTeacher.setUsername("testteacher");
+        testTeacher.setEmail("testteacher@example.com");
         testTeacher.setPassword(passwordEncoder.encode("password"));
-        testTeacher.setEmail("teacher@example.com");
         testTeacher.setFirstName("Test");
         testTeacher.setLastName("Teacher");
         testTeacher.setRole(Role.TEACHER);
-        testTeacher.setActive(true);
         testTeacher = userRepository.save(testTeacher);
 
         // Создаем тестовый вебинар
@@ -219,7 +218,7 @@ public class SimpleApiIntegrationTest {
         }
         
         // Извлекаем CSRF токен из HTML
-        String csrfToken = extractCsrfToken(getResponse.body());
+        csrfToken = extractCsrfToken(getResponse.body());
         if (csrfToken == null) {
             System.out.println("CSRF token not found in login page");
             return false;
@@ -290,11 +289,17 @@ public class SimpleApiIntegrationTest {
     private boolean toggleLike() throws Exception {
         String url = baseUrl + "/api/likes/toggle/WEBINAR/" + testWebinar.getId();
         
-        HttpRequest request = HttpRequest.newBuilder()
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .POST(HttpRequest.BodyPublishers.noBody())
-                .header("Content-Type", "application/json")
-                .build();
+                .header("Content-Type", "application/json");
+        
+        // Добавляем CSRF токен если он есть
+        if (csrfToken != null) {
+            requestBuilder.header("X-CSRF-TOKEN", csrfToken);
+        }
+        
+        HttpRequest request = requestBuilder.build();
 
         // Проверяем cookies перед запросом
         java.net.CookieStore cookieStore = ((java.net.CookieManager) httpClient.cookieHandler().get()).getCookieStore();
@@ -325,11 +330,17 @@ public class SimpleApiIntegrationTest {
         
         String jsonBody = objectMapper.writeValueAsString(commentData);
         
-        HttpRequest request = HttpRequest.newBuilder()
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .header("Content-Type", "application/json")
-                .build();
+                .header("Content-Type", "application/json");
+        
+        // Добавляем CSRF токен если он есть
+        if (csrfToken != null) {
+            requestBuilder.header("X-CSRF-TOKEN", csrfToken);
+        }
+        
+        HttpRequest request = requestBuilder.build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         

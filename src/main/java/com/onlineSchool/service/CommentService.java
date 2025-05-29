@@ -144,4 +144,14 @@ public class CommentService {
         }
         return commentRepository.existsByIdAndUserId(commentId, user.getId());
     }
+
+    /**
+     * Удаляет все комментарии для определенной сущности
+     * @param entityType тип сущности
+     * @param entityId ID сущности
+     */
+    @Transactional
+    public void deleteByEntityTypeAndEntityId(EntityType entityType, Long entityId) {
+        commentRepository.deleteAll(commentRepository.findByEntityTypeAndEntityId(entityType, entityId));
+    }
 } 

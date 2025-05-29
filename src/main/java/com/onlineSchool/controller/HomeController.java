@@ -242,11 +242,8 @@ public class HomeController {
                 
                 // Проверяем, поставил ли пользователь лайк
                 try {
-                    final User finalCurrentUser = currentUser; // Создаем effectively final переменную
-                    if (finalCurrentUser != null && webinar.getLikes() != null) {
-                        hasLiked = webinar.getLikes().stream()
-                                .anyMatch(like -> like.getUser() != null && 
-                                        like.getUser().getId().equals(finalCurrentUser.getId()));
+                    if (currentUser != null) {
+                        hasLiked = likeService.hasLiked(currentUser.getId(), webinar.getId(), EntityType.WEBINAR);
                     }
                 } catch (Exception e) {
                     System.err.println("Error checking user likes: " + e.getMessage());

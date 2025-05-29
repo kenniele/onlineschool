@@ -40,8 +40,9 @@ public class ProgressIntegrationTest extends BaseIntegrationTest {
         student.setUsername("teststudent");
         student.setEmail("teststudent@test.com");
         student.setPassword("password");
+        student.setFirstName("Test");
+        student.setLastName("Student");
         student.setRole(Role.STUDENT);
-        student.setActive(true);
         student = userService.save(student);
         
         Course course = createTestCourse(teacher);
@@ -102,8 +103,9 @@ public class ProgressIntegrationTest extends BaseIntegrationTest {
         student.setUsername("teststudent");
         student.setEmail("teststudent@test.com");
         student.setPassword("password");
+        student.setFirstName("Test");
+        student.setLastName("Student");
         student.setRole(Role.STUDENT);
-        student.setActive(true);
         student = userService.save(student);
         
         Course course = createTestCourse(teacher);

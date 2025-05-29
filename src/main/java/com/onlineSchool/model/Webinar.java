@@ -68,25 +68,13 @@ public class Webinar {
     private WebinarStatus status;
 
     @Builder.Default
-    @OneToMany
-    @JoinColumn(name = "entity_id", referencedColumnName = "id")
-    @SQLRestriction("entity_type = 'WEBINAR'")
-    private List<Comment> comments = new ArrayList<>();
-
-    @Builder.Default
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "webinar_participants",
             joinColumns = @JoinColumn(name = "webinar_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> participants = new HashSet<>();
-
-    @Builder.Default
-    @OneToMany
-    @JoinColumn(name = "entity_id", referencedColumnName = "id")
-    @SQLRestriction("entity_type = 'WEBINAR'")
-    private List<Like> likes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

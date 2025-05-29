@@ -66,30 +66,47 @@ public abstract class BaseIntegrationTest {
     }
     
     /**
-     * Создает тестового пользователя с уникальными данными
+     * Создает тестового пользователя с уникальным именем
      */
-    protected User createTestUser() {
-        long counter = userCounter.incrementAndGet();
+    protected User createTestUser(String username) {
+        long timestamp = System.currentTimeMillis();
         User user = new User();
-        user.setUsername("testuser_" + counter + "_" + System.currentTimeMillis());
-        user.setEmail("test_" + counter + "_" + System.currentTimeMillis() + "@example.com");
-        user.setPassword("password");
+        user.setUsername(username + timestamp);
+        user.setEmail(username + timestamp + "@test.com");
+        user.setPassword("password123");
+        user.setFirstName("Test");
+        user.setLastName("User");
         user.setRole(Role.STUDENT);
-        user.setActive(true);
         return userService.save(user);
     }
     
     /**
-     * Создает тестового пользователя с указанным суффиксом
+     * Создает тестового учителя
      */
-    protected User createTestUser(String suffix) {
+    protected User createTestTeacher(String username) {
         long timestamp = System.currentTimeMillis();
         User user = new User();
-        user.setUsername("testuser_" + suffix + "_" + timestamp);
-        user.setEmail("test_" + suffix + "_" + timestamp + "@example.com");
-        user.setPassword("password");
-        user.setRole(Role.STUDENT);
-        user.setActive(true);
+        user.setUsername(username + timestamp);
+        user.setEmail(username + timestamp + "@teacher.com");
+        user.setPassword("password123");
+        user.setFirstName("Test");
+        user.setLastName("Teacher");
+        user.setRole(Role.TEACHER);
+        return userService.save(user);
+    }
+    
+    /**
+     * Создает тестового администратора
+     */
+    protected User createTestAdmin(String username) {
+        long timestamp = System.currentTimeMillis();
+        User user = new User();
+        user.setUsername(username + timestamp);
+        user.setEmail(username + timestamp + "@admin.com");
+        user.setPassword("password123");
+        user.setFirstName("Test");
+        user.setLastName("Admin");
+        user.setRole(Role.ADMIN);
         return userService.save(user);
     }
     
@@ -102,10 +119,19 @@ public abstract class BaseIntegrationTest {
         User user = new User();
         user.setUsername(role.name().toLowerCase() + "_" + counter + "_" + timestamp);
         user.setEmail(role.name().toLowerCase() + "_" + counter + "_" + timestamp + "@example.com");
-        user.setPassword("password");
+        user.setPassword("password123");
+        user.setFirstName("Test");
+        user.setLastName(role.name());
         user.setRole(role);
-        user.setActive(true);
         return userService.save(user);
+    }
+    
+    /**
+     * Создает тестового пользователя с уникальными данными
+     */
+    protected User createTestUser() {
+        long counter = userCounter.incrementAndGet();
+        return createTestUser("testuser_" + counter);
     }
     
     /**

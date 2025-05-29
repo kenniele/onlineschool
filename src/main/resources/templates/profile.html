@@ -123,13 +123,9 @@
                             <div class="info-content">
                                 <div class="info-label">Статус аккаунта</div>
                                 <div class="info-value">
-                                    <span th:if="${user.active}" class="badge badge-success">
-                                        <i class="fas fa-check"></i>
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check-circle"></i>
                                         Активен
-                                    </span>
-                                    <span th:if="${!user.active}" class="badge badge-danger">
-                                        <i class="fas fa-times"></i>
-                                        Заблокирован
                                     </span>
                                 </div>
                             </div>

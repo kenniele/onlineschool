@@ -5,8 +5,6 @@ import com.onlineSchool.model.Webinar;
 import com.onlineSchool.model.WebinarStatus;
 import com.onlineSchool.model.User;
 import com.onlineSchool.model.EntityType;
-import com.onlineSchool.model.Comment;
-import com.onlineSchool.model.Like;
 import com.onlineSchool.repository.WebinarRepository;
 import com.onlineSchool.repository.CommentRepository;
 import com.onlineSchool.repository.LikeRepository;
@@ -55,12 +53,6 @@ public class WebinarService {
                 if (webinar.getParticipants() != null) {
                     webinar.getParticipants().size(); // Загружаем участников
                 }
-                
-                // Загружаем комментарии и лайки через репозитории
-                List<Comment> comments = commentRepository.findByEntityIdAndEntityType(id, EntityType.WEBINAR);
-                List<Like> likes = likeRepository.findByEntityIdAndEntityType(id, EntityType.WEBINAR);
-                webinar.setComments(comments);
-                webinar.setLikes(likes);
             }
             return webinarOpt;
         } catch (Exception e) {
@@ -159,7 +151,11 @@ public class WebinarService {
             throw new EntityNotFoundException("Вебинар с ID " + id + " не найден");
         }
         
-        // Триггеры БД автоматически удалят связанные комментарии и лайки
+        // Сначала удаляем связанные комментарии и лайки
+        commentRepository.deleteAll(commentRepository.findByEntityTypeAndEntityId(EntityType.WEBINAR, id));
+        likeRepository.deleteAll(likeRepository.findByEntityTypeAndEntityId(EntityType.WEBINAR, id));
+        
+        // Затем удаляем сам вебинар
         webinarRepository.deleteById(id);
     }
 
