@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface LikeRepository extends JpaRepository<Like, Long> {
     List<Like> findByEntityTypeAndEntityId(EntityType entityType, Long entityId);
     
+    List<Like> findByEntityIdAndEntityType(Long entityId, EntityType entityType);
+    
     List<Like> findByUserId(Long userId);
     
     List<Like> findByUserIdAndEntityTypeAndEntityId(Long userId, EntityType entityType, Long entityId);

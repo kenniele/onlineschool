@@ -100,12 +100,20 @@ public class LikeController {
             @PathVariable Long entityId,
             @AuthenticationPrincipal UserDetails userDetails) {
         
+        System.out.println("=== TOGGLE LIKE DEBUG ===");
+        System.out.println("EntityType: " + entityType);
+        System.out.println("EntityId: " + entityId);
+        System.out.println("Username: " + userDetails.getUsername());
+        
         try {
             // Получаем User через UserService, а не кастим напрямую
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
             
+            System.out.println("User found: " + user.getId() + " - " + user.getUsername());
+            
             boolean hasLiked = likeService.hasLiked(user.getId(), entityId, entityType);
+            System.out.println("Has liked before: " + hasLiked);
             
             Map<String, Object> response = new HashMap<>();
             
@@ -114,20 +122,27 @@ public class LikeController {
                 likeService.unlike(user.getId(), entityId, entityType);
                 response.put("liked", false);
                 response.put("message", "Лайк убран");
+                System.out.println("Like removed");
             } else {
                 // Ставим лайк
                 likeService.like(user.getId(), entityId, entityType);
                 response.put("liked", true);
                 response.put("message", "Лайк поставлен");
+                System.out.println("Like added");
             }
             
             // Получаем новое количество лайков
             long likesCount = likeService.countLikes(entityId, entityType);
+            System.out.println("New likes count: " + likesCount);
+            
             response.put("likesCount", likesCount);
             response.put("success", true);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.out.println("Error in toggleLike: " + e.getMessage());
+            e.printStackTrace();
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Ошибка: " + e.getMessage());

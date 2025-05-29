@@ -12,7 +12,11 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByEntityTypeAndEntityId(EntityType entityType, Long entityId);
+    
+    List<Comment> findByEntityIdAndEntityType(Long entityId, EntityType entityType);
+    
     List<Comment> findByUserId(Long userId);
+    
     List<Comment> findByUserIdAndEntityTypeAndEntityId(Long userId, EntityType entityType, Long entityId);
     
     @Query("SELECT c FROM Comment c WHERE c.entityType = com.onlineSchool.model.EntityType.WEBINAR AND c.entityId = :webinarId")

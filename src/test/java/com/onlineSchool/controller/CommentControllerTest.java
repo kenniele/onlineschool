@@ -125,8 +125,8 @@ class CommentControllerTest extends BaseIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(commentMap)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", is("New comment")))
-                .andExpect(jsonPath("$.user.username", is("student_1_123456789")));
+                .andExpect(jsonPath("$.comment.content", is("New comment")))
+                .andExpect(jsonPath("$.comment.user.username", is("student_1_123456789")));
     }
 
     @Test
@@ -140,7 +140,7 @@ class CommentControllerTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/comments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(commentMap)))
-                .andExpect(status().isNotFound()); // Пользователь не найден
+                .andExpect(status().isBadRequest()); // Пользователь не найден - 400
     }
 
     @Test  

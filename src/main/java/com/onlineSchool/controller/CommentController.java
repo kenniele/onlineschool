@@ -14,7 +14,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -58,13 +60,41 @@ public class CommentController {
     // Создать новый комментарий - только авторизованные пользователи
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public Comment create(@RequestBody Comment comment, Authentication authentication) {
-        // Устанавливаем текущего пользователя как автора комментария
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User currentUser = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
-        comment.setUser(currentUser);
-        return commentService.create(comment);
+    public ResponseEntity<Map<String, Object>> create(@RequestBody Comment comment, Authentication authentication) {
+        System.out.println("=== CREATE COMMENT DEBUG ===");
+        System.out.println("Comment content: " + comment.getContent());
+        System.out.println("Entity type: " + comment.getEntityType());
+        System.out.println("Entity ID: " + comment.getEntityId());
+        System.out.println("Username: " + authentication.getName());
+        
+        try {
+            // Устанавливаем текущего пользователя как автора комментария
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User currentUser = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
+            comment.setUser(currentUser);
+            
+            System.out.println("User found: " + currentUser.getId() + " - " + currentUser.getUsername());
+            
+            Comment savedComment = commentService.create(comment);
+            System.out.println("Comment saved with ID: " + savedComment.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Комментарий успешно добавлен");
+            response.put("comment", savedComment);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.out.println("Error in create comment: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Ошибка при добавлении комментария: " + e.getMessage());
+            
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // Обновить существующий комментарий - только автор или админ

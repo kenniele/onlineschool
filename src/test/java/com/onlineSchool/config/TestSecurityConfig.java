@@ -1,24 +1,31 @@
 package com.onlineSchool.config;
 
+import com.onlineSchool.model.User;
+import com.onlineSchool.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @TestConfiguration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class TestSecurityConfig {
+
+    @Bean
+    @Primary
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     @Primary
@@ -37,15 +44,22 @@ public class TestSecurityConfig {
             )
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .defaultAuthenticationEntryPointFor(
-                    (request, response, authException) -> response.sendError(403, "Access Denied"),
-                    new AntPathRequestMatcher("/api/**")
+                    (request, response, authException) -> {
+                        response.setStatus(401);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                    },
+                    request -> request.getRequestURI().startsWith("/api/")
                 )
             )
             .formLogin(form -> form
                 .loginPage("/login")
+                .defaultSuccessUrl("/dashboard", true)
                 .permitAll()
             )
             .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/")
                 .permitAll()
             );
 
@@ -54,31 +68,14 @@ public class TestSecurityConfig {
 
     @Bean
     @Primary
-    public UserDetailsService testUserDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails testUser = User.builder()
-            .username("testuser")
-            .password(passwordEncoder.encode("password"))
-            .roles("USER")
-            .build();
-
-        UserDetails testAdmin = User.builder()
-            .username("testadmin")
-            .password(passwordEncoder.encode("password"))
-            .roles("ADMIN")
-            .build();
-
-        UserDetails testTeacher = User.builder()
-            .username("testteacher")
-            .password(passwordEncoder.encode("password"))
-            .roles("TEACHER")
-            .build();
-
-        return new InMemoryUserDetailsManager(testUser, testAdmin, testTeacher);
-    }
-
-    @Bean
-    @Primary
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public UserDetailsService testUserDetailsService(@Autowired UserRepository userRepository) {
+        return new UserDetailsService() {
+            @Override
+            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                User user = userRepository.findByUsername(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+                return user;
+            }
+        };
     }
 } 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/header :: head}"></head>
-<body>
+<body th:data-webinar-id="${webinar.id}">
     <header th:replace="~{fragments/header :: header}"></header>
 
     <main class="container mt-5">
@@ -554,28 +554,63 @@
         }
     </style>
 
-    <script>
+    <script th:inline="javascript">
+        // Получаем webinarId из Thymeleaf
+        const WEBINAR_ID = /*[[${webinar.id}]]*/ null;
+        
         document.addEventListener('DOMContentLoaded', function() {
-            const webinarId = /*[[${webinar.id}]]*/ 0;
+            // Используем переменную WEBINAR_ID
+            const webinarId = WEBINAR_ID || document.body.dataset.webinarId;
+            
+            console.log('=== DEBUG INFO ===');
+            console.log('WEBINAR_ID from Thymeleaf:', WEBINAR_ID);
+            console.log('webinarId from body dataset:', document.body.dataset.webinarId);
+            console.log('Final webinarId:', webinarId);
+            console.log('webinarId type:', typeof webinarId);
             
             // Проверяем что ID корректен
-            if (!webinarId || webinarId === 0) {
-                console.error('Webinar ID not found');
+            if (!webinarId || webinarId === '0' || webinarId === 'null' || webinarId === null) {
+                console.error('Webinar ID not found, webinarId:', webinarId);
+                console.error('Available data:', {
+                    thymeleafId: WEBINAR_ID,
+                    bodyDataset: document.body.dataset.webinarId,
+                    finalId: webinarId
+                });
                 return;
             }
+            
+            console.log('✅ webinarId is valid:', webinarId);
             
             // Обработка формы комментариев
             const commentForm = document.getElementById('commentForm');
             if (commentForm) {
+                console.log('✅ Comment form found');
                 commentForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
                     const formData = new FormData(this);
+                    const content = formData.get('content');
+                    
+                    // Валидация
+                    if (!content || content.trim().length === 0) {
+                        showNotification('Пожалуйста, введите текст комментария', 'error');
+                        return;
+                    }
+                    
+                    if (content.trim().length > 1000) {
+                        showNotification('Комментарий слишком длинный (максимум 1000 символов)', 'error');
+                        return;
+                    }
+                    
                     const commentData = {
-                        content: formData.get('content'),
+                        content: content.trim(),
                         entityType: 'WEBINAR',
                         entityId: webinarId
                     };
+                    
+                    // Отключаем кнопку отправки
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
                     
                     // Убираем CSRF токены для API запросов, так как они отключены в SecurityConfig
                     const headers = {
@@ -586,33 +621,59 @@
                     fetch('/api/comments', {
                         method: 'POST',
                         headers: headers,
+                        credentials: 'include',
                         body: JSON.stringify(commentData)
                     })
                     .then(response => {
-                        if (response.ok) {
-                            return response.json();
+                        if (!response.ok) {
+                            if (response.status === 403) {
+                                throw new Error('У вас нет прав для добавления комментария');
+                            } else if (response.status === 401) {
+                                throw new Error('Необходимо авторизоваться');
+                            }
+                            throw new Error('Ошибка при отправке комментария');
                         }
-                        throw new Error('Ошибка при отправке комментария');
+                        return response.json();
                     })
                     .then(data => {
-                        showNotification('Комментарий успешно добавлен!', 'success');
-                        // Очищаем форму
-                        document.getElementById('commentText').value = '';
-                        // Перезагружаем страницу для показа нового комментария
-                        setTimeout(() => window.location.reload(), 1000);
+                        if (data.success) {
+                            showNotification('Комментарий успешно добавлен!', 'success');
+                            // Очищаем форму
+                            document.getElementById('commentText').value = '';
+                            // Перезагружаем страницу для показа нового комментария
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            throw new Error(data.message || 'Произошла ошибка при добавлении комментария');
+                        }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         showNotification(error.message || 'Произошла ошибка при добавлении комментария', 'error');
+                    })
+                    .finally(() => {
+                        // Включаем кнопку обратно
+                        submitButton.disabled = false;
                     });
                 });
+            } else {
+                console.log('❌ Comment form not found');
             }
             
             // Обработка лайков
-            document.querySelectorAll('.like-btn').forEach(button => {
+            const likeButtons = document.querySelectorAll('.like-btn');
+            console.log('✅ Found like buttons:', likeButtons.length);
+            
+            likeButtons.forEach((button, index) => {
+                console.log(`Adding click handler to button ${index + 1}`);
+                
                 button.addEventListener('click', function() {
+                    console.log('=== LIKE BUTTON CLICKED ===');
+                    
                     const entityType = this.dataset.entityType;
                     const entityId = this.dataset.entityId;
+                    
+                    console.log('entityType:', entityType);
+                    console.log('entityId:', entityId);
                     
                     // Проверяем что entityId корректен
                     if (!entityId || entityId === 'null') {
@@ -623,6 +684,7 @@
                     
                     // Отключаем кнопку на время запроса
                     this.disabled = true;
+                    console.log('Button disabled');
                     
                     // Убираем CSRF токены для API запросов
                     const headers = {
@@ -630,17 +692,24 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     };
                     
-                    fetch(`/api/likes/toggle/${entityType}/${entityId}`, {
+                    const url = `/api/likes/toggle/${entityType}/${entityId}`;
+                    console.log('Making request to:', url);
+                    
+                    fetch(url, {
                         method: 'POST',
-                        headers: headers
+                        headers: headers,
+                        credentials: 'include'
                     })
                     .then(response => {
+                        console.log('Response status:', response.status);
                         if (response.ok) {
                             return response.json();
                         }
-                        throw new Error('Ошибка при обработке лайка');
+                        throw new Error('Ошибка при обработке лайка: ' + response.status);
                     })
                     .then(data => {
+                        console.log('Like response:', data);
+                        
                         if (data.success) {
                             // Обновляем состояние кнопки
                             if (data.liked) {
@@ -651,13 +720,19 @@
                                 this.querySelector('.like-text span').textContent = 'Лайк';
                             }
                             
-                            // Обновляем счетчик
+                            // Обновляем счетчик лайков в кнопке
                             this.querySelector('.like-count').textContent = `(${data.likesCount})`;
+                            
+                            // Обновляем счетчик лайков в meta-информации
+                            const metaLikes = document.querySelector('.webinar-meta .meta-item i.fas.fa-heart').nextElementSibling;
+                            if (metaLikes) {
+                                metaLikes.textContent = `${data.likesCount} лайков`;
+                            }
                             
                             // Показываем уведомление
                             showNotification(data.message, 'success');
                         } else {
-                            throw new Error(data.message);
+                            throw new Error(data.message || 'Произошла ошибка при обработке лайка');
                         }
                     })
                     .catch(error => {
@@ -667,9 +742,12 @@
                     .finally(() => {
                         // Включаем кнопку обратно
                         this.disabled = false;
+                        console.log('Button enabled back');
                     });
                 });
             });
+            
+            console.log('✅ All event handlers added');
             
             // Функция для показа уведомлений
             function showNotification(message, type) {
