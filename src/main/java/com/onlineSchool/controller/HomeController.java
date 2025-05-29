@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -132,7 +134,7 @@ public class HomeController {
     }
 
     @GetMapping("/webinars")
-    public String webinars(Model model) {
+    public String webinars(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         try {
             // Получаем все предстоящие вебинары
             var upcomingWebinars = webinarService.findUpcoming();
@@ -146,32 +148,77 @@ public class HomeController {
                 System.out.println("Active webinars: " + activeWebinars.size());
                 model.addAttribute("webinars", activeWebinars);
                 model.addAttribute("totalWebinars", activeWebinars.size());
+                
+                // Добавляем информацию об участии текущего пользователя для каждого вебинара
+                if (userDetails != null) {
+                    Map<Long, Boolean> participationMap = new HashMap<>();
+                    for (var webinar : activeWebinars) {
+                        boolean isParticipant = webinarService.isUserParticipant(webinar.getId(), userDetails.getUsername());
+                        participationMap.put(webinar.getId(), isParticipant);
+                        // Принудительная загрузка для избежания lazy loading проблем
+                        webinar.getParticipants().size();
+                    }
+                    model.addAttribute("participationMap", participationMap);
+                } else {
+                    model.addAttribute("participationMap", new HashMap<Long, Boolean>());
+                }
             } else {
                 model.addAttribute("webinars", Collections.emptyList());
                 model.addAttribute("totalWebinars", 0);
+                model.addAttribute("participationMap", new HashMap<Long, Boolean>());
             }
         } catch (Exception e) {
             System.err.println("Error in webinars handler: " + e.getMessage());
             e.printStackTrace();
             model.addAttribute("webinars", Collections.emptyList());
             model.addAttribute("totalWebinars", 0);
+            model.addAttribute("participationMap", new HashMap<Long, Boolean>());
         }
         
         return "webinars";
     }
 
     @GetMapping("/webinars/{id}")
-    public String webinarDetails(@PathVariable Long id, Model model) {
+    public String webinarDetails(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            var webinar = webinarService.findById(id)
+            var webinar = webinarService.findByIdWithDetails(id)
                     .orElseThrow(() -> new RuntimeException("Webinar not found"));
             
+            // Проверяем, участвует ли текущий пользователь в вебинаре
+            boolean isParticipant = false;
+            boolean hasLiked = false;
+            if (userDetails != null) {
+                try {
+                    isParticipant = webinarService.isUserParticipant(id, userDetails.getUsername());
+                } catch (Exception e) {
+                    System.err.println("Error checking user participation: " + e.getMessage());
+                    isParticipant = false;
+                }
+                
+                // Проверяем, поставил ли пользователь лайк
+                try {
+                    var user = userService.findByUsername(userDetails.getUsername()).orElse(null);
+                    if (user != null && webinar.getLikes() != null) {
+                        hasLiked = webinar.getLikes().stream()
+                                .anyMatch(like -> like.getUser() != null && 
+                                        like.getUser().getId().equals(user.getId()));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error checking user likes: " + e.getMessage());
+                    hasLiked = false;
+                }
+            }
+            
             model.addAttribute("webinar", webinar);
+            model.addAttribute("isParticipant", isParticipant);
+            model.addAttribute("hasLiked", hasLiked);
+            
+            return "webinar-details";
         } catch (Exception e) {
+            System.err.println("Error in webinarDetails: " + e.getMessage());
+            e.printStackTrace();
             return "redirect:/webinars";
         }
-        
-        return "webinar-details";
     }
 
     @GetMapping("/profile")

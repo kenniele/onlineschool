@@ -32,13 +32,13 @@ public class LikeController {
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or authentication.principal.id == #userId")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<List<Like>> getLikesByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(likeService.getLikesByUser(userId));
     }
 
     @GetMapping("/user/{userId}/entity/{entityType}/{entityId}")
-    @PreAuthorize("hasRole('ADMIN') or authentication.principal.id == #userId")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<List<Like>> getLikesByUserAndEntity(
             @PathVariable Long userId,
             @PathVariable EntityType entityType,
@@ -81,7 +81,7 @@ public class LikeController {
     }
 
     @GetMapping("/has-liked/{userId}/{entityType}/{entityId}")
-    @PreAuthorize("hasRole('ADMIN') or authentication.principal.id == #userId")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<Boolean> hasLiked(
             @PathVariable Long userId,
             @PathVariable EntityType entityType,

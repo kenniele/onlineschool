@@ -89,10 +89,10 @@
                                     class="btn btn-outline like-btn" 
                                     th:data-entity-type="WEBINAR"
                                     th:data-entity-id="${webinar.id}"
-                                    th:classappend="${webinar.likes != null and webinar.likes.stream().anyMatch(like -> like.user.id == #authentication.principal.id)} ? 'liked' : ''">
+                                    th:classappend="${hasLiked} ? 'liked' : ''">
                                 <i class="fas fa-heart"></i>
                                 <span class="like-text">
-                                    <span th:text="${webinar.likes != null and webinar.likes.stream().anyMatch(like -> like.user.id == #authentication.principal.id)} ? 'Убрать лайк' : 'Лайк'">Лайк</span>
+                                    <span th:text="${hasLiked} ? 'Убрать лайк' : 'Лайк'">Лайк</span>
                                 </span>
                                 <span class="like-count" th:text="'(' + ${webinar.likes != null ? webinar.likes.size() : 0} + ')'">0</span>
                             </button>
@@ -107,7 +107,7 @@
                         
                         <!-- Действия для студентов -->
                         <div sec:authorize="hasRole('STUDENT')">
-                            <form th:if="${webinar.participants != null and !webinar.participants.contains(#authentication.principal) and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                            <form th:if="${!isParticipant and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
                                   th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" 
                                   method="post" 
                                   style="display: inline;">
@@ -117,14 +117,14 @@
                                 </button>
                             </form>
                             
-                            <span th:if="${webinar.participants != null and webinar.participants.contains(#authentication.principal)}" 
+                            <span th:if="${isParticipant}" 
                                   class="badge badge-success">
                                 <i class="fas fa-check"></i>
                                 Вы участвуете
                             </span>
                             
                             <!-- Кнопка входа в вебинар для участников -->
-                            <a th:if="${webinar.status != null and (webinar.status.name() == 'IN_PROGRESS' or webinar.status.name() == 'SCHEDULED') and webinar.participants != null and webinar.participants.contains(#authentication.principal) and webinar.meetingUrl != null and !webinar.meetingUrl.empty}" 
+                            <a th:if="${webinar.status != null and (webinar.status.name() == 'IN_PROGRESS' or webinar.status.name() == 'SCHEDULED') and isParticipant and webinar.meetingUrl != null and !webinar.meetingUrl.empty}" 
                                th:href="${webinar.meetingUrl}" 
                                target="_blank"
                                class="btn btn-warning">

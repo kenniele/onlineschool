@@ -1,5 +1,6 @@
 package com.onlineSchool.service;
 
+import com.onlineSchool.exception.WebinarException;
 import com.onlineSchool.model.Webinar;
 import com.onlineSchool.model.WebinarStatus;
 import com.onlineSchool.model.User;
@@ -29,6 +30,40 @@ public class WebinarService {
 
     public Optional<Webinar> findById(Long id) {
         return webinarRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Webinar> findByIdWithDetails(Long id) {
+        try {
+            Optional<Webinar> webinarOpt = webinarRepository.findById(id);
+            if (webinarOpt.isPresent()) {
+                Webinar webinar = webinarOpt.get();
+                // Принудительная загрузка связанных сущностей
+                if (webinar.getTeacher() != null) {
+                    webinar.getTeacher().getFirstName(); // Загружаем учителя
+                }
+                if (webinar.getCourse() != null) {
+                    webinar.getCourse().getTitle(); // Загружаем курс
+                }
+                if (webinar.getParticipants() != null) {
+                    webinar.getParticipants().size(); // Загружаем участников
+                }
+                if (webinar.getComments() != null) {
+                    webinar.getComments().size(); // Загружаем комментарии
+                }
+                if (webinar.getLikes() != null) {
+                    webinar.getLikes().size(); // Загружаем лайки
+                }
+                if (webinar.getMaterials() != null) {
+                    webinar.getMaterials().size(); // Загружаем материалы
+                }
+            }
+            return webinarOpt;
+        } catch (Exception e) {
+            System.err.println("Error loading webinar with details: " + e.getMessage());
+            e.printStackTrace();
+            return Optional.empty();
+        }
     }
 
     public List<Webinar> findByTeacher(User teacher) {
@@ -99,7 +134,7 @@ public class WebinarService {
     @Transactional
     public Webinar update(Long id, Webinar webinar) {
         Webinar existingWebinar = webinarRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + id + " не найден"));
         
         existingWebinar.setTitle(webinar.getTitle());
         existingWebinar.setDescription(webinar.getDescription());
@@ -116,16 +151,19 @@ public class WebinarService {
 
     @Transactional
     public void deleteById(Long id) {
+        if (!webinarRepository.existsById(id)) {
+            throw new EntityNotFoundException("Вебинар с ID " + id + " не найден");
+        }
         webinarRepository.deleteById(id);
     }
 
     @Transactional
     public Webinar start(Long id) {
         Webinar webinar = findById(id)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + id + " не найден"));
         
         if (webinar.getStatus() != WebinarStatus.SCHEDULED) {
-            throw new RuntimeException("Webinar cannot be started");
+            throw new WebinarException("Вебинар не может быть запущен. Текущий статус: " + webinar.getStatus());
         }
         
         webinar.setStatus(WebinarStatus.IN_PROGRESS);
@@ -135,10 +173,10 @@ public class WebinarService {
     @Transactional
     public Webinar complete(Long id) {
         Webinar webinar = findById(id)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + id + " не найден"));
         
         if (webinar.getStatus() != WebinarStatus.IN_PROGRESS) {
-            throw new RuntimeException("Webinar cannot be completed");
+            throw new WebinarException("Вебинар не может быть завершен. Текущий статус: " + webinar.getStatus());
         }
         
         webinar.setStatus(WebinarStatus.COMPLETED);
@@ -148,10 +186,10 @@ public class WebinarService {
     @Transactional
     public Webinar cancel(Long id) {
         Webinar webinar = findById(id)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + id + " не найден"));
         
         if (webinar.getStatus() != WebinarStatus.SCHEDULED) {
-            throw new RuntimeException("Webinar cannot be cancelled");
+            throw new WebinarException("Вебинар не может быть отменен. Текущий статус: " + webinar.getStatus());
         }
         
         webinar.setStatus(WebinarStatus.CANCELLED);
@@ -161,10 +199,27 @@ public class WebinarService {
     @Transactional
     public Webinar addParticipant(Long webinarId, User user) {
         Webinar webinar = findById(webinarId)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + webinarId + " не найден"));
         
-        if (webinar.getParticipants().size() >= 100) {
-            throw new RuntimeException("Webinar is full");
+        // Проверяем статус вебинара
+        if (webinar.getStatus() != WebinarStatus.SCHEDULED) {
+            throw new WebinarException("Нельзя записаться на вебинар. Статус: " + webinar.getStatus());
+        }
+        
+        // Проверяем активность
+        if (!webinar.isActive()) {
+            throw new WebinarException("Вебинар неактивен");
+        }
+        
+        // Проверяем лимит участников
+        if (webinar.getMaxParticipants() != null && 
+            webinar.getParticipants().size() >= webinar.getMaxParticipants()) {
+            throw new WebinarException("Достигнут лимит участников вебинара");
+        }
+        
+        // Проверяем, что пользователь еще не записан
+        if (webinar.getParticipants().contains(user)) {
+            throw new WebinarException("Вы уже записаны на этот вебинар");
         }
         
         webinar.getParticipants().add(user);
@@ -174,7 +229,11 @@ public class WebinarService {
     @Transactional
     public Webinar removeParticipant(Long webinarId, User user) {
         Webinar webinar = findById(webinarId)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + webinarId + " не найден"));
+        
+        if (!webinar.getParticipants().contains(user)) {
+            throw new WebinarException("Вы не записаны на этот вебинар");
+        }
         
         webinar.getParticipants().remove(user);
         return webinarRepository.save(webinar);
@@ -182,39 +241,45 @@ public class WebinarService {
 
     @Transactional
     public Webinar addParticipant(Long webinarId, Long userId) {
-        Webinar webinar = findById(webinarId)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
-        
-        if (webinar.getParticipants().size() >= 100) {
-            throw new RuntimeException("Webinar is full");
-        }
-        
         User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
         
-        webinar.getParticipants().add(user);
-        return webinarRepository.save(webinar);
+        return addParticipant(webinarId, user);
     }
 
     @Transactional
     public Webinar removeParticipant(Long webinarId, Long userId) {
-        Webinar webinar = findById(webinarId)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
-        
         User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
         
-        webinar.getParticipants().remove(user);
-        return webinarRepository.save(webinar);
+        return removeParticipant(webinarId, user);
     }
 
     @Transactional
     public Webinar deactivate(Long id) {
         Webinar webinar = findById(id)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Вебинар с ID " + id + " не найден"));
         
         webinar.setActive(false);
         webinar.setStatus(WebinarStatus.CANCELLED);
         return webinarRepository.save(webinar);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isUserParticipant(Long webinarId, String username) {
+        try {
+            Optional<Webinar> webinarOpt = webinarRepository.findById(webinarId);
+            if (webinarOpt.isEmpty()) {
+                return false;
+            }
+            
+            Webinar webinar = webinarOpt.get();
+            return webinar.getParticipants() != null && 
+                   webinar.getParticipants().stream()
+                           .anyMatch(participant -> participant.getUsername().equals(username));
+        } catch (Exception e) {
+            System.err.println("Error checking user participation: " + e.getMessage());
+            return false;
+        }
     }
 } 

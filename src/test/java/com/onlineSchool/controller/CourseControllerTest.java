@@ -44,22 +44,32 @@ public class CourseControllerTest extends BaseIntegrationTest {
 
     private User testTeacher;
     private User testStudent;
+    private User testAdmin;
     private Course testCourse;
 
     @BeforeEach
     public void setUp() {
-        // Создаем преподавателя
-        testTeacher = createTestTeacher();
+        // Создаем преподавателя с конкретным username для тестов
+        testTeacher = createTestUser(Role.TEACHER);
+        testTeacher.setUsername("testteacher");
+        testTeacher = userService.save(testTeacher);
         
         // Создаем студента
-        testStudent = createTestUser();
+        testStudent = createTestUser(Role.STUDENT);
+        testStudent.setUsername("teststudent");
+        testStudent = userService.save(testStudent);
+        
+        // Создаем админа
+        testAdmin = createTestUser(Role.ADMIN);
+        testAdmin.setUsername("testadmin");
+        testAdmin = userService.save(testAdmin);
         
         // Создаем курс
         testCourse = createTestCourse(testTeacher);
         testCourse.setTitle("Test Course");
         testCourse.setDescription("Test Description");
         testCourse.setPrice(100.0);
-        courseService.save(testCourse);
+        testCourse = courseService.save(testCourse);
     }
 
     @Test
@@ -78,15 +88,15 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username="testuser", roles = "USER")
-    void getAllCourses_WithUserRole_ShouldReturnForbidden() throws Exception {
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void getAllCourses_WithStudentRole_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username="testuser", roles = "USER")
+    @WithMockUser(username="teststudent", roles = "STUDENT")
     void getAllActiveCourses_ShouldReturnActiveCourses() throws Exception {
         // Given в setUp
         courseService.activate(testCourse.getId());
@@ -103,7 +113,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username="testuser", roles = "USER")
+    @WithMockUser(username="teststudent", roles = "STUDENT")
     void getCourseById_ShouldReturnCourse() throws Exception {
         // Given в setUp
 
@@ -122,14 +132,14 @@ public class CourseControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(username="testteacher", roles = "TEACHER")
     void createCourse_WithTeacherRole_ShouldCreateAndReturnCourse() throws Exception {
-        // Given
+        // Given - создаем валидный курс
         Course newCourse = new Course();
         newCourse.setTitle("New Course");
         newCourse.setDescription("New Description");
         newCourse.setPrice(200.0);
-        newCourse.setTeacher(testTeacher);
-        newCourse.setStartDate(LocalDateTime.now());
+        newCourse.setStartDate(LocalDateTime.now().plusDays(1));
         newCourse.setEndDate(LocalDateTime.now().plusDays(30));
+        newCourse.setActive(true);
 
         // When
         ResultActions result = mockMvc.perform(post("/api/courses")
@@ -140,19 +150,19 @@ public class CourseControllerTest extends BaseIntegrationTest {
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is(newCourse.getTitle())))
                 .andExpect(jsonPath("$.description", is(newCourse.getDescription())))
-                .andExpect(jsonPath("$.price", is(newCourse.getPrice())));
+                .andExpect(jsonPath("$.price", is(newCourse.getPrice())))
+                .andExpect(jsonPath("$.teacher.id", is(testTeacher.getId().intValue())));
     }
 
     @Test
-    @WithMockUser(username="testuser", roles = "USER")
-    void createCourse_WithUserRole_ShouldReturnForbidden() throws Exception {
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void createCourse_WithStudentRole_ShouldReturnForbidden() throws Exception {
         // Given
         Course newCourse = new Course();
         newCourse.setTitle("New Course");
         newCourse.setDescription("New Description");
         newCourse.setPrice(200.0);
-        newCourse.setTeacher(testTeacher);
-        newCourse.setStartDate(LocalDateTime.now());
+        newCourse.setStartDate(LocalDateTime.now().plusDays(1));
         newCourse.setEndDate(LocalDateTime.now().plusDays(30));
 
         // When & Then
@@ -165,7 +175,7 @@ public class CourseControllerTest extends BaseIntegrationTest {
     @Test
     @WithMockUser(username="testteacher", roles = "TEACHER")
     void updateCourse_WithTeacherRole_ShouldUpdateAndReturnCourse() throws Exception {
-        // Given
+        // Given - обновляем курс преподавателя
         testCourse.setTitle("Updated Title");
         testCourse.setDescription("Updated Description");
         testCourse.setPrice(300.0);
@@ -264,5 +274,55 @@ public class CourseControllerTest extends BaseIntegrationTest {
         // Then
         removeResult.andExpect(status().isOk())
                 .andExpect(jsonPath("$.students", hasSize(0)));
+    }
+
+    // НОВЫЕ ТЕСТЫ для новых endpoints
+    @Test
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void enrollInCourse_WithStudentRole_ShouldEnrollSuccessfully() throws Exception {
+        // Given в setUp
+
+        // When
+        ResultActions result = mockMvc.perform(post("/api/courses/{id}/enroll", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.enrolled", is(true)))
+                .andExpect(jsonPath("$.message", containsString("успешно записались")));
+    }
+
+    @Test
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void unenrollFromCourse_WithStudentRole_ShouldUnenrollSuccessfully() throws Exception {
+        // Given - сначала записываемся
+        courseService.enrollStudent(testCourse.getId(), testStudent);
+
+        // When
+        ResultActions result = mockMvc.perform(delete("/api/courses/{id}/enroll", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.enrolled", is(false)))
+                .andExpect(jsonPath("$.message", containsString("отписались")));
+    }
+
+    @Test
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void getEnrollmentStatus_WithStudentRole_ShouldReturnStatus() throws Exception {
+        // Given в setUp
+
+        // When
+        ResultActions result = mockMvc.perform(get("/api/courses/{id}/enrollment-status", testCourse.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.enrolled", is(false)))
+                .andExpect(jsonPath("$.courseId", is(testCourse.getId().intValue())))
+                .andExpect(jsonPath("$.userId", is(testStudent.getId().intValue())));
     }
 } 

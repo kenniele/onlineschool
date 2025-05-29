@@ -52,22 +52,37 @@ public class LikeControllerTest extends BaseIntegrationTest {
 
     private Like testLike;
     private User testUser;
+    private User testAdmin;
     private Course testCourse;
     private User testTeacher;
 
     @BeforeEach
     public void setUp() {
-        // Используем методы BaseIntegrationTest для создания уникальных данных
-        testUser = createTestUser();
-        testTeacher = createTestTeacher();
+        // Создаем пользователя с конкретным username
+        testUser = createTestUser(Role.STUDENT);
+        testUser.setUsername("testuser");
+        testUser = userService.save(testUser);
+
+        // Создаем админа
+        testAdmin = createTestUser(Role.ADMIN);
+        testAdmin.setUsername("testadmin");
+        testAdmin = userService.save(testAdmin);
+
+        // Создаем преподавателя
+        testTeacher = createTestUser(Role.TEACHER);
+        testTeacher.setUsername("testteacher");
+        testTeacher = userService.save(testTeacher);
+
+        // Создаем курс
         testCourse = createTestCourse(testTeacher);
+        testCourse = courseService.save(testCourse);
 
         // Создаем тестовый лайк
         testLike = createTestLike(testUser, testCourse.getId(), EntityType.COURSE);
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     public void createLike_WhenValidInput_ShouldReturnCreatedLike() throws Exception {
         // Удаляем существующий лайк, чтобы избежать уникального ограничения
         likeService.deleteLike(testLike.getId());
@@ -88,7 +103,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     public void deleteLike_WhenLikeExists_ShouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/likes/{id}", testLike.getId()))
                 .andExpect(status().isNoContent());
@@ -99,7 +114,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     public void getLikesByEntity_ShouldReturnLikesList() throws Exception {
         mockMvc.perform(get("/api/likes/entity/{entityType}/{entityId}", 
                 testLike.getEntityType(), testLike.getEntityId()))
@@ -110,7 +125,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "testadmin", roles = "ADMIN")
     void getLikesByUser_ShouldReturnLikesList() throws Exception {
         mockMvc.perform(get("/api/likes/user/{userId}", testUser.getId()))
                 .andExpect(status().isOk())
@@ -119,7 +134,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "testadmin", roles = "ADMIN")
     void getLikesByUserAndEntity_ShouldReturnLikesList() throws Exception {
         mockMvc.perform(get("/api/likes/user/{userId}/entity/{entityType}/{entityId}", 
                 testUser.getId(), testLike.getEntityType(), testLike.getEntityId()))
@@ -131,7 +146,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     public void getLikeById_WhenLikeExists_ShouldReturnLike() throws Exception {
         mockMvc.perform(get("/api/likes/{id}", testLike.getId()))
                 .andExpect(status().isOk())
@@ -142,14 +157,14 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     public void getLikeById_WhenLikeDoesNotExist_ShouldReturnNotFound() throws Exception {
         mockMvc.perform(get("/api/likes/999"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "testuser", roles = "STUDENT")
     public void countLikes_ShouldReturnCount() throws Exception {
         mockMvc.perform(get("/api/likes/count/{entityType}/{entityId}", 
                 testLike.getEntityType(), testLike.getEntityId()))
@@ -158,7 +173,7 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "testadmin", roles = "ADMIN")
     void hasLiked_WhenUserLiked_ShouldReturnTrue() throws Exception {
         mockMvc.perform(get("/api/likes/has-liked/{userId}/{entityType}/{entityId}", 
                 testUser.getId(), testLike.getEntityType(), testLike.getEntityId()))
@@ -167,10 +182,12 @@ public class LikeControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "testadmin", roles = "ADMIN")
     void hasLiked_WhenUserNotLiked_ShouldReturnFalse() throws Exception {
         // Создаем другого пользователя, который не ставил лайк
-        User otherUser = createTestUser("other");
+        User otherUser = createTestUser(Role.STUDENT);
+        otherUser.setUsername("otheruser");
+        otherUser = userService.save(otherUser);
 
         mockMvc.perform(get("/api/likes/has-liked/{userId}/{entityType}/{entityId}", 
                 otherUser.getId(), testLike.getEntityType(), testLike.getEntityId()))

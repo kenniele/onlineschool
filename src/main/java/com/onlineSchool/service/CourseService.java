@@ -1,8 +1,10 @@
 package com.onlineSchool.service;
 
+import com.onlineSchool.exception.CourseEnrollmentException;
 import com.onlineSchool.model.Course;
 import com.onlineSchool.model.User;
 import com.onlineSchool.repository.CourseRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +62,7 @@ public class CourseService {
     @Transactional
     public Course update(Long id, Course course) {
         Course existingCourse = findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + id + " не найден"));
         
         existingCourse.setTitle(course.getTitle());
         existingCourse.setDescription(course.getDescription());
@@ -74,13 +76,16 @@ public class CourseService {
 
     @Transactional
     public void deleteById(Long id) {
+        if (!courseRepository.existsById(id)) {
+            throw new EntityNotFoundException("Курс с ID " + id + " не найден");
+        }
         courseRepository.deleteById(id);
     }
 
     @Transactional
     public Course activate(Long id) {
         Course course = findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + id + " не найден"));
         course.setActive(true);
         return courseRepository.save(course);
     }
@@ -88,7 +93,7 @@ public class CourseService {
     @Transactional
     public Course deactivate(Long id) {
         Course course = findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + id + " не найден"));
         course.setActive(false);
         return courseRepository.save(course);
     }
@@ -96,16 +101,16 @@ public class CourseService {
     @Transactional
     public Course enrollStudent(Long courseId, User student) {
         Course course = findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Курс не найден"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + courseId + " не найден"));
         
         // Проверяем, что курс активен
         if (!course.isActive()) {
-            throw new RuntimeException("Курс неактивен");
+            throw new CourseEnrollmentException("Курс неактивен и недоступен для записи");
         }
         
         // Проверяем, что студент еще не записан
         if (course.getStudents().contains(student)) {
-            throw new RuntimeException("Вы уже записаны на этот курс");
+            throw new CourseEnrollmentException("Вы уже записаны на этот курс");
         }
         
         course.getStudents().add(student);
@@ -115,7 +120,12 @@ public class CourseService {
     @Transactional
     public Course unenrollStudent(Long courseId, User student) {
         Course course = findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + courseId + " не найден"));
+        
+        if (!course.getStudents().contains(student)) {
+            throw new CourseEnrollmentException("Вы не записаны на этот курс");
+        }
+        
         course.getStudents().remove(student);
         return courseRepository.save(course);
     }
@@ -123,9 +133,14 @@ public class CourseService {
     @Transactional
     public Course addStudent(Long courseId, Long studentId) {
         Course course = findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + courseId + " не найден"));
         User student = userService.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Студент с ID " + studentId + " не найден"));
+        
+        if (course.getStudents().contains(student)) {
+            throw new CourseEnrollmentException("Студент уже записан на этот курс");
+        }
+        
         course.getStudents().add(student);
         return courseRepository.save(course);
     }
@@ -133,9 +148,14 @@ public class CourseService {
     @Transactional
     public Course removeStudent(Long courseId, Long studentId) {
         Course course = findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Курс с ID " + courseId + " не найден"));
         User student = userService.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Студент с ID " + studentId + " не найден"));
+        
+        if (!course.getStudents().contains(student)) {
+            throw new CourseEnrollmentException("Студент не записан на этот курс");
+        }
+        
         course.getStudents().remove(student);
         return courseRepository.save(course);
     }

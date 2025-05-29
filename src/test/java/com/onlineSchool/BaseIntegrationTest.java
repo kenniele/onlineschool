@@ -14,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.onlineSchool.model.Comment;
@@ -36,7 +35,8 @@ import com.onlineSchool.service.WebinarService;
 @ActiveProfiles("test")
 @Transactional
 @Rollback
-@Sql(scripts = "classpath:schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+// Убираем @Sql так как schema.sql использует MySQL синтаксис AUTO_INCREMENT
+// Позволяем Hibernate создавать схему автоматически для тестов
 public abstract class BaseIntegrationTest {
 
     @Autowired

@@ -48,6 +48,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
 
     private User testTeacher;
     private User testStudent;
+    private User testAdmin;
     private Course testCourse;
     private Webinar testWebinar;
     private LocalDateTime now;
@@ -56,7 +57,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     public void setUp() {
         now = LocalDateTime.now();
         
-        // Создаем тестового преподавателя
+        // Создаем тестового преподавателя с нужным username
         testTeacher = User.builder()
                 .username("testteacher")
                 .password("password")
@@ -67,16 +68,27 @@ class WebinarControllerTest extends BaseIntegrationTest {
                 .build();
         testTeacher = userService.save(testTeacher);
 
-        // Создаем тестового студента
+        // Создаем тестового студента с правильной ролью
         testStudent = User.builder()
                 .username("teststudent")
                 .password("password")
                 .email("student@example.com")
                 .firstName("Test")
                 .lastName("Student")
-                .role(Role.USER)
+                .role(Role.STUDENT)
                 .build();
         testStudent = userService.save(testStudent);
+
+        // Создаем админа
+        testAdmin = User.builder()
+                .username("testadmin")
+                .password("password")
+                .email("admin@example.com")
+                .firstName("Test")
+                .lastName("Admin")
+                .role(Role.ADMIN)
+                .build();
+        testAdmin = userService.save(testAdmin);
 
         // Создаем тестовый курс
         testCourse = Course.builder()
@@ -107,7 +119,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void getAllWebinars_ShouldReturnWebinars() throws Exception {
         mockMvc.perform(get("/api/webinars"))
                 .andExpect(status().isOk())
@@ -116,7 +128,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void getWebinarsByCourse_ShouldReturnWebinars() throws Exception {
         mockMvc.perform(get("/api/webinars/course/{courseId}", testCourse.getId()))
                 .andExpect(status().isOk())
@@ -125,7 +137,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void getWebinarsByTeacher_ShouldReturnWebinars() throws Exception {
         mockMvc.perform(get("/api/webinars/teacher/{teacherId}", testTeacher.getId()))
                 .andExpect(status().isOk())
@@ -134,7 +146,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username="teststudent", roles = "STUDENT")
     void getUpcomingWebinars_ShouldReturnWebinars() throws Exception {
         mockMvc.perform(get("/api/webinars/upcoming"))
                 .andExpect(status().isOk())
@@ -143,7 +155,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username="teststudent", roles = "STUDENT")
     void getPastWebinars_ShouldReturnEmptyListWhenNoPastWebinars() throws Exception {
         mockMvc.perform(get("/api/webinars/past"))
                 .andExpect(status().isOk())
@@ -151,7 +163,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void getWebinarById_ShouldReturnWebinar() throws Exception {
         mockMvc.perform(get("/api/webinars/{id}", testWebinar.getId()))
                 .andExpect(status().isOk())
@@ -160,52 +172,56 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void createWebinar_ShouldReturnCreatedWebinar() throws Exception {
-        Map<String, Object> webinarMap = new HashMap<>();
-        webinarMap.put("title", "New Webinar");
-        webinarMap.put("description", "New Description");
-        webinarMap.put("startTime", now.plusDays(2).toString());
-        webinarMap.put("duration", 90);
-        webinarMap.put("maxParticipants", 50);
-        webinarMap.put("courseId", testCourse.getId());
-        webinarMap.put("teacherId", testTeacher.getId());
-        webinarMap.put("status", "SCHEDULED");
-        webinarMap.put("active", true);
+        // Создаем валидный объект Webinar
+        Webinar newWebinar = Webinar.builder()
+                .title("New Webinar")
+                .description("New Description")
+                .startTime(now.plusDays(2))
+                .duration(90)
+                .maxParticipants(50)
+                .status(WebinarStatus.SCHEDULED)
+                .active(true)
+                .course(testCourse)
+                .build();
 
         mockMvc.perform(post("/api/webinars")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(webinarMap)))
+                        .content(objectMapper.writeValueAsString(newWebinar)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is("New Webinar")))
-                .andExpect(jsonPath("$.description", is("New Description")));
+                .andExpect(jsonPath("$.description", is("New Description")))
+                .andExpect(jsonPath("$.teacher.id", is(testTeacher.getId().intValue())));
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void updateWebinar_ShouldReturnUpdatedWebinar() throws Exception {
-        Map<String, Object> webinarMap = new HashMap<>();
-        webinarMap.put("id", testWebinar.getId());
-        webinarMap.put("title", "Updated Webinar");
-        webinarMap.put("description", "Updated Description");
-        webinarMap.put("startTime", testWebinar.getStartTime().toString());
-        webinarMap.put("duration", testWebinar.getDuration());
-        webinarMap.put("maxParticipants", testWebinar.getMaxParticipants());
-        webinarMap.put("courseId", testCourse.getId());
-        webinarMap.put("teacherId", testTeacher.getId());
-        webinarMap.put("status", testWebinar.getStatus().toString());
-        webinarMap.put("active", testWebinar.isActive());
+        // Создаем обновленный вебинар того же преподавателя
+        Webinar updatedWebinar = Webinar.builder()
+                .id(testWebinar.getId())
+                .title("Updated Webinar")
+                .description("Updated Description")
+                .startTime(testWebinar.getStartTime())
+                .duration(testWebinar.getDuration())
+                .maxParticipants(testWebinar.getMaxParticipants())
+                .course(testCourse)
+                .teacher(testTeacher)
+                .status(testWebinar.getStatus())
+                .active(testWebinar.isActive())
+                .build();
 
         mockMvc.perform(put("/api/webinars/{id}", testWebinar.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(webinarMap)))
+                        .content(objectMapper.writeValueAsString(updatedWebinar)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is("Updated Webinar")))
                 .andExpect(jsonPath("$.description", is("Updated Description")));
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void deleteWebinar_ShouldReturnOk() throws Exception {
         mockMvc.perform(delete("/api/webinars/{id}", testWebinar.getId()))
                 .andExpect(status().isOk());
@@ -215,7 +231,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void startWebinar_ShouldReturnUpdatedWebinar() throws Exception {
         mockMvc.perform(post("/api/webinars/{id}/start", testWebinar.getId()))
                 .andExpect(status().isOk())
@@ -223,7 +239,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void completeWebinar_ShouldReturnUpdatedWebinar() throws Exception {
         // Сначала запускаем вебинар
         webinarService.start(testWebinar.getId());
@@ -234,7 +250,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void cancelWebinar_ShouldReturnUpdatedWebinar() throws Exception {
         mockMvc.perform(post("/api/webinars/{id}/cancel", testWebinar.getId()))
                 .andExpect(status().isOk())
@@ -242,7 +258,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void addParticipant_ShouldReturnUpdatedWebinar() throws Exception {
         mockMvc.perform(post("/api/webinars/{id}/participants/{userId}", 
                 testWebinar.getId(), testStudent.getId()))
@@ -251,7 +267,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testteacher", roles = "TEACHER")
     void removeParticipant_ShouldReturnUpdatedWebinar() throws Exception {
         // Сначала добавляем участника
         webinarService.addParticipant(testWebinar.getId(), testStudent.getId());
@@ -263,7 +279,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username="testadmin", roles = "ADMIN")
     void deactivateWebinar_ShouldDeactivateWebinar() throws Exception {
         mockMvc.perform(post("/api/webinars/{id}/deactivate", testWebinar.getId()))
                 .andExpect(status().isOk())
@@ -271,7 +287,7 @@ class WebinarControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username="teststudent", roles = "STUDENT")
     void getWebinarsByParticipant_ShouldReturnWebinars() throws Exception {
         // Сначала добавляем участника
         webinarService.addParticipant(testWebinar.getId(), testStudent.getId());
@@ -280,5 +296,42 @@ class WebinarControllerTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(testWebinar.getId().intValue())));
+    }
+
+    // НОВЫЕ ТЕСТЫ для новых endpoints
+    @Test
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void joinWebinar_WithStudentRole_ShouldJoinSuccessfully() throws Exception {
+        mockMvc.perform(post("/api/webinars/{id}/join", testWebinar.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.joined", is(true)))
+                .andExpect(jsonPath("$.message", containsString("успешно записались")));
+    }
+
+    @Test
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void leaveWebinar_WithStudentRole_ShouldLeaveSuccessfully() throws Exception {
+        // Сначала записываемся на вебинар
+        webinarService.addParticipant(testWebinar.getId(), testStudent);
+        
+        mockMvc.perform(delete("/api/webinars/{id}/join", testWebinar.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.joined", is(false)))
+                .andExpect(jsonPath("$.message", containsString("отписались")));
+    }
+
+    @Test
+    @WithMockUser(username="teststudent", roles = "STUDENT")
+    void getParticipationStatus_WithStudentRole_ShouldReturnStatus() throws Exception {
+        mockMvc.perform(get("/api/webinars/{id}/participation-status", testWebinar.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.joined", is(false)))
+                .andExpect(jsonPath("$.webinarId", is(testWebinar.getId().intValue())))
+                .andExpect(jsonPath("$.username", is("teststudent")));
     }
 } 
