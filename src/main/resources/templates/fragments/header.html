@@ -45,12 +45,7 @@
             
             <ul class="navbar-nav">
                 <!-- Навигация для админов -->
-                <div sec:authorize="hasRole('ADMIN')">
-                    <li><a href="/" class="nav-link">
-                        <i class="fas fa-home"></i> 
-                        Главная
-                    </a></li>
-                </div>
+                <!-- Ссылка "Главная" удалена для админов -->
                 
                 <!-- Навигация для учителей -->
                 <div sec:authorize="hasRole('TEACHER')">
