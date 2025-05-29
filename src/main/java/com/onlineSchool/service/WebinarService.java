@@ -54,9 +54,6 @@ public class WebinarService {
                 if (webinar.getLikes() != null) {
                     webinar.getLikes().size(); // Загружаем лайки
                 }
-                if (webinar.getMaterials() != null) {
-                    webinar.getMaterials().size(); // Загружаем материалы
-                }
             }
             return webinarOpt;
         } catch (Exception e) {

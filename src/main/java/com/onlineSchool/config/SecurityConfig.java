@@ -44,6 +44,8 @@ public class SecurityConfig {
                 .requestMatchers("/", "/courses", "/courses/**").permitAll()
                 // Разрешить публичный доступ к курсам через API, но вебинары только для авторизованных
                 .requestMatchers("GET", "/api/courses/**").permitAll()
+                // Разрешить GET запросы к комментариям для всех пользователей
+                .requestMatchers("GET", "/api/comments/**").permitAll()
                 .requestMatchers("GET", "/api/webinars/**").authenticated()
                 // Вебинары доступны только авторизованным пользователям
                 .requestMatchers("/webinars", "/webinars/**").authenticated()
@@ -57,7 +59,7 @@ public class SecurityConfig {
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 // Страницы студентов только для студентов
                 .requestMatchers("/student/**").hasRole("STUDENT")
-                // API endpoints требуют аутентификации (кроме GET для курсов)
+                // API endpoints требуют аутентификации (кроме GET для курсов и комментариев)
                 .requestMatchers("/api/**").authenticated()
                 // Все остальные запросы требуют аутентификации
                 .anyRequest().authenticated()

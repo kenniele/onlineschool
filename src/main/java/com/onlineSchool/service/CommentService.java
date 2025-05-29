@@ -129,4 +129,19 @@ public class CommentService {
     public boolean isUserCommentOwner(Long userId, Long commentId) {
         return commentRepository.existsByIdAndUserId(commentId, userId);
     }
+
+    /**
+     * Проверяет является ли пользователь автором комментария
+     * @param commentId ID комментария
+     * @param username имя пользователя
+     * @return true если пользователь является автором комментария
+     */
+    public boolean isCommentAuthor(Long commentId, String username) {
+        User user = userService.findByUsername(username)
+                .orElse(null);
+        if (user == null) {
+            return false;
+        }
+        return commentRepository.existsByIdAndUserId(commentId, user.getId());
+    }
 } 

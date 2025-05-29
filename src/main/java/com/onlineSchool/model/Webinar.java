@@ -74,10 +74,6 @@ public class Webinar {
     private List<Comment> comments = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "webinar", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WebinarMaterial> materials = new ArrayList<>();
-
-    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "webinar_participants",

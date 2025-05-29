@@ -44,13 +44,6 @@ INSERT INTO webinar_participants (webinar_id, user_id) VALUES
 (3, 5),
 (4, 3), (4, 5);
 
--- Материалы для вебинаров
-INSERT INTO webinar_materials (id, title, file_path, file_type, webinar_id, uploaded_at) VALUES
-(1, 'Презентация: Введение в Java', '/materials/java-intro.pdf', 'PDF', 1, CURRENT_TIMESTAMP),
-(2, 'Примеры кода Java', '/materials/java-examples.zip', 'ZIP', 1, CURRENT_TIMESTAMP),
-(3, 'HTML шаблоны', '/materials/html-templates.zip', 'ZIP', 2, CURRENT_TIMESTAMP),
-(4, 'UX Guidelines', '/materials/ux-guidelines.pdf', 'PDF', 3, CURRENT_TIMESTAMP);
-
 -- Комментарии
 INSERT INTO comments (id, content, user_id, entity_type, entity_id, created_at) VALUES
 (1, 'Отличный курс! Очень понятно объясняется', 3, 'COURSE', 1, CURRENT_TIMESTAMP),

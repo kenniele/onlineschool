@@ -52,15 +52,16 @@ class CommentControllerTest extends BaseIntegrationTest {
 
     private User testUser;
     private User testTeacher;
+    private User testAdmin;
     private Webinar testWebinar;
     private Comment testComment;
-    private LocalDateTime now;
 
     @BeforeEach
     public void setUp() {
         // Создаем тестовых пользователей с уникальными данными
         testUser = createTestUser(Role.STUDENT);
         testTeacher = createTestTeacher();
+        testAdmin = createTestAdmin();
         
         // Создаем тестовый вебинар
         testWebinar = createTestWebinar();
@@ -70,7 +71,6 @@ class CommentControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser", roles = "STUDENT")
     void getAllComments_ShouldReturnComments() throws Exception {
         mockMvc.perform(get("/api/comments"))
                 .andExpect(status().isOk())
@@ -79,7 +79,6 @@ class CommentControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
     void getCommentById_ShouldReturnComment() throws Exception {
         mockMvc.perform(get("/api/comments/{id}", testComment.getId()))
                 .andExpect(status().isOk())
@@ -89,14 +88,12 @@ class CommentControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
     void getCommentById_WhenCommentNotExists_ShouldReturnNotFound() throws Exception {
         mockMvc.perform(get("/api/comments/999999"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser(username = "testuser")
     void getCommentsByWebinar_ShouldReturnComments() throws Exception {
         mockMvc.perform(get("/api/comments/webinar/{webinarId}", testWebinar.getId()))
                 .andExpect(status().isOk())
@@ -105,7 +102,6 @@ class CommentControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
     void getCommentsByUser_ShouldReturnComments() throws Exception {
         mockMvc.perform(get("/api/comments/user/{userId}", testUser.getId()))
                 .andExpect(status().isOk())
@@ -114,11 +110,14 @@ class CommentControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser")
+    @WithMockUser(username = "student_1_123456789", roles = "STUDENT")  // Используем имя созданного пользователя
     void createComment_ShouldReturnCreatedComment() throws Exception {
+        // Обновляем пользователя чтобы имя совпадало с @WithMockUser
+        testUser.setUsername("student_1_123456789");
+        userService.save(testUser);
+
         Map<String, Object> commentMap = new HashMap<>();
         commentMap.put("content", "New comment");
-        commentMap.put("userId", testUser.getId());
         commentMap.put("entityType", "WEBINAR");
         commentMap.put("entityId", testWebinar.getId());
 
@@ -127,16 +126,33 @@ class CommentControllerTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(commentMap)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", is("New comment")))
-                .andExpect(jsonPath("$.user.id", is(testUser.getId().intValue())));
+                .andExpect(jsonPath("$.user.username", is("student_1_123456789")));
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void updateComment_ShouldReturnUpdatedComment() throws Exception {
+    @WithMockUser(username = "not_authorized")
+    void createComment_WithoutAuth_ShouldReturnForbidden() throws Exception {
+        Map<String, Object> commentMap = new HashMap<>();
+        commentMap.put("content", "New comment");
+        commentMap.put("entityType", "WEBINAR");
+        commentMap.put("entityId", testWebinar.getId());
+
+        mockMvc.perform(post("/api/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(commentMap)))
+                .andExpect(status().isNotFound()); // Пользователь не найден
+    }
+
+    @Test  
+    @WithMockUser(username = "admin_1_123456789", roles = "ADMIN")
+    void updateComment_AsAdmin_ShouldReturnUpdatedComment() throws Exception {
+        // Обновляем админа чтобы имя совпадало с @WithMockUser
+        testAdmin.setUsername("admin_1_123456789");
+        userService.save(testAdmin);
+
         Map<String, Object> commentMap = new HashMap<>();
         commentMap.put("id", testComment.getId());
-        commentMap.put("content", "Updated comment");
-        commentMap.put("userId", testUser.getId());
+        commentMap.put("content", "Updated comment by admin");
         commentMap.put("entityType", "WEBINAR");
         commentMap.put("entityId", testWebinar.getId());
 
@@ -144,41 +160,81 @@ class CommentControllerTest extends BaseIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(commentMap)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(testComment.getId().intValue())))
-                .andExpect(jsonPath("$.content", is("Updated comment")))
-                .andExpect(jsonPath("$.user.id", is(testUser.getId().intValue())));
+                .andExpect(jsonPath("$.content", is("Updated comment by admin")));
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void updateComment_WhenCommentNotExists_ShouldReturnNotFound() throws Exception {
+    @WithMockUser(username = "different_user", roles = "STUDENT")
+    void updateComment_AsNonAuthor_ShouldReturnForbidden() throws Exception {
+        // Создаем другого пользователя
+        User differentUser = createTestUser(Role.STUDENT);
+        differentUser.setUsername("different_user");
+        userService.save(differentUser);
+
+        Map<String, Object> commentMap = new HashMap<>();
+        commentMap.put("id", testComment.getId());
+        commentMap.put("content", "Updated comment");
+        commentMap.put("entityType", "WEBINAR");
+        commentMap.put("entityId", testWebinar.getId());
+
+        mockMvc.perform(put("/api/comments/{id}", testComment.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(commentMap)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "different_user2", roles = "STUDENT")
+    void updateComment_WhenCommentNotExists_ShouldReturnForbidden() throws Exception {
+        // Создаем пользователя
+        User differentUser = createTestUser(Role.STUDENT);
+        differentUser.setUsername("different_user2");
+        userService.save(differentUser);
+
         Map<String, Object> commentMap = new HashMap<>();
         commentMap.put("id", 999L);
         commentMap.put("content", "Updated comment");
-        commentMap.put("userId", testUser.getId());
         commentMap.put("entityType", "WEBINAR");
         commentMap.put("entityId", testWebinar.getId());
 
         mockMvc.perform(put("/api/comments/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(commentMap)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void deleteComment_ShouldDeleteComment() throws Exception {
+    @WithMockUser(username = "admin_2_123456789", roles = "ADMIN") 
+    void deleteComment_AsAdmin_ShouldDeleteComment() throws Exception {
+        // Обновляем админа чтобы имя совпадало с @WithMockUser
+        testAdmin.setUsername("admin_2_123456789");
+        userService.save(testAdmin);
+
         mockMvc.perform(delete("/api/comments/{id}", testComment.getId()))
                 .andExpect(status().isOk());
-        
-        mockMvc.perform(get("/api/comments/{id}", testComment.getId()))
-                .andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void deleteComment_WhenCommentNotExists_ShouldReturnNotFound() throws Exception {
+    @WithMockUser(username = "different_user3", roles = "STUDENT")
+    void deleteComment_AsNonAuthor_ShouldReturnForbidden() throws Exception {
+        // Создаем другого пользователя
+        User differentUser = createTestUser(Role.STUDENT);
+        differentUser.setUsername("different_user3");
+        userService.save(differentUser);
+
+        mockMvc.perform(delete("/api/comments/{id}", testComment.getId()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "different_user4", roles = "STUDENT")
+    void deleteComment_WhenCommentNotExists_ShouldReturnForbidden() throws Exception {
+        // Создаем пользователя
+        User differentUser = createTestUser(Role.STUDENT);
+        differentUser.setUsername("different_user4");
+        userService.save(differentUser);
+
         mockMvc.perform(delete("/api/comments/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 } 

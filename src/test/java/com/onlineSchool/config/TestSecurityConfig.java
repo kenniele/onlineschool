@@ -26,6 +26,8 @@ public class TestSecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index", "/login", "/register", "/courses").permitAll()
+                .requestMatchers("GET", "/api/courses/**").permitAll()
+                .requestMatchers("GET", "/api/comments/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

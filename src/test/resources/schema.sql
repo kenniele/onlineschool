@@ -92,15 +92,4 @@ CREATE TABLE IF NOT EXISTS user_course_enrollments (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (course_id) REFERENCES courses(id),
     UNIQUE (user_id, course_id)
-);
-
-CREATE TABLE IF NOT EXISTS webinar_materials (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    file_type VARCHAR(255) NOT NULL,
-    webinar_id BIGINT NOT NULL,
-    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (webinar_id) REFERENCES webinars(id),
-    UNIQUE (webinar_id, file_path)
 ); 
