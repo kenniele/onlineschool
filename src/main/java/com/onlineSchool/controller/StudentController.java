@@ -7,9 +7,13 @@ import com.onlineSchool.service.CourseService;
 import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
 import com.onlineSchool.service.ProgressService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
+@RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/student")
 @PreAuthorize("hasRole('STUDENT')")
 public class StudentController {
@@ -37,28 +43,28 @@ public class StudentController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
-        System.out.println("=== DASHBOARD PAGE DEBUG ===");
+        log.info("=== DASHBOARD PAGE DEBUG ===");
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        System.out.println("Student found: " + student.getUsername() + ", Role: " + student.getRole());
+        log.info("Student found: " + student.getUsername() + ", Role: " + student.getRole());
         
         // Получаем курсы студента
         List<Course> enrolledCourses = courseService.findByStudent(student);
         List<Webinar> upcomingWebinars = webinarService.findUpcoming();
         List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
 
-        System.out.println("Enrolled courses count: " + (enrolledCourses != null ? enrolledCourses.size() : "null"));
-        System.out.println("Upcoming webinars count: " + (upcomingWebinars != null ? upcomingWebinars.size() : "null"));
-        System.out.println("Attended webinars count: " + (attendedWebinars != null ? attendedWebinars.size() : "null"));
+        log.info("Enrolled courses count: " + (enrolledCourses != null ? enrolledCourses.size() : "null"));
+        log.info("Upcoming webinars count: " + (upcomingWebinars != null ? upcomingWebinars.size() : "null"));
+        log.info("Attended webinars count: " + (attendedWebinars != null ? attendedWebinars.size() : "null"));
 
         // Получаем статистику прогресса
         Map<String, Object> progressStats = progressService.getProgressStatistics(student);
-        System.out.println("Progress stats: " + progressStats);
+        log.info("Progress stats: " + progressStats);
         
         // Получаем прогресс по курсам
         Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(student);
-        System.out.println("Course progress map size: " + (courseProgressMap != null ? courseProgressMap.size() : "null"));
+        log.info("Course progress map size: " + (courseProgressMap != null ? courseProgressMap.size() : "null"));
         
         model.addAttribute("student", student);
         model.addAttribute("enrolledCourses", enrolledCourses);
@@ -151,25 +157,25 @@ public class StudentController {
 
     @GetMapping("/progress")
     public String progress(Model model, Authentication authentication) {
-        System.out.println("=== PROGRESS PAGE DEBUG ===");
+        log.info("=== PROGRESS PAGE DEBUG ===");
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        System.out.println("Student found: " + student.getUsername() + ", Role: " + student.getRole());
+        log.info("Student found: " + student.getUsername() + ", Role: " + student.getRole());
         
         List<Course> enrolledCourses = courseService.findByStudent(student);
-        System.out.println("Enrolled courses count: " + (enrolledCourses != null ? enrolledCourses.size() : "null"));
+        log.info("Enrolled courses count: " + (enrolledCourses != null ? enrolledCourses.size() : "null"));
         
         List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
-        System.out.println("Attended webinars count: " + (attendedWebinars != null ? attendedWebinars.size() : "null"));
+        log.info("Attended webinars count: " + (attendedWebinars != null ? attendedWebinars.size() : "null"));
         
         // Получаем детальную статистику прогресса
         Map<String, Object> progressStats = progressService.getProgressStatistics(student);
-        System.out.println("Progress stats: " + progressStats);
+        log.info("Progress stats: " + progressStats);
         
         // Получаем прогресс по курсам
         Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(student);
-        System.out.println("Course progress map size: " + (courseProgressMap != null ? courseProgressMap.size() : "null"));
+        log.info("Course progress map size: " + (courseProgressMap != null ? courseProgressMap.size() : "null"));
         
         model.addAttribute("student", student);
         model.addAttribute("enrolledCourses", enrolledCourses);
@@ -184,8 +190,8 @@ public class StudentController {
         model.addAttribute("totalWebinarsInCourses", progressStats.get("totalWebinarsInCourses"));
         model.addAttribute("completedCourses", progressStats.get("completedCourses"));
         
-        System.out.println("Model attributes added successfully");
-        System.out.println("=== END PROGRESS PAGE DEBUG ===");
+        log.info("Model attributes added successfully");
+        log.info("=== END PROGRESS PAGE DEBUG ===");
         
         return "student/progress";
     }

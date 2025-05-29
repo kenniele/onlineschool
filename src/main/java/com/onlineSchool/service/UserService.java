@@ -8,6 +8,7 @@ import com.onlineSchool.repository.UserCourseEnrollmentRepository;
 import com.onlineSchool.repository.CommentRepository;
 import com.onlineSchool.repository.LikeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -146,7 +148,7 @@ public class UserService {
             userCourseEnrollmentRepository.deleteAll(userCourseEnrollmentRepository.findByUser(user));
         } catch (Exception e) {
             // Игнорируем ошибку если таблица не существует (например в тестах)
-            System.out.println("Warning: Could not delete user course enrollments: " + e.getMessage());
+            log.warn("Warning: Could not delete user course enrollments: " + e.getMessage());
         }
         
         // Удаляем комментарии пользователя
@@ -154,7 +156,7 @@ public class UserService {
             commentRepository.deleteAll(commentRepository.findByUserId(user.getId()));
         } catch (Exception e) {
             // Игнорируем ошибку если таблица не существует (например в тестах)
-            System.out.println("Warning: Could not delete user comments: " + e.getMessage());
+            log.warn("Warning: Could not delete user comments: " + e.getMessage());
         }
         
         // Удаляем лайки пользователя
@@ -162,7 +164,7 @@ public class UserService {
             likeRepository.deleteAll(likeRepository.findByUserId(user.getId()));
         } catch (Exception e) {
             // Игнорируем ошибку если таблица не существует (например в тестах)
-            System.out.println("Warning: Could not delete user likes: " + e.getMessage());
+            log.warn("Warning: Could not delete user likes: " + e.getMessage());
         }
         
         // Наконец удаляем пользователя

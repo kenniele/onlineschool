@@ -5,6 +5,8 @@ import com.onlineSchool.model.Like;
 import com.onlineSchool.model.User;
 import com.onlineSchool.service.LikeService;
 import com.onlineSchool.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ import java.util.Map;
 import java.util.HashMap;
 
 @RestController
+@RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/likes")
 public class LikeController {
 
@@ -100,20 +104,20 @@ public class LikeController {
             @PathVariable Long entityId,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        System.out.println("=== TOGGLE LIKE DEBUG ===");
-        System.out.println("EntityType: " + entityType);
-        System.out.println("EntityId: " + entityId);
-        System.out.println("Username: " + userDetails.getUsername());
+        log.info("=== TOGGLE LIKE DEBUG ===");
+        log.info("EntityType: {}", entityType);
+        log.info("EntityId: {}", entityId);
+        log.info("Username: {}", userDetails.getUsername());
         
         try {
             // Получаем User через UserService, а не кастим напрямую
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
             
-            System.out.println("User found: " + user.getId() + " - " + user.getUsername());
+            log.info("User found: {} - {}", user.getId(), user.getUsername());
             
             boolean hasLiked = likeService.hasLiked(user.getId(), entityId, entityType);
-            System.out.println("Has liked before: " + hasLiked);
+            log.info("Has liked before: {}", hasLiked);
             
             Map<String, Object> response = new HashMap<>();
             
@@ -122,25 +126,25 @@ public class LikeController {
                 likeService.unlike(user.getId(), entityId, entityType);
                 response.put("liked", false);
                 response.put("message", "Лайк убран");
-                System.out.println("Like removed");
+                log.info("Like removed");
             } else {
                 // Ставим лайк
                 likeService.like(user.getId(), entityId, entityType);
                 response.put("liked", true);
                 response.put("message", "Лайк поставлен");
-                System.out.println("Like added");
+                log.info("Like added");
             }
             
             // Получаем новое количество лайков
             long likesCount = likeService.countLikes(entityId, entityType);
-            System.out.println("New likes count: " + likesCount);
+            log.info("New likes count: {}", likesCount);
             
             response.put("likesCount", likesCount);
             response.put("success", true);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println("Error in toggleLike: " + e.getMessage());
+            log.error("Error in toggleLike: {}", e.getMessage());
             e.printStackTrace();
             
             Map<String, Object> response = new HashMap<>();

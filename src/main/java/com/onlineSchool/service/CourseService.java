@@ -11,6 +11,7 @@ import com.onlineSchool.repository.WebinarRepository;
 import com.onlineSchool.repository.UserCourseEnrollmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CourseService {
     private final CourseRepository courseRepository;
     private final UserService userService;
@@ -104,7 +106,7 @@ public class CourseService {
             userCourseEnrollmentRepository.deleteAll(userCourseEnrollmentRepository.findByCourse(course));
         } catch (Exception e) {
             // Игнорируем ошибку если таблица не существует (например в тестах)
-            System.out.println("Warning: Could not delete user course enrollments: " + e.getMessage());
+            log.warn("Warning: Could not delete user course enrollments: " + e.getMessage());
         }
         
         // Затем удаляем комментарии и лайки курса

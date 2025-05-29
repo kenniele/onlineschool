@@ -6,6 +6,8 @@ import com.onlineSchool.model.User;
 import com.onlineSchool.service.CommentService;
 import com.onlineSchool.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +20,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.HashMap;
 
-@RestController
+@Controller
+@RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/comments")
 public class CommentController {
 
@@ -61,11 +65,11 @@ public class CommentController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> create(@RequestBody Comment comment, Authentication authentication) {
-        System.out.println("=== CREATE COMMENT DEBUG ===");
-        System.out.println("Comment content: " + comment.getContent());
-        System.out.println("Entity type: " + comment.getEntityType());
-        System.out.println("Entity ID: " + comment.getEntityId());
-        System.out.println("Username: " + authentication.getName());
+        log.info("=== CREATE COMMENT DEBUG ===");
+        log.info("Comment content: " + comment.getContent());
+        log.info("Entity type: " + comment.getEntityType());
+        log.info("Entity ID: " + comment.getEntityId());
+        log.info("Username: " + authentication.getName());
         
         try {
             // Устанавливаем текущего пользователя как автора комментария
@@ -74,10 +78,10 @@ public class CommentController {
                     .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
             comment.setUser(currentUser);
             
-            System.out.println("User found: " + currentUser.getId() + " - " + currentUser.getUsername());
+            log.info("User found: " + currentUser.getId() + " - " + currentUser.getUsername());
             
             Comment savedComment = commentService.create(comment);
-            System.out.println("Comment saved with ID: " + savedComment.getId());
+            log.info("Comment saved with ID: " + savedComment.getId());
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -86,7 +90,7 @@ public class CommentController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println("Error in create comment: " + e.getMessage());
+            log.error("Error in create comment: " + e.getMessage());
             e.printStackTrace();
             
             Map<String, Object> response = new HashMap<>();

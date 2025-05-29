@@ -3,6 +3,9 @@ package com.onlineSchool.config;
 import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
 import com.onlineSchool.repository.UserRepository;
+import com.onlineSchool.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -15,6 +18,8 @@ import java.sql.Statement;
 
 @Component
 @Profile("!test")
+@RequiredArgsConstructor
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -22,11 +27,6 @@ public class DataInitializer implements CommandLineRunner {
     
     @Autowired
     private DataSource dataSource;
-
-    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Override
     public void run(String... args) throws Exception {
@@ -39,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setLastName("User");
             admin.setRole(Role.ADMIN);
             userRepository.save(admin);
-            System.out.println("Создан администратор по умолчанию: admin / adminpassword");
+            log.info("Создан администратор по умолчанию: admin / adminpassword");
         }
         
         // Исправляем sequences после создания данных
@@ -50,7 +50,7 @@ public class DataInitializer implements CommandLineRunner {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             
-            System.out.println("Исправление sequences PostgreSQL...");
+            log.info("Исправление sequences PostgreSQL...");
             
             // Исправляем все sequences для корректной автогенерации ID
             String[] sequenceFixes = {
@@ -64,16 +64,16 @@ public class DataInitializer implements CommandLineRunner {
             for (String sql : sequenceFixes) {
                 try {
                     statement.execute(sql);
-                    System.out.println("✅ Выполнено: " + sql.split(" ")[2]); // Показываем название sequence
+                    log.info("✅ Выполнено: " + sql.split(" ")[2]); // Показываем название sequence
                 } catch (Exception e) {
-                    System.out.println("⚠️ Ошибка при исправлении sequence: " + e.getMessage());
+                    log.warn("⚠️ Ошибка при исправлении sequence: " + e.getMessage());
                 }
             }
             
-            System.out.println("✅ Sequences исправлены успешно!");
+            log.info("✅ Sequences исправлены успешно!");
             
         } catch (Exception e) {
-            System.err.println("❌ Ошибка при исправлении sequences: " + e.getMessage());
+            log.error("❌ Ошибка при исправлении sequences: " + e.getMessage());
         }
     }
 } 

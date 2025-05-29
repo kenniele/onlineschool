@@ -11,23 +11,25 @@ import com.onlineSchool.service.WebinarService;
 import com.onlineSchool.service.ProgressService;
 import com.onlineSchool.service.LikeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class HomeController {
 
     private final CourseService courseService;
@@ -89,14 +91,14 @@ public class HomeController {
         try {
             // Получаем все курсы
             var allCourses = courseService.findAll();
-            System.out.println("Found courses: " + (allCourses != null ? allCourses.size() : "null"));
+            log.info("Found courses: {}", allCourses != null ? allCourses.size() : "null");
             
             if (allCourses != null) {
                 // Фильтруем только активные курсы
                 var activeCourses = allCourses.stream()
                         .filter(course -> course != null && course.isActive())
                         .toList();
-                System.out.println("Active courses: " + activeCourses.size());
+                log.info("Active courses: {}", activeCourses.size());
                 model.addAttribute("courses", activeCourses);
                 model.addAttribute("totalCourses", activeCourses.size());
                 
@@ -110,7 +112,7 @@ public class HomeController {
                             model.addAttribute("student", user);
                         }
                     } catch (Exception e) {
-                        System.err.println("Error getting student progress: " + e.getMessage());
+                        log.error("Error getting student progress: ", e);
                     }
                 }
             } else {
@@ -118,7 +120,7 @@ public class HomeController {
                 model.addAttribute("totalCourses", 0);
             }
         } catch (Exception e) {
-            System.err.println("Error in courses handler: " + e.getMessage());
+            log.error("Error in courses handler: ", e);
             e.printStackTrace();
             model.addAttribute("courses", Collections.emptyList());
             model.addAttribute("totalCourses", 0);
@@ -158,17 +160,17 @@ public class HomeController {
 
     @GetMapping("/webinars")
     public String webinars(Model model, @AuthenticationPrincipal UserDetails userDetails) {
-        System.out.println("=== WEBINARS PAGE DEBUG ===");
+        log.info("=== WEBINARS PAGE DEBUG ===");
         
         // Получаем все вебинары
         var allWebinars = webinarService.findAll();
-        System.out.println("All webinars count: " + (allWebinars != null ? allWebinars.size() : "null"));
+        log.info("All webinars count: {}", allWebinars != null ? allWebinars.size() : "null");
             
             // Фильтруем только активные вебинары
         var upcomingWebinars = allWebinars.stream()
                 .filter(webinar -> webinar.getStartTime().isAfter(LocalDateTime.now()))
                         .toList();
-        System.out.println("Upcoming webinars count: " + upcomingWebinars.size());
+        log.info("Upcoming webinars count: {}", upcomingWebinars.size());
         
         model.addAttribute("webinars", allWebinars);
         model.addAttribute("upcomingWebinars", upcomingWebinars);
@@ -178,10 +180,10 @@ public class HomeController {
         if (userDetails != null) {
             try {
                 User currentUser = userService.findByUsername(userDetails.getUsername()).orElse(null);
-                System.out.println("Current user: " + (currentUser != null ? currentUser.getUsername() : "null"));
+                log.info("Current user: {}", currentUser != null ? currentUser.getUsername() : "null");
                 
                 if (currentUser != null && currentUser.getRole() == Role.STUDENT) {
-                    System.out.println("User is student, adding participation info");
+                    log.info("User is student, adding participation info");
                     // Создаем карту участия в вебинарах
                     Map<Long, Boolean> participationMap = new HashMap<>();
                     for (var webinar : allWebinars) {
@@ -189,18 +191,18 @@ public class HomeController {
                                 webinar.getParticipants().contains(currentUser);
                         participationMap.put(webinar.getId(), isParticipant);
                     }
-                    System.out.println("Participation map size: " + participationMap.size());
+                    log.info("Participation map size: {}", participationMap.size());
                     model.addAttribute("participationMap", participationMap);
                 }
             } catch (Exception e) {
-                System.err.println("Error processing user participation: " + e.getMessage());
+                log.error("Error processing user participation: ", e);
             e.printStackTrace();
             }
         } else {
-            System.out.println("User not authenticated");
+            log.info("User not authenticated");
         }
         
-        System.out.println("=== END WEBINARS DEBUG ===");
+        log.info("=== END WEBINARS DEBUG ===");
         return "webinars";
     }
 
@@ -236,7 +238,7 @@ public class HomeController {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("Error checking user participation: " + e.getMessage());
+                    log.error("Error checking user participation: ", e);
                     isParticipant = false;
                 }
                 
@@ -246,7 +248,7 @@ public class HomeController {
                         hasLiked = likeService.hasLiked(currentUser.getId(), webinar.getId(), EntityType.WEBINAR);
                     }
                 } catch (Exception e) {
-                    System.err.println("Error checking user likes: " + e.getMessage());
+                    log.error("Error checking user likes: ", e);
                     hasLiked = false;
                 }
             }
@@ -257,7 +259,7 @@ public class HomeController {
             
             return "webinar-details";
         } catch (Exception e) {
-            System.err.println("Error in webinarDetails: " + e.getMessage());
+            log.error("Error in webinarDetails: ", e);
             e.printStackTrace();
             return "redirect:/webinars";
         }
@@ -279,7 +281,7 @@ public class HomeController {
                 model.addAttribute("totalWebinars", progressStats.get("totalAttendedWebinars"));
                 model.addAttribute("overallProgress", progressStats.get("overallProgress"));
             } catch (Exception e) {
-                System.err.println("Error getting student progress: " + e.getMessage());
+                log.error("Error getting student progress: ", e);
                 // Устанавливаем значения по умолчанию при ошибке
                 model.addAttribute("totalCourses", 0);
                 model.addAttribute("completedCourses", 0);
@@ -304,7 +306,7 @@ public class HomeController {
                 model.addAttribute("teacherStudentsCount", totalStudents);
                 model.addAttribute("teacherRating", 4.8); // Пока статичное значение, можно добавить систему рейтингов
             } catch (Exception e) {
-                System.err.println("Error getting teacher stats: " + e.getMessage());
+                log.error("Error getting teacher stats: ", e);
                 model.addAttribute("teacherCoursesCount", 0);
                 model.addAttribute("teacherWebinarsCount", 0);
                 model.addAttribute("teacherStudentsCount", 0);
@@ -329,7 +331,7 @@ public class HomeController {
                 model.addAttribute("upcomingWebinarsCount", upcomingWebinars.size());
                 model.addAttribute("systemUptime", 99.9); // Статичное значение для демонстрации
             } catch (Exception e) {
-                System.err.println("Error getting admin stats: " + e.getMessage());
+                log.error("Error getting admin stats: ", e);
                 model.addAttribute("totalUsers", 0);
                 model.addAttribute("activeCourses", 0);
                 model.addAttribute("upcomingWebinarsCount", 0);
