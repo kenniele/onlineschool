@@ -6,74 +6,101 @@ import com.onlineSchool.model.Webinar;
 import com.onlineSchool.service.CourseService;
 import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import com.onlineSchool.service.ProgressService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 @Controller
 @RequestMapping("/student")
-@RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
 public class StudentController {
 
-    private final CourseService courseService;
-    private final WebinarService webinarService;
-    private final UserService userService;
+    @Autowired
+    private CourseService courseService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private WebinarService webinarService;
+
+    @Autowired
+    private ProgressService progressService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
+        System.out.println("=== DASHBOARD PAGE DEBUG ===");
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
+        System.out.println("Student found: " + student.getUsername() + ", Role: " + student.getRole());
+        
+        // Получаем курсы студента
         List<Course> enrolledCourses = courseService.findByStudent(student);
+        List<Webinar> upcomingWebinars = webinarService.findUpcoming();
+        List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
+
+        System.out.println("Enrolled courses count: " + (enrolledCourses != null ? enrolledCourses.size() : "null"));
+        System.out.println("Upcoming webinars count: " + (upcomingWebinars != null ? upcomingWebinars.size() : "null"));
+        System.out.println("Attended webinars count: " + (attendedWebinars != null ? attendedWebinars.size() : "null"));
+
+        // Получаем статистику прогресса
+        Map<String, Object> progressStats = progressService.getProgressStatistics(student);
+        System.out.println("Progress stats: " + progressStats);
         
-        // Получаем ID курсов студента для более безопасного сравнения
-        List<Long> enrolledCourseIds = enrolledCourses.stream()
-                .map(Course::getId)
-                .toList();
-        
-        List<Webinar> upcomingWebinars = webinarService.findUpcoming().stream()
-                .filter(webinar -> {
-                    // Проверяем участие в вебинаре или запись на курс
-                    boolean isParticipant = webinar.getParticipants() != null && 
-                                          webinar.getParticipants().stream()
-                                                  .anyMatch(participant -> participant.getId().equals(student.getId()));
-                    
-                    boolean isEnrolledInCourse = webinar.getCourse() != null && 
-                                               enrolledCourseIds.contains(webinar.getCourse().getId());
-                    
-                    return isParticipant || isEnrolledInCourse;
-                })
-                .limit(5)
-                .toList();
+        // Получаем прогресс по курсам
+        Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(student);
+        System.out.println("Course progress map size: " + (courseProgressMap != null ? courseProgressMap.size() : "null"));
         
         model.addAttribute("student", student);
         model.addAttribute("enrolledCourses", enrolledCourses);
         model.addAttribute("upcomingWebinars", upcomingWebinars);
-        model.addAttribute("coursesCount", enrolledCourses.size());
-        model.addAttribute("webinarsCount", upcomingWebinars.size());
+        model.addAttribute("attendedWebinars", attendedWebinars);
+        model.addAttribute("courseProgressMap", courseProgressMap);
+        model.addAttribute("coursesCount", enrolledCourses != null ? enrolledCourses.size() : 0);
+        model.addAttribute("webinarsCount", attendedWebinars != null ? attendedWebinars.size() : 0);
+        model.addAttribute("completedWebinars", progressStats.get("completedWebinars"));
+        model.addAttribute("overallProgress", progressStats.get("overallProgress"));
         
         return "student/dashboard";
     }
 
     @GetMapping("/courses")
-    public String myCourses(Model model, Authentication authentication) {
+    public String courses(Model model, Authentication authentication) {
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
         List<Course> enrolledCourses = courseService.findByStudent(student);
-        model.addAttribute("courses", enrolledCourses);
+        Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(student);
+
         model.addAttribute("student", student);
+        model.addAttribute("enrolledCourses", enrolledCourses);
+        model.addAttribute("courseProgressMap", courseProgressMap);
         
         return "student/courses";
+    }
+
+    @GetMapping("/webinars")
+    public String webinars(Model model, Authentication authentication) {
+        User student = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        List<Webinar> upcomingWebinars = webinarService.findUpcoming();
+        List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
+
+        model.addAttribute("student", student);
+        model.addAttribute("upcomingWebinars", upcomingWebinars);
+        model.addAttribute("attendedWebinars", attendedWebinars);
+            
+        return "student/webinars";
     }
 
     @PostMapping("/courses/{id}/enroll")
@@ -81,63 +108,25 @@ public class StudentController {
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        courseService.enrollStudent(id, student);
+        Course course = courseService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
         
-        return "redirect:/courses/" + id;
-    }
-
-    @PostMapping("/api/courses/{id}/enroll")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> enrollInCourseAjax(@PathVariable Long id, Authentication authentication) {
-        try {
-            User student = userService.findByUsername(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("Student not found"));
-            
-            courseService.enrollStudent(id, student);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Вы успешно записались на курс!");
-            response.put("enrolled", true);
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Ошибка при записи на курс: " + e.getMessage());
-            
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    @PostMapping("/courses/{id}/unenroll")
-    public String unenrollFromCourse(@PathVariable Long id, Authentication authentication) {
-        User student = userService.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-        
-        courseService.unenrollStudent(id, student);
+        courseService.enrollStudent(course.getId(), student);
         
         return "redirect:/student/courses";
     }
 
-    @GetMapping("/webinars")
-    public String myWebinars(Model model, Authentication authentication) {
+    @PostMapping("/courses/{id}/leave")
+    public String leaveCourse(@PathVariable Long id, Authentication authentication) {
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        List<Webinar> participatingWebinars = webinarService.findByParticipant(student);
-        List<Webinar> availableWebinars = webinarService.findUpcoming().stream()
-                .filter(webinar -> webinar.getParticipants() != null && 
-                                 !webinar.getParticipants().stream()
-                                         .anyMatch(participant -> participant.getId().equals(student.getId())))
-                .limit(10)
-                .toList();
+        Course course = courseService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
         
-        model.addAttribute("participatingWebinars", participatingWebinars);
-        model.addAttribute("availableWebinars", availableWebinars);
-        model.addAttribute("student", student);
+        courseService.unenrollStudent(course.getId(), student);
         
-        return "student/webinars";
+        return "redirect:/student/courses";
     }
 
     @PostMapping("/webinars/{id}/join")
@@ -147,7 +136,7 @@ public class StudentController {
         
         webinarService.addParticipant(id, student);
         
-        return "redirect:/webinars/" + id;
+        return "redirect:/student/webinars";
     }
 
     @PostMapping("/webinars/{id}/leave")
@@ -162,26 +151,41 @@ public class StudentController {
 
     @GetMapping("/progress")
     public String progress(Model model, Authentication authentication) {
+        System.out.println("=== PROGRESS PAGE DEBUG ===");
         User student = userService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        List<Course> enrolledCourses = courseService.findByStudent(student);
-        List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
+        System.out.println("Student found: " + student.getUsername() + ", Role: " + student.getRole());
         
-        // Подсчет статистики
-        int totalCourses = enrolledCourses.size();
-        int completedCourses = (int) enrolledCourses.stream()
-                .filter(course -> course.getEndDate().isBefore(java.time.LocalDateTime.now()))
-                .count();
-        int totalWebinars = attendedWebinars.size();
+        List<Course> enrolledCourses = courseService.findByStudent(student);
+        System.out.println("Enrolled courses count: " + (enrolledCourses != null ? enrolledCourses.size() : "null"));
+        
+        List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
+        System.out.println("Attended webinars count: " + (attendedWebinars != null ? attendedWebinars.size() : "null"));
+        
+        // Получаем детальную статистику прогресса
+        Map<String, Object> progressStats = progressService.getProgressStatistics(student);
+        System.out.println("Progress stats: " + progressStats);
+        
+        // Получаем прогресс по курсам
+        Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(student);
+        System.out.println("Course progress map size: " + (courseProgressMap != null ? courseProgressMap.size() : "null"));
         
         model.addAttribute("student", student);
         model.addAttribute("enrolledCourses", enrolledCourses);
         model.addAttribute("attendedWebinars", attendedWebinars);
-        model.addAttribute("totalCourses", totalCourses);
-        model.addAttribute("completedCourses", completedCourses);
-        model.addAttribute("totalWebinars", totalWebinars);
-        model.addAttribute("progressPercentage", totalCourses > 0 ? (completedCourses * 100 / totalCourses) : 0);
+        model.addAttribute("courseProgressMap", courseProgressMap);
+        
+        // Добавляем статистику
+        model.addAttribute("totalCourses", progressStats.get("totalCourses"));
+        model.addAttribute("totalWebinars", progressStats.get("totalAttendedWebinars"));
+        model.addAttribute("completedWebinars", progressStats.get("completedWebinars"));
+        model.addAttribute("overallProgress", progressStats.get("overallProgress"));
+        model.addAttribute("totalWebinarsInCourses", progressStats.get("totalWebinarsInCourses"));
+        model.addAttribute("completedCourses", progressStats.get("completedCourses"));
+        
+        System.out.println("Model attributes added successfully");
+        System.out.println("=== END PROGRESS PAGE DEBUG ===");
         
         return "student/progress";
     }

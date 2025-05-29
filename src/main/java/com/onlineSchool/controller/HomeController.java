@@ -2,9 +2,12 @@ package com.onlineSchool.controller;
 
 import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
+import com.onlineSchool.model.Course;
+import com.onlineSchool.model.Webinar;
 import com.onlineSchool.service.CourseService;
 import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
+import com.onlineSchool.service.ProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +20,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,6 +31,7 @@ public class HomeController {
     private final CourseService courseService;
     private final UserService userService;
     private final WebinarService webinarService;
+    private final ProgressService progressService;
 
     @GetMapping("/")
     public String home(Model model) {
@@ -76,7 +82,7 @@ public class HomeController {
     }
 
     @GetMapping("/courses")
-    public String courses(Model model) {
+    public String courses(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         try {
             // Получаем все курсы
             var allCourses = courseService.findAll();
@@ -90,6 +96,20 @@ public class HomeController {
                 System.out.println("Active courses: " + activeCourses.size());
                 model.addAttribute("courses", activeCourses);
                 model.addAttribute("totalCourses", activeCourses.size());
+                
+                // Если пользователь авторизован и является студентом, добавляем данные о прогрессе
+                if (userDetails != null) {
+                    try {
+                        var user = userService.findByUsername(userDetails.getUsername()).orElse(null);
+                        if (user != null && user.getRole() == Role.STUDENT) {
+                            Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(user);
+                            model.addAttribute("courseProgressMap", courseProgressMap);
+                            model.addAttribute("student", user);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error getting student progress: " + e.getMessage());
+                    }
+                }
             } else {
                 model.addAttribute("courses", Collections.emptyList());
                 model.addAttribute("totalCourses", 0);
@@ -135,46 +155,49 @@ public class HomeController {
 
     @GetMapping("/webinars")
     public String webinars(Model model, @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            // Получаем все предстоящие вебинары
-            var upcomingWebinars = webinarService.findUpcoming();
-            System.out.println("Found upcoming webinars: " + (upcomingWebinars != null ? upcomingWebinars.size() : "null"));
+        System.out.println("=== WEBINARS PAGE DEBUG ===");
+        
+        // Получаем все вебинары
+        var allWebinars = webinarService.findAll();
+        System.out.println("All webinars count: " + (allWebinars != null ? allWebinars.size() : "null"));
             
             // Фильтруем только активные вебинары
-            if (upcomingWebinars != null) {
-                var activeWebinars = upcomingWebinars.stream()
-                        .filter(webinar -> webinar != null && webinar.isActive())
+        var upcomingWebinars = allWebinars.stream()
+                .filter(webinar -> webinar.getStartTime().isAfter(LocalDateTime.now()))
                         .toList();
-                System.out.println("Active webinars: " + activeWebinars.size());
-                model.addAttribute("webinars", activeWebinars);
-                model.addAttribute("totalWebinars", activeWebinars.size());
+        System.out.println("Upcoming webinars count: " + upcomingWebinars.size());
+        
+        model.addAttribute("webinars", allWebinars);
+        model.addAttribute("upcomingWebinars", upcomingWebinars);
+        model.addAttribute("totalWebinars", upcomingWebinars.size());
                 
-                // Добавляем информацию об участии текущего пользователя для каждого вебинара
-                if (userDetails != null) {
+        // Если пользователь авторизован как студент, добавляем информацию об участии
+        if (userDetails != null) {
+            try {
+                User currentUser = userService.findByUsername(userDetails.getUsername()).orElse(null);
+                System.out.println("Current user: " + (currentUser != null ? currentUser.getUsername() : "null"));
+                
+                if (currentUser != null && currentUser.getRole() == Role.STUDENT) {
+                    System.out.println("User is student, adding participation info");
+                    // Создаем карту участия в вебинарах
                     Map<Long, Boolean> participationMap = new HashMap<>();
-                    for (var webinar : activeWebinars) {
-                        boolean isParticipant = webinarService.isUserParticipant(webinar.getId(), userDetails.getUsername());
+                    for (var webinar : allWebinars) {
+                        boolean isParticipant = webinar.getParticipants() != null && 
+                                webinar.getParticipants().contains(currentUser);
                         participationMap.put(webinar.getId(), isParticipant);
-                        // Принудительная загрузка для избежания lazy loading проблем
-                        webinar.getParticipants().size();
                     }
+                    System.out.println("Participation map size: " + participationMap.size());
                     model.addAttribute("participationMap", participationMap);
-                } else {
-                    model.addAttribute("participationMap", new HashMap<Long, Boolean>());
                 }
-            } else {
-                model.addAttribute("webinars", Collections.emptyList());
-                model.addAttribute("totalWebinars", 0);
-                model.addAttribute("participationMap", new HashMap<Long, Boolean>());
-            }
-        } catch (Exception e) {
-            System.err.println("Error in webinars handler: " + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("Error processing user participation: " + e.getMessage());
             e.printStackTrace();
-            model.addAttribute("webinars", Collections.emptyList());
-            model.addAttribute("totalWebinars", 0);
-            model.addAttribute("participationMap", new HashMap<Long, Boolean>());
+            }
+        } else {
+            System.out.println("User not authenticated");
         }
         
+        System.out.println("=== END WEBINARS DEBUG ===");
         return "webinars";
     }
 
@@ -187,9 +210,28 @@ public class HomeController {
             // Проверяем, участвует ли текущий пользователь в вебинаре
             boolean isParticipant = false;
             boolean hasLiked = false;
+            User currentUser = null;
+            
             if (userDetails != null) {
                 try {
+                    currentUser = userService.findByUsername(userDetails.getUsername()).orElse(null);
+                    if (currentUser != null) {
                     isParticipant = webinarService.isUserParticipant(id, userDetails.getUsername());
+                        
+                        // Если пользователь - студент, добавляем данные о прогрессе
+                        if (currentUser.getRole() == Role.STUDENT) {
+                            Map<String, Object> progressStats = progressService.getProgressStatistics(currentUser);
+                            Map<Course, Integer> courseProgressMap = progressService.getCourseProgressMap(currentUser);
+                            
+                            model.addAttribute("student", currentUser);
+                            model.addAttribute("progressStats", progressStats);
+                            model.addAttribute("courseProgressMap", courseProgressMap);
+                            model.addAttribute("overallProgress", progressStats.get("overallProgress"));
+                            model.addAttribute("completedWebinars", progressStats.get("completedWebinars"));
+                            model.addAttribute("totalCourses", progressStats.get("totalCourses"));
+                            model.addAttribute("completedCourses", progressStats.get("completedCourses"));
+                        }
+                    }
                 } catch (Exception e) {
                     System.err.println("Error checking user participation: " + e.getMessage());
                     isParticipant = false;
@@ -197,11 +239,11 @@ public class HomeController {
                 
                 // Проверяем, поставил ли пользователь лайк
                 try {
-                    var user = userService.findByUsername(userDetails.getUsername()).orElse(null);
-                    if (user != null && webinar.getLikes() != null) {
+                    final User finalCurrentUser = currentUser; // Создаем effectively final переменную
+                    if (finalCurrentUser != null && webinar.getLikes() != null) {
                         hasLiked = webinar.getLikes().stream()
                                 .anyMatch(like -> like.getUser() != null && 
-                                        like.getUser().getId().equals(user.getId()));
+                                        like.getUser().getId().equals(finalCurrentUser.getId()));
                     }
                 } catch (Exception e) {
                     System.err.println("Error checking user likes: " + e.getMessage());
@@ -225,6 +267,74 @@ public class HomeController {
     public String profile(@AuthenticationPrincipal User user, Model model) {
         if (user == null) {
             return "redirect:/login";
+        }
+        
+        // Добавляем статистику в зависимости от роли пользователя
+        if (user.getRole() == Role.STUDENT) {
+            try {
+                Map<String, Object> progressStats = progressService.getProgressStatistics(user);
+                model.addAttribute("progressStats", progressStats);
+                model.addAttribute("totalCourses", progressStats.get("totalCourses"));
+                model.addAttribute("completedCourses", progressStats.get("completedCourses"));
+                model.addAttribute("totalWebinars", progressStats.get("totalAttendedWebinars"));
+                model.addAttribute("overallProgress", progressStats.get("overallProgress"));
+            } catch (Exception e) {
+                System.err.println("Error getting student progress: " + e.getMessage());
+                // Устанавливаем значения по умолчанию при ошибке
+                model.addAttribute("totalCourses", 0);
+                model.addAttribute("completedCourses", 0);
+                model.addAttribute("totalWebinars", 0);
+                model.addAttribute("overallProgress", 0);
+            }
+        } else if (user.getRole() == Role.TEACHER) {
+            try {
+                List<Course> teacherCourses = courseService.findByTeacher(user);
+                List<Webinar> teacherWebinars = webinarService.findByTeacher(user);
+                
+                // Подсчитываем количество студентов без lambda
+                int totalStudents = 0;
+                for (Course course : teacherCourses) {
+                    if (course.getStudents() != null) {
+                        totalStudents += course.getStudents().size();
+                    }
+                }
+                
+                model.addAttribute("teacherCoursesCount", teacherCourses.size());
+                model.addAttribute("teacherWebinarsCount", teacherWebinars.size());
+                model.addAttribute("teacherStudentsCount", totalStudents);
+                model.addAttribute("teacherRating", 4.8); // Пока статичное значение, можно добавить систему рейтингов
+            } catch (Exception e) {
+                System.err.println("Error getting teacher stats: " + e.getMessage());
+                model.addAttribute("teacherCoursesCount", 0);
+                model.addAttribute("teacherWebinarsCount", 0);
+                model.addAttribute("teacherStudentsCount", 0);
+                model.addAttribute("teacherRating", 0);
+            }
+        } else if (user.getRole() == Role.ADMIN) {
+            try {
+                List<User> allUsers = userService.findAll();
+                List<Course> allCourses = courseService.findAll();
+                List<Webinar> upcomingWebinars = webinarService.findUpcoming();
+                
+                // Подсчитываем активные курсы без lambda
+                int activeCourseCount = 0;
+                for (Course course : allCourses) {
+                    if (course.isActive()) {
+                        activeCourseCount++;
+                    }
+                }
+                
+                model.addAttribute("totalUsers", allUsers.size());
+                model.addAttribute("activeCourses", activeCourseCount);
+                model.addAttribute("upcomingWebinarsCount", upcomingWebinars.size());
+                model.addAttribute("systemUptime", 99.9); // Статичное значение для демонстрации
+            } catch (Exception e) {
+                System.err.println("Error getting admin stats: " + e.getMessage());
+                model.addAttribute("totalUsers", 0);
+                model.addAttribute("activeCourses", 0);
+                model.addAttribute("upcomingWebinarsCount", 0);
+                model.addAttribute("systemUptime", 100);
+            }
         }
         
         model.addAttribute("user", user);

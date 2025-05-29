@@ -7,7 +7,7 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Online School</title>
     
-    <!-- Modern CSS -->
+    <!-- Apple-style CSS -->
     <link rel="stylesheet" href="/css/style.css">
     
     <!-- Google Fonts -->
@@ -15,8 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -49,45 +49,59 @@
                         Вебинары
                     </a></li>
                     
-                    <!-- Админские ссылки -->
-                    <li sec:authorize="hasRole('ADMIN')">
-                        <a href="/admin" class="nav-link">
-                            <i class="fas fa-cog"></i> 
-                            Админ
-                        </a>
-                    </li>
-                    
-                    <!-- Ссылки учителя -->
-                    <li sec:authorize="hasRole('TEACHER')">
-                        <a href="/teacher/dashboard" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i> 
-                            Кабинет
-                        </a>
-                    </li>
-                    
-                    <!-- Ссылки студента -->
-                    <li sec:authorize="hasRole('STUDENT')">
-                        <a href="/student/dashboard" class="nav-link">
-                            <i class="fas fa-user-graduate"></i> 
-                            Кабинет
-                        </a>
-                    </li>
-                    
                     <!-- Профиль пользователя -->
                     <li class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle" onclick="toggleDropdown(event)">
                             <i class="fas fa-user-circle"></i>
                             <span sec:authentication="name">Пользователь</span>
+                            <span sec:authorize="hasRole('ADMIN')" class="role-badge admin">Админ</span>
+                            <span sec:authorize="hasRole('TEACHER')" class="role-badge teacher">Учитель</span>
+                            <span sec:authorize="hasRole('STUDENT')" class="role-badge student">Студент</span>
                             <i class="fas fa-chevron-down"></i>
                         </a>
                         <div class="dropdown-menu">
-                            <a href="/dashboard" class="dropdown-item">
+                            <!-- Дашборд в зависимости от роли -->
+                            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="dropdown-item">
                                 <i class="fas fa-tachometer-alt"></i> Дашборд
                             </a>
+                            <a sec:authorize="hasRole('TEACHER')" href="/teacher/dashboard" class="dropdown-item">
+                                <i class="fas fa-tachometer-alt"></i> Дашборд
+                            </a>
+                            <a sec:authorize="hasRole('STUDENT')" href="/student/dashboard" class="dropdown-item">
+                                <i class="fas fa-tachometer-alt"></i> Дашборд
+                            </a>
+                            
+                            <!-- Админ панель для админов -->
+                            <a sec:authorize="hasRole('ADMIN')" href="/admin/users" class="dropdown-item">
+                                <i class="fas fa-users-cog"></i> Управление пользователями
+                            </a>
+                            <a sec:authorize="hasRole('ADMIN')" href="/admin/courses" class="dropdown-item">
+                                <i class="fas fa-book-open"></i> Управление курсами
+                            </a>
+                            <a sec:authorize="hasRole('ADMIN')" href="/admin/webinars" class="dropdown-item">
+                                <i class="fas fa-video"></i> Управление вебинарами
+                            </a>
+                            
+                            <!-- Учительские функции -->
+                            <a sec:authorize="hasRole('TEACHER')" href="/teacher/courses" class="dropdown-item">
+                                <i class="fas fa-chalkboard"></i> Мои курсы
+                            </a>
+                            <a sec:authorize="hasRole('TEACHER')" href="/teacher/webinars" class="dropdown-item">
+                                <i class="fas fa-video"></i> Мои вебинары
+                            </a>
+                            
+                            <!-- Студенческие функции -->
+                            <a sec:authorize="hasRole('STUDENT')" href="/student/courses" class="dropdown-item">
+                                <i class="fas fa-book"></i> Мои курсы
+                            </a>
+                            <a sec:authorize="hasRole('STUDENT')" href="/student/progress" class="dropdown-item">
+                                <i class="fas fa-chart-line"></i> Прогресс
+                            </a>
+                            
+                            <div class="dropdown-divider"></div>
                             <a href="/profile" class="dropdown-item">
                                 <i class="fas fa-user-edit"></i> Профиль
                             </a>
-                            <div class="dropdown-divider"></div>
                             <form th:action="@{/logout}" method="post" style="margin: 0;">
                                 <button type="submit" class="dropdown-item" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">
                                     <i class="fas fa-sign-out-alt"></i> Выйти
@@ -98,7 +112,7 @@
                 </div>
                 
                 <!-- Ссылки для неавторизованных пользователей -->
-                <div sec:authorize="!isAuthenticated()">
+                <div class="auth-links" sec:authorize="!isAuthenticated()">
                     <li><a href="/login" class="nav-link">
                         <i class="fas fa-sign-in-alt"></i> 
                         Войти

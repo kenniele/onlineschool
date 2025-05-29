@@ -24,7 +24,7 @@
                             <i class="fas fa-book-open"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number" th:text="${enrolledCourses.size()}">0</div>
+                            <div class="stat-number" th:text="${totalCourses != null ? totalCourses : 0}">0</div>
                             <div class="stat-label">Изучаемых курсов</div>
                         </div>
                     </div>
@@ -33,17 +33,17 @@
                             <i class="fas fa-video"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number" th:text="${attendedWebinars.size()}">0</div>
-                            <div class="stat-label">Посещенных вебинаров</div>
+                            <div class="stat-number" th:text="${totalWebinars != null ? totalWebinars : 0}">0</div>
+                            <div class="stat-label">Участвую в вебинарах</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-trophy"></i>
+                            <i class="fas fa-check-circle"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Завершенных курсов</div>
+                            <div class="stat-number" th:text="${completedWebinars != null ? completedWebinars : 0}">0</div>
+                            <div class="stat-label">Пройдено вебинаров</div>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -51,35 +51,42 @@
                             <i class="fas fa-percentage"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number">0%</div>
+                            <div class="stat-number" th:text="${overallProgress != null ? overallProgress + '%' : '0%'}">0%</div>
                             <div class="stat-label">Средний прогресс</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Профиль студента -->
+                <!-- Общий прогресс -->
                 <div class="section">
                     <h2 class="section-title">
-                        <i class="fas fa-user"></i>
-                        Профиль студента
+                        <i class="fas fa-chart-pie"></i>
+                        Общий прогресс обучения
                     </h2>
                     
-                    <div class="profile-card">
-                        <div class="profile-avatar">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="profile-info">
-                            <h3 th:text="${student.firstName != null ? student.firstName + ' ' + student.lastName : student.username}">Имя студента</h3>
-                            <p class="profile-email" th:text="${student.email}">email@example.com</p>
-                            <div class="profile-badges">
-                                <span class="badge badge-primary">
-                                    <i class="fas fa-user-graduate"></i>
-                                    Студент
-                                </span>
-                                <span class="badge badge-success" th:if="${student.active}">
-                                    <i class="fas fa-check-circle"></i>
-                                    Активный
-                                </span>
+                    <div class="progress-overview">
+                        <div class="overall-progress-card">
+                            <div class="progress-circle-container">
+                                <div class="progress-circle" th:data-progress="${overallProgress != null ? overallProgress : 0}">
+                                    <div class="progress-percentage" th:text="${overallProgress != null ? overallProgress + '%' : '0%'}">0%</div>
+                                </div>
+                            </div>
+                            <div class="progress-details">
+                                <h3>Ваш общий прогресс</h3>
+                                <p class="text-muted">
+                                    Завершено <strong th:text="${completedWebinars != null ? completedWebinars : 0}">0</strong> из 
+                                    <strong th:text="${totalWebinarsInCourses != null ? totalWebinarsInCourses : 0}">0</strong> вебинаров в ваших курсах
+                                </p>
+                                <div class="progress-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-value" th:text="${completedCourses != null ? completedCourses : 0}">0</span>
+                                        <span class="stat-label">Завершенных курсов</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value" th:text="${totalCourses != null and completedCourses != null ? (totalCourses - completedCourses) : 0}">0</span>
+                                        <span class="stat-label">Курсов в процессе</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -96,23 +103,38 @@
                         <div class="progress-item" th:each="course : ${enrolledCourses}">
                             <div class="progress-header">
                                 <h4 th:text="${course.title}">Название курса</h4>
-                                <span class="progress-percentage">0%</span>
+                                <span class="progress-percentage" th:text="${courseProgressMap[course] != null ? courseProgressMap[course] + '%' : '0%'}">0%</span>
                             </div>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 0%"></div>
+                                <div class="progress-fill" 
+                                     th:style="'width: ' + ${courseProgressMap[course] != null ? courseProgressMap[course] : 0} + '%'"
+                                     th:classappend="${courseProgressMap[course] != null and courseProgressMap[course] == 100} ? 'completed' : 'in-progress'">
+                                </div>
                             </div>
+                            
                             <div class="progress-details">
                                 <div class="detail-item">
                                     <i class="fas fa-chalkboard-teacher"></i>
-                                    <span th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}">Преподаватель</span>
+                                    <span th:text="${course.teacher != null ? (course.teacher.firstName != null ? course.teacher.firstName : '') + ' ' + (course.teacher.lastName != null ? course.teacher.lastName : '') : 'Преподаватель'}">Преподаватель</span>
                                 </div>
                                 <div class="detail-item">
                                     <i class="fas fa-video"></i>
-                                    <span th:text="${course.webinars.size()} + ' вебинаров'">0 вебинаров</span>
+                                    <span th:text="${course.webinars != null ? course.webinars.size() : 0} + ' вебинаров всего'">0 вебинаров всего</span>
                                 </div>
                                 <div class="detail-item">
-                                    <i class="fas fa-users"></i>
-                                    <span th:text="${course.students.size()} + ' студентов'">0 студентов</span>
+                                    <i class="fas fa-check-double"></i>
+                                    <span>
+                                        Пройдено: 
+                                        <span th:with="totalWebinars=${course.webinars != null ? course.webinars.size() : 0},
+                                                     progress=${courseProgressMap[course] != null ? courseProgressMap[course] : 0}"
+                                              th:text="${#numbers.formatDecimal(progress * totalWebinars / 100, 0, 0)} + ' из ' + ${totalWebinars}">
+                                            0 из 0
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="detail-item" th:if="${courseProgressMap[course] != null and courseProgressMap[course] == 100}">
+                                    <i class="fas fa-trophy text-warning"></i>
+                                    <span class="text-success fw-bold">Курс завершен!</span>
                                 </div>
                             </div>
                             <div class="progress-actions">
@@ -120,6 +142,9 @@
                                     <i class="fas fa-eye"></i>
                                     Перейти к курсу
                                 </a>
+                                <span th:if="${courseProgressMap[course] != null and courseProgressMap[course] == 100}" class="badge bg-success ms-2">
+                                    <i class="fas fa-check"></i> Завершен
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -169,7 +194,12 @@
                                 </div>
                             </div>
                             <div class="history-status">
-                                <span class="status-badge" th:classappend="${webinar.status.name().toLowerCase()}" th:text="${webinar.status}">Статус</span>
+                                <span class="status-badge completed" 
+                                      th:if="${webinar.startTime != null and webinar.startTime.isBefore(T(java.time.LocalDateTime).now())}"
+                                      th:text="'Пройден'">Пройден</span>
+                                <span class="status-badge scheduled" 
+                                      th:if="${webinar.startTime == null or !webinar.startTime.isBefore(T(java.time.LocalDateTime).now())}"
+                                      th:text="'Запланирован'">Запланирован</span>
                             </div>
                         </div>
                     </div>
@@ -178,52 +208,65 @@
                         <div class="empty-icon">
                             <i class="fas fa-video"></i>
                         </div>
-                        <h3>Нет записей об участии в вебинарах</h3>
-                        <p>Принимайте участие в вебинарах, чтобы увидеть их здесь</p>
+                        <h3>Нет истории участия в вебинарах</h3>
+                        <p>Записывайтесь на вебинары, чтобы отслеживать свой прогресс</p>
                         <a href="/webinars" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
+                            <i class="fas fa-calendar"></i>
                             Найти вебинары
                         </a>
                     </div>
                 </div>
 
-                <!-- Достижения (заглушка для будущего функционала) -->
+                <!-- Достижения -->
                 <div class="section">
                     <h2 class="section-title">
-                        <i class="fas fa-medal"></i>
+                        <i class="fas fa-trophy"></i>
                         Достижения
                     </h2>
                     
                     <div class="achievements-grid">
-                        <div class="achievement-card locked">
+                        <div class="achievement-card" th:classappend="${enrolledCourses != null and not #lists.isEmpty(enrolledCourses) ? 'unlocked' : 'locked'}">
                             <div class="achievement-icon">
                                 <i class="fas fa-book"></i>
                             </div>
                             <h4>Первый курс</h4>
                             <p>Запишитесь на свой первый курс</p>
-                            <span class="achievement-status" th:classappend="${#lists.isEmpty(enrolledCourses) ? 'locked' : 'unlocked'}">
-                                <span th:text="${#lists.isEmpty(enrolledCourses) ? 'Заблокировано' : 'Получено'}"></span>
+                            <span class="achievement-status" th:classappend="${enrolledCourses != null and not #lists.isEmpty(enrolledCourses) ? 'unlocked' : 'locked'}">
+                                <span th:text="${enrolledCourses != null and not #lists.isEmpty(enrolledCourses) ? 'Получено' : 'Заблокировано'}"></span>
                             </span>
                         </div>
                         
-                        <div class="achievement-card locked">
+                        <div class="achievement-card" th:classappend="${attendedWebinars != null and not #lists.isEmpty(attendedWebinars) ? 'unlocked' : 'locked'}">
                             <div class="achievement-icon">
                                 <i class="fas fa-video"></i>
                             </div>
                             <h4>Участник</h4>
                             <p>Примите участие в вебинаре</p>
-                            <span class="achievement-status" th:classappend="${#lists.isEmpty(attendedWebinars) ? 'locked' : 'unlocked'}">
-                                <span th:text="${#lists.isEmpty(attendedWebinars) ? 'Заблокировано' : 'Получено'}"></span>
+                            <span class="achievement-status" th:classappend="${attendedWebinars != null and not #lists.isEmpty(attendedWebinars) ? 'unlocked' : 'locked'}">
+                                <span th:text="${attendedWebinars != null and not #lists.isEmpty(attendedWebinars) ? 'Получено' : 'Заблокировано'}"></span>
                             </span>
                         </div>
                         
-                        <div class="achievement-card locked">
+                        <div class="achievement-card" th:classappend="${overallProgress != null and overallProgress == 100 ? 'unlocked' : 'locked'}">
                             <div class="achievement-icon">
-                                <i class="fas fa-trophy"></i>
+                                <i class="fas fa-graduation-cap"></i>
                             </div>
-                            <h4>Завершитель</h4>
-                            <p>Завершите свой первый курс</p>
-                            <span class="achievement-status locked">Заблокировано</span>
+                            <h4>Отличник</h4>
+                            <p>Достигните 100% прогресса</p>
+                            <span class="achievement-status" th:classappend="${overallProgress != null and overallProgress == 100 ? 'unlocked' : 'locked'}">
+                                <span th:text="${overallProgress != null and overallProgress == 100 ? 'Получено' : 'Заблокировано'}"></span>
+                            </span>
+                        </div>
+                        
+                        <div class="achievement-card" th:classappend="${completedWebinars != null and completedWebinars >= 10 ? 'unlocked' : 'locked'}">
+                            <div class="achievement-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h4>Знаток</h4>
+                            <p>Пройдите 10 вебинаров</p>
+                            <span class="achievement-status" th:classappend="${completedWebinars != null and completedWebinars >= 10 ? 'unlocked' : 'locked'}">
+                                <span th:text="${completedWebinars != null and completedWebinars >= 10 ? 'Получено' : 'Заблокировано'}"></span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -232,5 +275,42 @@
     </main>
     
     <div th:replace="fragments/footer :: footer"></div>
+    
+    <script>
+        // Анимация круглой диаграммы прогресса
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressCircle = document.querySelector('.progress-circle');
+            if (progressCircle) {
+                const progress = parseInt(progressCircle.dataset.progress);
+                const circumference = 2 * Math.PI * 45; // радиус = 45
+                const offset = circumference - (progress / 100) * circumference;
+                
+                // Создаем SVG круг для прогресса
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', '120');
+                svg.setAttribute('height', '120');
+                svg.style.position = 'absolute';
+                svg.style.top = '0';
+                svg.style.left = '0';
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', '60');
+                circle.setAttribute('cy', '60');
+                circle.setAttribute('r', '45');
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', '#007bff');
+                circle.setAttribute('stroke-width', '8');
+                circle.setAttribute('stroke-dasharray', circumference);
+                circle.setAttribute('stroke-dashoffset', offset);
+                circle.setAttribute('stroke-linecap', 'round');
+                circle.style.transform = 'rotate(-90deg)';
+                circle.style.transformOrigin = '60px 60px';
+                circle.style.transition = 'stroke-dashoffset 1s ease-in-out';
+                
+                svg.appendChild(circle);
+                progressCircle.insertBefore(svg, progressCircle.firstChild);
+            }
+        });
+    </script>
 </body>
 </html> 

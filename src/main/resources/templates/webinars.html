@@ -14,7 +14,7 @@
         <!-- Statistics -->
         <div class="stats-grid mb-5">
             <div class="stat-card">
-                <span class="stat-number" th:text="${totalWebinars ?: 0}">0</span>
+                <span class="stat-number" th:text="${totalWebinars != null ? totalWebinars : 0}">0</span>
                 <span class="stat-label">Предстоящих вебинаров</span>
             </div>
         </div>

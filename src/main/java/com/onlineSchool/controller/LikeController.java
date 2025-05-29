@@ -4,6 +4,7 @@ import com.onlineSchool.model.EntityType;
 import com.onlineSchool.model.Like;
 import com.onlineSchool.model.User;
 import com.onlineSchool.service.LikeService;
+import com.onlineSchool.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,9 @@ public class LikeController {
 
     @Autowired
     private LikeService likeService;
+    
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/entity/{entityType}/{entityId}")
     public ResponseEntity<List<Like>> getLikesByEntity(
@@ -97,7 +101,10 @@ public class LikeController {
             @AuthenticationPrincipal UserDetails userDetails) {
         
         try {
-            User user = (User) userDetails;
+            // Получаем User через UserService, а не кастим напрямую
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+            
             boolean hasLiked = likeService.hasLiked(user.getId(), entityId, entityType);
             
             Map<String, Object> response = new HashMap<>();

@@ -70,10 +70,10 @@
                     
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-file"></i>
+                            <i class="fas fa-file-alt"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number" th:text="${webinar.materials.size()}">0</div>
+                            <div class="stat-number">0</div>
                             <div class="stat-label">Материалов</div>
                         </div>
                     </div>
@@ -147,37 +147,43 @@
                     </div>
                 </div>
 
-                <!-- Материалы -->
+                <!-- Webinar Materials -->
+                <!-- Материалы временно отключены
                 <div class="section" th:if="${not #lists.isEmpty(webinar.materials)}">
                     <h2 class="section-title">
-                        <i class="fas fa-file"></i>
-                        Материалы вебинара
+                        <i class="fas fa-file-alt"></i>
+                        Материалы к вебинару
                     </h2>
                     
                     <div class="materials-list">
                         <div class="material-item" th:each="material : ${webinar.materials}">
-                            <div class="material-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
                             <div class="material-info">
+                                <div class="material-icon">
+                                    <i class="fas fa-file-pdf" th:if="${material.type == 'PDF'}"></i>
+                                    <i class="fas fa-file-word" th:if="${material.type == 'DOC'}"></i>
+                                    <i class="fas fa-file-powerpoint" th:if="${material.type == 'PPT'}"></i>
+                                    <i class="fas fa-file" th:unless="${material.type == 'PDF' or material.type == 'DOC' or material.type == 'PPT'}"></i>
+                                </div>
+                                <div class="material-details">
                                 <h4 th:text="${material.title}">Название материала</h4>
-                                <p th:text="${material.description}" th:if="${material.description}">Описание материала</p>
-                                <div class="material-meta">
-                                    <span th:if="${material.fileSize}">
-                                        <i class="fas fa-weight"></i>
-                                        <span th:text="${material.fileSize}">Размер файла</span>
-                                    </span>
+                                    <p th:text="${material.description}">Описание материала</p>
+                                    <small th:text="${material.fileSize}">2.3 MB</small>
                                 </div>
                             </div>
                             <div class="material-actions">
-                                <a th:href="${material.fileUrl}" class="btn btn-outline-primary btn-sm" target="_blank" th:if="${material.fileUrl}">
+                                <a th:href="@{/materials/{id}/download(id=${material.id})}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-download"></i>
                                     Скачать
+                                </a>
+                                <a th:href="@{/materials/{id}(id=${material.id})}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                    Просмотр
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
+                -->
 
                 <!-- Действия -->
                 <div class="section-actions">

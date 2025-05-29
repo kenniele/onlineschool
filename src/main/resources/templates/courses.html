@@ -128,6 +128,17 @@
                             </div>
                         </div>
                         
+                        <!-- Progress bar for student progress -->
+                        <div class="student-progress mt-3" sec:authorize="hasRole('STUDENT')" th:if="${courseProgressMap != null and courseProgressMap.containsKey(course)}">
+                            <div class="progress-label">Мой прогресс</div>
+                            <div class="progress">
+                                <div class="progress-bar" 
+                                     th:style="'width: ' + ${courseProgressMap[course] != null ? courseProgressMap[course] : 0} + '%'">
+                                </div>
+                            </div>
+                            <small class="text-muted" th:text="${courseProgressMap[course] != null ? courseProgressMap[course] : 0} + '% завершено'">0% завершено</small>
+                        </div>
+                        
                         <!-- Progress bar for course duration -->
                         <div class="course-progress mt-3" th:if="${course.startDate != null and course.startDate.isBefore(T(java.time.LocalDateTime).now())}">
                             <div class="progress-label">Прогресс курса</div>

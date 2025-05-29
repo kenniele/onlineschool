@@ -180,19 +180,19 @@
                 <div class="card-body">
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${totalCourses ?: 0}">0</span>
                             <span class="stat-label">Записан на курсов</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${completedCourses ?: 0}">0</span>
                             <span class="stat-label">Завершено курсов</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${totalWebinars ?: 0}">0</span>
                             <span class="stat-label">Участие в вебинарах</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0%</span>
+                            <span class="stat-number" th:text="${overallProgress ?: 0} + '%'">0%</span>
                             <span class="stat-label">Общий прогресс</span>
                         </div>
                     </div>
@@ -222,19 +222,19 @@
                 <div class="card-body">
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${teacherCoursesCount ?: 0}">0</span>
                             <span class="stat-label">Создано курсов</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${teacherWebinarsCount ?: 0}">0</span>
                             <span class="stat-label">Проведено вебинаров</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${teacherStudentsCount ?: 0}">0</span>
                             <span class="stat-label">Всего студентов</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${teacherRating ?: 0}">0</span>
                             <span class="stat-label">Средний рейтинг</span>
                         </div>
                     </div>
@@ -264,19 +264,19 @@
                 <div class="card-body">
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${totalUsers ?: 0}">0</span>
                             <span class="stat-label">Всего пользователей</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${activeCourses ?: 0}">0</span>
                             <span class="stat-label">Активных курсов</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">0</span>
+                            <span class="stat-number" th:text="${upcomingWebinarsCount ?: 0}">0</span>
                             <span class="stat-label">Запланированных вебинаров</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">100%</span>
+                            <span class="stat-number" th:text="${systemUptime ?: 100} + '%'">100%</span>
                             <span class="stat-label">Доступность системы</span>
                         </div>
                     </div>

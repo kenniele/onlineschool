@@ -172,26 +172,26 @@
         </div>
 
         <!-- Webinar Materials -->
+        <!-- Материалы временно отключены 
         <div class="webinar-materials mb-5" th:if="${webinar.materials != null and !webinar.materials.empty}">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        <i class="fas fa-file-alt"></i>
-                        Материалы
-                    </h2>
-                </div>
-                <div class="card-body">
-                    <div class="materials-list">
-                        <div th:each="material : ${webinar.materials}" class="material-item">
-                            <a th:href="@{/materials/{id}(id=${material.id})}" class="material-link">
-                                <i class="fas fa-download"></i>
-                                <span th:text="${material.title}">Материал</span>
-                            </a>
-                        </div>
+            <div class="content-section">
+                <h3 class="section-title">
+                    <i class="fas fa-file-alt"></i>
+                    Материалы вебинара
+                </h3>
+                
+                <div class="materials-list">
+                    <div th:each="material : ${webinar.materials}" class="material-item">
+                        <a th:href="@{/materials/{id}(id=${material.id})}" class="material-link">
+                            <i class="fas fa-download"></i>
+                            <span th:text="${material.title}">Название материала</span>
+                            <small th:text="${material.fileSize}">2.1 MB</small>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
+        -->
 
         <!-- Comments Section -->
         <div class="webinar-comments">
@@ -232,11 +232,11 @@
                     
                     <!-- Comment Form -->
                     <div class="comment-form" sec:authorize="isAuthenticated()">
-                        <form th:action="@{/api/webinars/{id}/comments(id=${webinar.id})}" method="post">
+                        <form id="commentForm">
                             <div class="form-group">
                                 <label for="commentText" class="form-label">Ваш комментарий</label>
                                 <textarea id="commentText" 
-                                          name="text" 
+                                          name="content" 
                                           class="form-control" 
                                           rows="3"
                                           placeholder="Поделитесь своими мыслями о вебинаре..."
@@ -556,23 +556,90 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const webinarId = /*[[${webinar.id}]]*/ 0;
+            
+            // Проверяем что ID корректен
+            if (!webinarId || webinarId === 0) {
+                console.error('Webinar ID not found');
+                return;
+            }
+            
+            // Обработка формы комментариев
+            const commentForm = document.getElementById('commentForm');
+            if (commentForm) {
+                commentForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const commentData = {
+                        content: formData.get('content'),
+                        entityType: 'WEBINAR',
+                        entityId: webinarId
+                    };
+                    
+                    // Убираем CSRF токены для API запросов, так как они отключены в SecurityConfig
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    };
+                    
+                    fetch('/api/comments', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(commentData)
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Ошибка при отправке комментария');
+                    })
+                    .then(data => {
+                        showNotification('Комментарий успешно добавлен!', 'success');
+                        // Очищаем форму
+                        document.getElementById('commentText').value = '';
+                        // Перезагружаем страницу для показа нового комментария
+                        setTimeout(() => window.location.reload(), 1000);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification(error.message || 'Произошла ошибка при добавлении комментария', 'error');
+                    });
+                });
+            }
+            
             // Обработка лайков
             document.querySelectorAll('.like-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const entityType = this.dataset.entityType;
                     const entityId = this.dataset.entityId;
                     
+                    // Проверяем что entityId корректен
+                    if (!entityId || entityId === 'null') {
+                        console.error('Entity ID not found');
+                        showNotification('Ошибка: ID объекта не найден', 'error');
+                        return;
+                    }
+                    
                     // Отключаем кнопку на время запроса
                     this.disabled = true;
                     
+                    // Убираем CSRF токены для API запросов
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    };
+                    
                     fetch(`/api/likes/toggle/${entityType}/${entityId}`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
+                        headers: headers
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Ошибка при обработке лайка');
+                    })
                     .then(data => {
                         if (data.success) {
                             // Обновляем состояние кнопки
@@ -604,7 +671,7 @@
                 });
             });
             
-            // Функция для показа уведомлений (аналогично courses.html)
+            // Функция для показа уведомлений
             function showNotification(message, type) {
                 const notification = document.createElement('div');
                 notification.className = `notification notification-${type}`;

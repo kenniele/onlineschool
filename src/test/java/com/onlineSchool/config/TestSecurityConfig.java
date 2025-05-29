@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @TestConfiguration
 @EnableWebSecurity
@@ -23,13 +24,22 @@ public class TestSecurityConfig {
     @Primary
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**")
+                .ignoringRequestMatchers("/register", "/register/**")
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index", "/login", "/register", "/courses").permitAll()
                 .requestMatchers("GET", "/api/courses/**").permitAll()
                 .requestMatchers("GET", "/api/comments/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(exceptionHandling -> exceptionHandling
+                .defaultAuthenticationEntryPointFor(
+                    (request, response, authException) -> response.sendError(403, "Access Denied"),
+                    new AntPathRequestMatcher("/api/**")
+                )
             )
             .formLogin(form -> form
                 .loginPage("/login")
