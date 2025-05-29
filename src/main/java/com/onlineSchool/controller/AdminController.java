@@ -35,15 +35,21 @@ public class AdminController {
     }
 
     @GetMapping
-    public String adminPage() {
-        return "admin"; // Имя Thymeleaf шаблона (admin.html)
+    public String adminPage(Model model) {
+        // Добавляем статистику для главной страницы админа
+        model.addAttribute("totalUsers", userService.count());
+        model.addAttribute("totalCourses", courseService.count());
+        model.addAttribute("totalWebinars", webinarService.count());
+        model.addAttribute("activeWebinars", webinarService.countByStatus("SCHEDULED"));
+        
+        return "admin"; // Возвращаем главную страницу админки
     }
 
     @GetMapping("/users")
     public String manageUsers(Model model) {
         List<User> users = userService.findAll();
         model.addAttribute("users", users);
-        return "admin-users";
+        return "admin/users";
     }
 
     @GetMapping("/users/new")
@@ -51,7 +57,7 @@ public class AdminController {
         User user = new User();
         user.setActive(true); // По умолчанию новый пользователь активен
         model.addAttribute("user", user);
-        return "admin-user-form";
+        return "admin/user-form";
     }
 
     @PostMapping("/users/save")
@@ -86,7 +92,7 @@ public class AdminController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("user", user);
-            return "admin-user-form";
+            return "admin/user-form";
         }
 
         // Устанавливаем пароль, только если он предоставлен.
@@ -98,7 +104,7 @@ public class AdminController {
             // Эта ветка не должна достигаться из-за валидации выше, но для безопасности:
              bindingResult.rejectValue("password", "error.user", "Пароль не может быть пустым для нового пользователя.");
              model.addAttribute("user", user);
-             return "admin-user-form";
+             return "admin/user-form";
         }
         // Если это существующий пользователь и rawPassword пуст, userService.save() должен сохранить старый пароль.
 
@@ -111,7 +117,7 @@ public class AdminController {
         User user = userService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с ID:" + id + " не найден"));
         model.addAttribute("user", user);
-        return "admin-user-form";
+        return "admin/user-form";
     }
 
     @PostMapping("/users/update")
@@ -133,7 +139,7 @@ public class AdminController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("user", userFromForm);
-            return "admin-user-form";
+            return "admin/user-form";
         }
 
         // Обновляем поля существующего пользователя данными из формы
@@ -175,7 +181,7 @@ public class AdminController {
     public String manageWebinars(Model model) {
         List<Webinar> webinars = webinarService.findAll();
         model.addAttribute("webinars", webinars);
-        return "admin-webinars";
+        return "admin/webinars";
     }
 
     @GetMapping("/webinars/new")
@@ -183,7 +189,7 @@ public class AdminController {
         model.addAttribute("webinar", new Webinar());
         model.addAttribute("courses", courseService.findAll());
         model.addAttribute("teachers", userService.findByRole("TEACHER"));
-        return "admin-webinar-form";
+        return "admin/webinar-form";
     }
 
     @PostMapping("/webinars/save")
@@ -193,7 +199,7 @@ public class AdminController {
             model.addAttribute("webinar", webinar);
             model.addAttribute("courses", courseService.findAll());
             model.addAttribute("teachers", userService.findByRole("TEACHER"));
-            return "admin-webinar-form";
+            return "admin/webinar-form";
         }
 
         webinarService.save(webinar);
@@ -207,7 +213,7 @@ public class AdminController {
         model.addAttribute("webinar", webinar);
         model.addAttribute("courses", courseService.findAll());
         model.addAttribute("teachers", userService.findByRole("TEACHER"));
-        return "admin-webinar-form";
+        return "admin/webinar-form";
     }
 
     @PostMapping("/webinars/update")
@@ -217,7 +223,7 @@ public class AdminController {
             model.addAttribute("webinar", webinar);
             model.addAttribute("courses", courseService.findAll());
             model.addAttribute("teachers", userService.findByRole("TEACHER"));
-            return "admin-webinar-form";
+            return "admin/webinar-form";
         }
 
         webinarService.update(webinar.getId(), webinar);
@@ -229,12 +235,4 @@ public class AdminController {
         webinarService.deleteById(id);
         return "redirect:/admin/webinars";
     }
-
-    // Здесь можно будет добавить методы для управления пользователями, курсами и т.д.
-    // Например:
-    // @GetMapping("/users")
-    // public String manageUsers(Model model) {
-    //     // ... логика ...
-    //     return "admin-users";
-    // }
 } 

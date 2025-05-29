@@ -124,4 +124,8 @@ public class UserService {
             return List.of();
         }
     }
+
+    public long count() {
+        return userRepository.count();
+    }
 }

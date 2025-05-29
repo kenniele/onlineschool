@@ -107,7 +107,7 @@
                         
                         <!-- Действия для студентов -->
                         <div sec:authorize="hasRole('STUDENT')">
-                            <form th:if="${!isParticipant and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                            <form th:if="${isParticipant == null or (!isParticipant and webinar.status != null and webinar.status.name() == 'SCHEDULED')}" 
                                   th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" 
                                   method="post" 
                                   style="display: inline;">
@@ -117,14 +117,14 @@
                                 </button>
                             </form>
                             
-                            <span th:if="${isParticipant}" 
+                            <span th:if="${isParticipant != null and isParticipant}" 
                                   class="badge badge-success">
                                 <i class="fas fa-check"></i>
                                 Вы участвуете
                             </span>
                             
                             <!-- Кнопка входа в вебинар для участников -->
-                            <a th:if="${webinar.status != null and (webinar.status.name() == 'IN_PROGRESS' or webinar.status.name() == 'SCHEDULED') and isParticipant and webinar.meetingUrl != null and !webinar.meetingUrl.empty}" 
+                            <a th:if="${webinar.status != null and (webinar.status.name() == 'IN_PROGRESS' or webinar.status.name() == 'SCHEDULED') and isParticipant != null and isParticipant and webinar.meetingUrl != null and !webinar.meetingUrl.empty}" 
                                th:href="${webinar.meetingUrl}" 
                                target="_blank"
                                class="btn btn-warning">
@@ -136,26 +136,6 @@
                         
                         <!-- Действия для преподавателей -->
                         <div sec:authorize="hasRole('TEACHER')" th:if="${webinar.teacher != null and webinar.teacher.username == #authentication.name}">
-                            <form th:if="${webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
-                                  th:action="@{/teacher/webinars/{id}/start(id=${webinar.id})}" 
-                                  method="post" 
-                                  style="display: inline;">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-play"></i>
-                                    Начать вебинар
-                                </button>
-                            </form>
-                            
-                            <form th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS'}" 
-                                  th:action="@{/teacher/webinars/{id}/complete(id=${webinar.id})}" 
-                                  method="post" 
-                                  style="display: inline;">
-                                <button type="submit" class="btn btn-secondary">
-                                    <i class="fas fa-stop"></i>
-                                    Завершить вебинар
-                                </button>
-                            </form>
-                            
                             <form th:if="${webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
                                   th:action="@{/teacher/webinars/{id}/cancel(id=${webinar.id})}" 
                                   method="post" 
@@ -562,60 +542,44 @@
             // Используем переменную WEBINAR_ID
             const webinarId = WEBINAR_ID || document.body.dataset.webinarId;
             
-            console.log('=== DEBUG INFO ===');
-            console.log('WEBINAR_ID from Thymeleaf:', WEBINAR_ID);
-            console.log('webinarId from body dataset:', document.body.dataset.webinarId);
-            console.log('Final webinarId:', webinarId);
-            console.log('webinarId type:', typeof webinarId);
-            
             // Проверяем что ID корректен
             if (!webinarId || webinarId === '0' || webinarId === 'null' || webinarId === null) {
                 console.error('Webinar ID not found, webinarId:', webinarId);
-                console.error('Available data:', {
-                    thymeleafId: WEBINAR_ID,
-                    bodyDataset: document.body.dataset.webinarId,
-                    finalId: webinarId
-                });
                 return;
             }
-            
-            console.log('✅ webinarId is valid:', webinarId);
             
             // Обработка формы комментариев
             const commentForm = document.getElementById('commentForm');
             if (commentForm) {
-                console.log('✅ Comment form found');
                 commentForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    const formData = new FormData(this);
-                    const content = formData.get('content');
+                    const commentText = document.getElementById('commentText').value.trim();
                     
-                    // Валидация
-                    if (!content || content.trim().length === 0) {
-                        showNotification('Пожалуйста, введите текст комментария', 'error');
+                    // Валидация комментария
+                    if (!commentText) {
+                        alert('Пожалуйста, введите текст комментария');
                         return;
                     }
                     
-                    if (content.trim().length > 1000) {
-                        showNotification('Комментарий слишком длинный (максимум 1000 символов)', 'error');
+                    if (commentText.length > 1000) {
+                        alert('Комментарий слишком длинный (максимум 1000 символов)');
                         return;
                     }
+                    
+                    // Получаем CSRF токен
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                    
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    headers[csrfHeader] = csrfToken;
                     
                     const commentData = {
-                        content: content.trim(),
+                        content: commentText,
                         entityType: 'WEBINAR',
                         entityId: webinarId
-                    };
-                    
-                    // Отключаем кнопку отправки
-                    const submitButton = this.querySelector('button[type="submit"]');
-                    submitButton.disabled = true;
-                    
-                    // Убираем CSRF токены для API запросов, так как они отключены в SecurityConfig
-                    const headers = {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
                     };
                     
                     fetch('/api/comments', {
@@ -625,152 +589,81 @@
                         body: JSON.stringify(commentData)
                     })
                     .then(response => {
-                        if (!response.ok) {
-                            if (response.status === 403) {
-                                throw new Error('У вас нет прав для добавления комментария');
-                            } else if (response.status === 401) {
-                                throw new Error('Необходимо авторизоваться');
-                            }
+                        if (response.ok) {
+                            return response.json();
+                        } else {
                             throw new Error('Ошибка при отправке комментария');
                         }
-                        return response.json();
                     })
                     .then(data => {
-                        if (data.success) {
-                            showNotification('Комментарий успешно добавлен!', 'success');
-                            // Очищаем форму
-                            document.getElementById('commentText').value = '';
-                            // Перезагружаем страницу для показа нового комментария
-                            setTimeout(() => window.location.reload(), 1000);
-                        } else {
-                            throw new Error(data.message || 'Произошла ошибка при добавлении комментария');
-                        }
+                        // Очистка формы
+                        document.getElementById('commentText').value = '';
+                        
+                        // Перезагрузка страницы для отображения нового комментария
+                        location.reload();
                     })
                     .catch(error => {
-                        console.error('Error:', error);
-                        showNotification(error.message || 'Произошла ошибка при добавлении комментария', 'error');
-                    })
-                    .finally(() => {
-                        // Включаем кнопку обратно
-                        submitButton.disabled = false;
+                        alert('Ошибка при добавлении комментария: ' + error.message);
                     });
                 });
-            } else {
-                console.log('❌ Comment form not found');
             }
             
             // Обработка лайков
             const likeButtons = document.querySelectorAll('.like-btn');
-            console.log('✅ Found like buttons:', likeButtons.length);
-            
             likeButtons.forEach((button, index) => {
-                console.log(`Adding click handler to button ${index + 1}`);
-                
                 button.addEventListener('click', function() {
-                    console.log('=== LIKE BUTTON CLICKED ===');
-                    
                     const entityType = this.dataset.entityType;
                     const entityId = this.dataset.entityId;
                     
-                    console.log('entityType:', entityType);
-                    console.log('entityId:', entityId);
+                    // Получаем CSRF токен
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
                     
-                    // Проверяем что entityId корректен
-                    if (!entityId || entityId === 'null') {
-                        console.error('Entity ID not found');
-                        showNotification('Ошибка: ID объекта не найден', 'error');
-                        return;
-                    }
-                    
-                    // Отключаем кнопку на время запроса
-                    this.disabled = true;
-                    console.log('Button disabled');
-                    
-                    // Убираем CSRF токены для API запросов
                     const headers = {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'Content-Type': 'application/json'
                     };
+                    headers[csrfHeader] = csrfToken;
                     
-                    const url = `/api/likes/toggle/${entityType}/${entityId}`;
-                    console.log('Making request to:', url);
+                    // Блокируем кнопку на время запроса
+                    this.disabled = true;
                     
-                    fetch(url, {
+                    fetch(`/api/likes/toggle/${entityType}/${entityId}`, {
                         method: 'POST',
                         headers: headers,
                         credentials: 'include'
                     })
                     .then(response => {
-                        console.log('Response status:', response.status);
                         if (response.ok) {
                             return response.json();
+                        } else {
+                            throw new Error('Ошибка при обработке лайка: ' + response.status);
                         }
-                        throw new Error('Ошибка при обработке лайка: ' + response.status);
                     })
                     .then(data => {
-                        console.log('Like response:', data);
+                        // Обновляем интерфейс
+                        const likeCountElement = this.querySelector('.like-count');
+                        if (likeCountElement) {
+                            likeCountElement.textContent = data.likeCount || 0;
+                        }
                         
-                        if (data.success) {
-                            // Обновляем состояние кнопки
-                            if (data.liked) {
-                                this.classList.add('liked');
-                                this.querySelector('.like-text span').textContent = 'Убрать лайк';
-                            } else {
-                                this.classList.remove('liked');
-                                this.querySelector('.like-text span').textContent = 'Лайк';
-                            }
-                            
-                            // Обновляем счетчик лайков в кнопке
-                            this.querySelector('.like-count').textContent = `(${data.likesCount})`;
-                            
-                            // Обновляем счетчик лайков в meta-информации
-                            const metaLikes = document.querySelector('.webinar-meta .meta-item i.fas.fa-heart').nextElementSibling;
-                            if (metaLikes) {
-                                metaLikes.textContent = `${data.likesCount} лайков`;
-                            }
-                            
-                            // Показываем уведомление
-                            showNotification(data.message, 'success');
+                        // Обновляем состояние кнопки
+                        if (data.liked) {
+                            this.classList.add('liked');
+                            this.innerHTML = '❤️ ' + (data.likeCount || 0);
                         } else {
-                            throw new Error(data.message || 'Произошла ошибка при обработке лайка');
+                            this.classList.remove('liked');
+                            this.innerHTML = '🤍 ' + (data.likeCount || 0);
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
-                        showNotification(error.message || 'Произошла ошибка при обработке лайка', 'error');
+                        alert('Ошибка: ' + error.message);
                     })
                     .finally(() => {
-                        // Включаем кнопку обратно
+                        // Разблокируем кнопку
                         this.disabled = false;
-                        console.log('Button enabled back');
                     });
                 });
             });
-            
-            console.log('✅ All event handlers added');
-            
-            // Функция для показа уведомлений
-            function showNotification(message, type) {
-                const notification = document.createElement('div');
-                notification.className = `notification notification-${type}`;
-                notification.innerHTML = `
-                    <div class="notification-content">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                        <span>${message}</span>
-                        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 5000);
-            }
         });
     </script>
 </body>

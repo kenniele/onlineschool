@@ -279,4 +279,19 @@ public class WebinarService {
             return false;
         }
     }
+    
+    public long count() {
+        return webinarRepository.count();
+    }
+    
+    public long countByStatus(String status) {
+        try {
+            WebinarStatus webinarStatus = WebinarStatus.valueOf(status.toUpperCase());
+            return webinarRepository.findAll().stream()
+                    .filter(webinar -> webinar.getStatus() == webinarStatus)
+                    .count();
+        } catch (IllegalArgumentException e) {
+            return 0;
+        }
+    }
 } 

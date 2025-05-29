@@ -42,7 +42,7 @@ class AdminControllerTest extends BaseIntegrationTest {
     void manageUsers_ShouldReturnUsersPageWithUserList() throws Exception {
         mockMvc.perform(get("/admin/users"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-users"))
+                .andExpect(view().name("admin/users"))
                 .andExpect(model().attributeExists("users"));
     }
 
@@ -51,7 +51,7 @@ class AdminControllerTest extends BaseIntegrationTest {
     void showCreateUserForm_ShouldReturnUserFormPageWithNewUser() throws Exception {
         mockMvc.perform(get("/admin/users/new"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-user-form"))
+                .andExpect(view().name("admin/user-form"))
                 .andExpect(model().attributeExists("user"))
                 .andExpect(model().attribute("user", hasProperty("active", is(true))));
     }
@@ -84,7 +84,7 @@ class AdminControllerTest extends BaseIntegrationTest {
                         .param("rawPassword", "password123")
                         .param("role", "STUDENT"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-user-form"))
+                .andExpect(view().name("admin/user-form"))
                 .andExpect(model().hasErrors())
                 .andExpect(model().attributeHasFieldErrorCode("user", "username", "error.user"));
     }
@@ -103,7 +103,7 @@ class AdminControllerTest extends BaseIntegrationTest {
                         .param("rawPassword", "") // Empty password
                         .param("role", "STUDENT"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-user-form"))
+                .andExpect(view().name("admin/user-form"))
                 .andExpect(model().hasErrors())
                 .andExpect(model().attributeHasFieldErrorCode("user", "password", "error.user"));
     }
@@ -113,7 +113,7 @@ class AdminControllerTest extends BaseIntegrationTest {
     void showEditUserForm_WhenUserExists_ShouldReturnUserFormPageWithUser() throws Exception {
         mockMvc.perform(get("/admin/users/edit/{id}", studentUser.getId()))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-user-form"))
+                .andExpect(view().name("admin/user-form"))
                 .andExpect(model().attributeExists("user"));
     }
 
@@ -155,7 +155,7 @@ class AdminControllerTest extends BaseIntegrationTest {
                         .param("email", "student@example.com")
                         .param("role", "STUDENT"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-user-form"))
+                .andExpect(view().name("admin/user-form"))
                 .andExpect(model().hasErrors())
                 .andExpect(model().attributeHasFieldErrorCode("user", "username", "error.user"));
     }

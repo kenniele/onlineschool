@@ -33,7 +33,7 @@
                             
                             <div class="form-group mb-4">
                                 <label for="title" class="form-label">
-                                    <i class="fas fa-heading"></i>
+                                    <i class="fas fa-heading me-2"></i>
                                     Название курса
                                 </label>
                                 <input type="text" 
@@ -47,7 +47,7 @@
 
                             <div class="form-group mb-4">
                                 <label for="description" class="form-label">
-                                    <i class="fas fa-align-left"></i>
+                                    <i class="fas fa-align-left me-2"></i>
                                     Описание курса
                                 </label>
                                 <textarea id="description" 
@@ -63,34 +63,40 @@
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="startDate" class="form-label">
-                                            <i class="fas fa-calendar-start"></i>
+                                            <i class="fas fa-calendar-start me-2"></i>
                                             Дата начала
                                         </label>
                                         <input type="datetime-local" 
                                                id="startDate" 
                                                th:field="*{startDate}" 
                                                class="form-control"
+                                               min="2024-01-01T00:00"
+                                               max="2030-12-31T23:59"
                                                required>
+                                        <div class="form-help">Выберите дату и время начала курса</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="endDate" class="form-label">
-                                            <i class="fas fa-calendar-check"></i>
+                                            <i class="fas fa-calendar-check me-2"></i>
                                             Дата окончания
                                         </label>
                                         <input type="datetime-local" 
                                                id="endDate" 
                                                th:field="*{endDate}" 
                                                class="form-control"
+                                               min="2024-01-01T00:00"
+                                               max="2030-12-31T23:59"
                                                required>
+                                        <div class="form-help">Выберите дату и время окончания курса</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group mb-4">
                                 <label for="price" class="form-label">
-                                    <i class="fas fa-ruble-sign"></i>
+                                    <i class="fas fa-ruble-sign me-2"></i>
                                     Цена курса
                                 </label>
                                 <input type="number" 
@@ -105,7 +111,7 @@
 
                             <div class="form-group mb-4">
                                 <label for="imageUrl" class="form-label">
-                                    <i class="fas fa-image"></i>
+                                    <i class="fas fa-image me-2"></i>
                                     URL изображения курса
                                 </label>
                                 <input type="url" 
@@ -123,7 +129,7 @@
                                            class="form-check-input"
                                            id="active">
                                     <label class="form-check-label" for="active">
-                                        <i class="fas fa-toggle-on"></i>
+                                        <i class="fas fa-toggle-on me-2"></i>
                                         Курс активен (доступен для записи студентов)
                                     </label>
                                 </div>
@@ -132,11 +138,11 @@
 
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i>
+                                    <i class="fas fa-save me-2"></i>
                                     <span th:text="${course.id != null ? 'Сохранить изменения' : 'Создать курс'}">Создать курс</span>
                                 </button>
-                                <a href="/teacher/courses" class="btn btn-outline">
-                                    <i class="fas fa-times"></i>
+                                <a href="/" class="btn btn-outline">
+                                    <i class="fas fa-times me-2"></i>
                                     Отменить
                                 </a>
                             </div>
@@ -380,16 +386,86 @@
             // Валидация дат
             const startDateInput = document.getElementById('startDate');
             const endDateInput = document.getElementById('endDate');
+            const form = document.querySelector('.course-form');
+            
+            // Устанавливаем минимальную дату начала как сегодня
+            const now = new Date();
+            const today = now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+            startDateInput.min = today;
             
             if (startDateInput && endDateInput) {
                 startDateInput.addEventListener('change', function() {
-                    endDateInput.min = this.value;
+                    const startDate = new Date(this.value);
+                    const minEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // +1 день
+                    endDateInput.min = minEndDate.toISOString().slice(0, 16);
+                    
+                    // Проверяем если дата окончания уже установлена
+                    if (endDateInput.value && new Date(endDateInput.value) <= startDate) {
+                        endDateInput.value = '';
+                        alert('Дата окончания должна быть позже даты начала');
+                    }
                 });
                 
                 endDateInput.addEventListener('change', function() {
-                    if (startDateInput.value && this.value < startDateInput.value) {
-                        alert('Дата окончания не может быть раньше даты начала');
-                        this.value = '';
+                    if (startDateInput.value && this.value) {
+                        const startDate = new Date(startDateInput.value);
+                        const endDate = new Date(this.value);
+                        
+                        if (endDate <= startDate) {
+                            this.value = '';
+                            alert('Дата окончания должна быть позже даты начала');
+                            return;
+                        }
+                        
+                        // Проверяем что курс не слишком длинный (максимум 2 года)
+                        const maxDuration = 2 * 365 * 24 * 60 * 60 * 1000; // 2 года в миллисекундах
+                        if (endDate.getTime() - startDate.getTime() > maxDuration) {
+                            this.value = '';
+                            alert('Продолжительность курса не может превышать 2 года');
+                            return;
+                        }
+                    }
+                });
+            }
+            
+            // Валидация формы перед отправкой
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Проверяем даты
+                    if (startDateInput.value && endDateInput.value) {
+                        const startDate = new Date(startDateInput.value);
+                        const endDate = new Date(endDateInput.value);
+                        const now = new Date();
+                        
+                        // Проверяем что даты в разумных пределах
+                        const minYear = 2024;
+                        const maxYear = 2030;
+                        
+                        if (startDate.getFullYear() < minYear || startDate.getFullYear() > maxYear) {
+                            e.preventDefault();
+                            alert(`Год начала курса должен быть между ${minYear} и ${maxYear}`);
+                            return;
+                        }
+                        
+                        if (endDate.getFullYear() < minYear || endDate.getFullYear() > maxYear) {
+                            e.preventDefault();
+                            alert(`Год окончания курса должен быть между ${minYear} и ${maxYear}`);
+                            return;
+                        }
+                        
+                        if (endDate <= startDate) {
+                            e.preventDefault();
+                            alert('Дата окончания должна быть позже даты начала');
+                            return;
+                        }
+                    }
+                    
+                    // Проверяем цену
+                    const priceInput = document.getElementById('price');
+                    if (priceInput.value && (isNaN(priceInput.value) || parseFloat(priceInput.value) < 0)) {
+                        e.preventDefault();
+                        alert('Цена должна быть положительным числом');
+                        return;
                     }
                 });
             }

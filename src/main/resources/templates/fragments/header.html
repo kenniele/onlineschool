@@ -25,31 +25,83 @@
 <header th:fragment="header" class="header">
     <div class="container">
         <nav class="navbar">
-            <a href="/" class="navbar-brand">
+            <!-- Логотип - ведет на соответствующий dashboard в зависимости от роли -->
+            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i>
+                Online School
+            </a>
+            <a sec:authorize="hasRole('TEACHER')" href="/teacher/dashboard" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i>
+                Online School
+            </a>
+            <a sec:authorize="hasRole('STUDENT')" href="/student/dashboard" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i>
+                Online School
+            </a>
+            <a sec:authorize="!isAuthenticated()" href="/" class="navbar-brand">
                 <i class="fas fa-graduation-cap"></i>
                 Online School
             </a>
             
             <ul class="navbar-nav">
-                <!-- Общие ссылки -->
-                <li><a href="/" class="nav-link">
-                    <i class="fas fa-home"></i> 
-                    Главная
-                </a></li>
-                
-                <li><a href="/courses" class="nav-link">
-                    <i class="fas fa-book"></i> 
-                    Курсы
-                </a></li>
-                
-                <!-- Ссылки для авторизованных пользователей -->
-                <div sec:authorize="isAuthenticated()">
+                <!-- Навигация для админов -->
+                <div sec:authorize="hasRole('ADMIN')">
+                    <li><a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> 
+                        Главная
+                    </a></li>
+                    <li><a href="/courses" class="nav-link">
+                        <i class="fas fa-book"></i> 
+                        Курсы
+                    </a></li>
                     <li><a href="/webinars" class="nav-link">
                         <i class="fas fa-video"></i> 
                         Вебинары
                     </a></li>
-                    
-                    <!-- Профиль пользователя -->
+                </div>
+                
+                <!-- Навигация для учителей -->
+                <div sec:authorize="hasRole('TEACHER')">
+                    <li><a href="/teacher/courses" class="nav-link">
+                        <i class="fas fa-chalkboard"></i> 
+                        Курсы
+                    </a></li>
+                    <li><a href="/teacher/webinars" class="nav-link">
+                        <i class="fas fa-video"></i> 
+                        Вебинары
+                    </a></li>
+                </div>
+                
+                <!-- Навигация для студентов -->
+                <div sec:authorize="hasRole('STUDENT')">
+                    <li><a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> 
+                        Главная
+                    </a></li>
+                    <li><a href="/courses" class="nav-link">
+                        <i class="fas fa-book"></i> 
+                        Курсы
+                    </a></li>
+                    <li><a href="/webinars" class="nav-link">
+                        <i class="fas fa-video"></i> 
+                        Вебинары
+                    </a></li>
+                </div>
+                
+                <!-- Навигация для неавторизованных -->
+                <div sec:authorize="!isAuthenticated()">
+                    <li><a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> 
+                        Главная
+                    </a></li>
+                    <li><a href="/courses" class="nav-link">
+                        <i class="fas fa-book"></i> 
+                        Курсы
+                    </a></li>
+                </div>
+                
+                <!-- Профиль пользователя -->
+                <div sec:authorize="isAuthenticated()">
                     <li class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle" onclick="toggleDropdown(event)">
                             <i class="fas fa-user-circle"></i>

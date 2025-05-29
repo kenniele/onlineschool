@@ -7,15 +7,16 @@
     <div th:replace="~{fragments/header :: header}"></div>
     
     <main class="main-content">
-        <div class="container">
-            <!-- Teacher Header -->
-            <div class="teacher-header">
-                <div class="teacher-title">
-                    <h1><i class="fas fa-chalkboard-teacher"></i> Панель учителя</h1>
-                    <p>Добро пожаловать, <span th:text="${teacher.firstName + ' ' + teacher.lastName}">Учитель</span>!</p>
-                </div>
+        <div class="container mt-4">
+            <!-- Page Header -->
+            <div class="page-header text-center mb-4 py-4">
+                <h1 class="page-title mb-3">
+                    <i class="fas fa-chalkboard-teacher"></i> 
+                    Добро пожаловать, <span th:text="${teacher.firstName + ' ' + teacher.lastName}">Учитель</span>!
+                </h1>
+                <p class="page-description text-muted mb-3">Ваша панель управления преподаванием</p>
                 <div class="teacher-actions">
-                    <a href="/teacher/courses/new" class="btn btn-primary">
+                    <a href="/teacher/courses/new" class="btn btn-primary me-2">
                         <i class="fas fa-plus"></i> Новый курс
                     </a>
                     <a href="/teacher/webinars/new" class="btn btn-success">
@@ -24,183 +25,228 @@
                 </div>
             </div>
             
-            <!-- Teacher Stats -->
-            <div class="teacher-stats">
-                <div class="stat-card teacher-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 th:text="${coursesCount}">0</h3>
-                        <p>Мои курсы</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card teacher-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 th:text="${studentsCount}">0</h3>
-                        <p>Студентов</p>
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-2">
+                                <i class="fas fa-book fa-2x text-primary"></i>
+                            </div>
+                            <h3 class="stat-number mb-1" th:text="${coursesCount}">0</h3>
+                            <div class="stat-label text-muted">Курсы</div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="stat-card teacher-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-video"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 th:text="${webinarsCount}">0</h3>
-                        <p>Вебинаров</p>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-2">
+                                <i class="fas fa-user-graduate fa-2x text-success"></i>
+                            </div>
+                            <h3 class="stat-number mb-1" th:text="${studentsCount}">0</h3>
+                            <div class="stat-label text-muted">Студентов</div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="stat-card teacher-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-alt"></i>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-2">
+                                <i class="fas fa-video fa-2x text-info"></i>
+                            </div>
+                            <h3 class="stat-number mb-1" th:text="${webinarsCount}">0</h3>
+                            <div class="stat-label text-muted">Вебинаров</div>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <h3 th:text="${upcomingWebinars.size()}">0</h3>
-                        <p>Предстоящих</p>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-2">
+                                <i class="fas fa-calendar-alt fa-2x text-warning"></i>
+                            </div>
+                            <h3 class="stat-number mb-1" th:text="${upcomingWebinars.size()}">0</h3>
+                            <div class="stat-label text-muted">Предстоящих</div>
+                        </div>
                     </div>
                 </div>
             </div>
             
             <!-- Dashboard Content -->
-            <div class="dashboard-grid">
+            <div class="row">
                 <!-- Upcoming Webinars -->
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3><i class="fas fa-calendar-alt"></i> Ближайшие вебинары</h3>
-                        <a href="/teacher/webinars" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye"></i> Все
-                        </a>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div th:if="${upcomingWebinars.isEmpty()}" class="empty-state">
-                            <i class="fas fa-calendar-times"></i>
-                            <h4>Нет запланированных вебинаров</h4>
-                            <p>Создайте свой первый вебинар</p>
-                            <a href="/teacher/webinars/new" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Создать вебинар
+                <div class="col-12 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center py-3">
+                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Ближайшие вебинары</h5>
+                            <a href="/teacher/webinars" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Все вебинары
                             </a>
                         </div>
-                        
-                        <div th:each="webinar : ${upcomingWebinars}" class="webinar-item">
-                            <div class="webinar-info">
-                                <h5 th:text="${webinar.title}">Название вебинара</h5>
-                                <p th:text="${webinar.description}">Описание</p>
-                                <div class="webinar-meta">
-                                    <span class="meta-item">
-                                        <i class="fas fa-clock"></i>
-                                        <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата</span>
-                                    </span>
-                                    <span class="meta-item">
-                                        <i class="fas fa-hourglass-half"></i>
-                                        <span th:text="${webinar.duration}">60</span> мин
-                                    </span>
+                        <div class="card-body">
+                            <div th:if="${upcomingWebinars.isEmpty()}" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Нет запланированных вебинаров</h5>
+                                    <p class="text-muted">Создайте свой первый вебинар</p>
+                                    <a href="/teacher/webinars/new" class="btn btn-success">
+                                        <i class="fas fa-plus"></i> Создать вебинар
+                                    </a>
                                 </div>
                             </div>
-                            <div class="webinar-actions">
-                                <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a th:href="@{/teacher/webinars/{id}/edit(id=${webinar.id})}" class="btn btn-outline-warning btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- My Courses -->
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3><i class="fas fa-book"></i> Мои курсы</h3>
-                        <a href="/teacher/courses" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye"></i> Все
-                        </a>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div th:if="${recentCourses.isEmpty()}" class="empty-state">
-                            <i class="fas fa-book-open"></i>
-                            <h4>У вас пока нет курсов</h4>
-                            <p>Создайте свой первый курс</p>
-                            <a href="/teacher/courses/new" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Создать курс
-                            </a>
-                        </div>
-                        
-                        <div th:each="course : ${recentCourses}" class="course-item">
-                            <div class="course-info">
-                                <h5 th:text="${course.title}">Название курса</h5>
-                                <p th:text="${course.description}">Описание</p>
-                                <div class="course-meta">
-                                    <span class="meta-item">
-                                        <i class="fas fa-users"></i>
-                                        <span th:text="${course.students.size()}">0</span> студентов
-                                    </span>
-                                    <span class="status-badge" 
-                                          th:classappend="${course.active} ? 'active' : 'inactive'"
-                                          th:text="${course.active} ? 'Активен' : 'Неактивен'">
-                                        Статус
-                                    </span>
+                            
+                            <div th:each="webinar : ${upcomingWebinars}" class="border-bottom pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="mb-1" th:text="${webinar.title}">Название вебинара</h6>
+                                        <p class="mb-2 text-muted small" th:text="${webinar.description}">Описание</p>
+                                        <div class="webinar-meta">
+                                            <span class="badge bg-light text-dark me-2">
+                                                <i class="fas fa-clock"></i>
+                                                <span th:text="${#temporals.format(webinar.startTime, 'dd.MM.yyyy HH:mm')}">Дата</span>
+                                            </span>
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-hourglass-half"></i>
+                                                <span th:text="${webinar.duration}">60</span> мин
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="btn-group" role="group">
+                                            <a th:href="@{/webinars/{id}(id=${webinar.id})}" class="btn btn-outline-primary btn-sm" title="Просмотр">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/teacher/webinars/{id}/edit(id=${webinar.id})}" class="btn btn-outline-warning btn-sm" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="course-actions">
-                                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a th:href="@{/teacher/courses/{id}/edit(id=${course.id})}" class="btn btn-outline-warning btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <h2>Быстрые действия</h2>
-                <div class="actions-grid">
-                    <a href="/teacher/courses/new" class="action-card">
-                        <div class="action-icon">
-                            <i class="fas fa-plus-circle"></i>
+            <!-- My Courses -->
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center py-3">
+                            <h5 class="mb-0"><i class="fas fa-book me-2"></i>Мои курсы</h5>
+                            <a href="/teacher/courses" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Все курсы
+                            </a>
                         </div>
-                        <h4>Создать курс</h4>
-                        <p>Добавьте новый курс для студентов</p>
-                    </a>
-                    
-                    <a href="/teacher/webinars/new" class="action-card">
-                        <div class="action-icon">
-                            <i class="fas fa-video"></i>
+                        <div class="card-body">
+                            <div th:if="${recentCourses.isEmpty()}" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">У вас пока нет курсов</h5>
+                                    <p class="text-muted">Создайте свой первый курс</p>
+                                    <a href="/teacher/courses/new" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Создать курс
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div th:each="course : ${recentCourses}" class="col-lg-4 col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-2" th:text="${course.title}">Название курса</h6>
+                                            <p class="card-text text-muted small mb-3" th:text="${course.description}">Описание</p>
+                                            <div class="course-meta mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="fas fa-users"></i>
+                                                        <span th:text="${course.students.size()}">0</span> студентов
+                                                    </span>
+                                                    <span class="badge" 
+                                                          th:classappend="${course.active} ? 'bg-success' : 'bg-secondary'"
+                                                          th:text="${course.active} ? 'Активен' : 'Неактивен'">
+                                                        Статус
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100" role="group">
+                                                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-eye"></i> Просмотр
+                                                </a>
+                                                <a th:href="@{/teacher/courses/{id}/edit(id=${course.id})}" class="btn btn-outline-warning btn-sm">
+                                                    <i class="fas fa-edit"></i> Изменить
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h4>Новый вебинар</h4>
-                        <p>Запланируйте онлайн-занятие</p>
-                    </a>
-                    
-                    <a href="/teacher/courses" class="action-card">
-                        <div class="action-icon">
-                            <i class="fas fa-book"></i>
-                        </div>
-                        <h4>Мои курсы</h4>
-                        <p>Управляйте своими курсами</p>
-                    </a>
-                    
-                    <a href="/teacher/webinars" class="action-card">
-                        <div class="action-icon">
-                            <i class="fas fa-calendar"></i>
-                        </div>
-                        <h4>Мои вебинары</h4>
-                        <p>Просмотрите все вебинары</p>
-                    </a>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
     
     <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <style>
+        .page-header {
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .card {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #5a5c69;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .empty-state {
+            padding: 2rem;
+        }
+        
+        .border-bottom:last-child {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        .btn-group .btn {
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+            .teacher-actions {
+                text-align: center;
+            }
+            
+            .teacher-actions .btn {
+                margin: 0.25rem;
+            }
+        }
+    </style>
 </body>
 </html> 

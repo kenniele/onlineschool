@@ -142,7 +142,7 @@
                             
                             <!-- Кнопки для студентов -->
                             <div sec:authorize="hasRole('STUDENT')">
-                                <form th:if="${!participationMap[webinar.id] and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
+                                <form th:if="${participationMap != null and !participationMap[webinar.id] and webinar.status != null and webinar.status.name() == 'SCHEDULED'}" 
                                       th:action="@{/student/webinars/{id}/join(id=${webinar.id})}" 
                                       method="post" 
                                       style="display: inline;">
@@ -152,13 +152,13 @@
                                     </button>
                                 </form>
                                 
-                                <span th:if="${participationMap[webinar.id]}" 
+                                <span th:if="${participationMap != null and participationMap[webinar.id]}" 
                                       class="badge badge-success">
                                     <i class="fas fa-check"></i>
                                     Вы участвуете
                                 </span>
                                 
-                                <a th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS' and participationMap[webinar.id]}" 
+                                <a th:if="${webinar.status != null and webinar.status.name() == 'IN_PROGRESS' and participationMap != null and participationMap[webinar.id]}" 
                                    th:href="${webinar.meetingUrl != null and !webinar.meetingUrl.empty ? webinar.meetingUrl : '#'}" 
                                    target="_blank"
                                    class="btn btn-warning btn-sm">

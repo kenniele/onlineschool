@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,9 +44,11 @@ public class Course {
     @JoinColumn(name = "teacher_id", nullable = false)
     private User teacher;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 

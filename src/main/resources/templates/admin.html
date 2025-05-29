@@ -110,7 +110,7 @@
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>5</h3>
+                            <h3 th:text="${totalUsers != null ? totalUsers : 0}">0</h3>
                             <p>Всего пользователей</p>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
                             <i class="fas fa-book"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>4</h3>
+                            <h3 th:text="${totalCourses != null ? totalCourses : 0}">0</h3>
                             <p>Активных курсов</p>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
                             <i class="fas fa-video"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>4</h3>
+                            <h3 th:text="${activeWebinars != null ? activeWebinars : 0}">0</h3>
                             <p>Запланированных вебинаров</p>
                         </div>
                     </div>

@@ -173,4 +173,8 @@ public class CourseService {
         return course.get().getStudents().stream()
                 .anyMatch(student -> student.getUsername().equals(username));
     }
+    
+    public long count() {
+        return courseRepository.count();
+    }
 } 

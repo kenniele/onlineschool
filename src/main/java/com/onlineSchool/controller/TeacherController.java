@@ -31,8 +31,15 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
         
         List<Course> teacherCourses = courseService.findByTeacher(teacher);
+        
+        // Вычисляем общее количество студентов
+        int totalStudents = teacherCourses.stream()
+                .mapToInt(course -> course.getStudents().size())
+                .sum();
+        
         model.addAttribute("courses", teacherCourses);
         model.addAttribute("teacher", teacher);
+        model.addAttribute("totalStudents", totalStudents);
         
         return "teacher/courses";
     }
@@ -89,8 +96,20 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
         
         List<Webinar> teacherWebinars = webinarService.findByTeacher(teacher);
+        
+        // Вычисляем статистику
+        long upcomingCount = teacherWebinars.stream()
+                .filter(w -> w.getStartTime().isAfter(java.time.LocalDateTime.now()))
+                .count();
+        
+        int totalParticipants = teacherWebinars.stream()
+                .mapToInt(w -> w.getParticipants().size())
+                .sum();
+        
         model.addAttribute("webinars", teacherWebinars);
         model.addAttribute("teacher", teacher);
+        model.addAttribute("upcomingCount", upcomingCount);
+        model.addAttribute("totalParticipants", totalParticipants);
         
         return "teacher/webinars";
     }
@@ -148,6 +167,25 @@ public class TeacherController {
         webinar.setId(id);
         webinar.setTeacher(teacher);
         webinarService.update(id, webinar);
+        
+        return "redirect:/teacher/webinars";
+    }
+
+    @PostMapping("/webinars/{id}/cancel")
+    public String cancelWebinar(@PathVariable Long id, Authentication authentication) {
+        Webinar webinar = webinarService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        
+        // Проверяем, что вебинар принадлежит текущему учителю
+        User teacher = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+        
+        if (!webinar.getTeacher().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+        
+        // Отменяем вебинар
+        webinarService.cancel(id);
         
         return "redirect:/teacher/webinars";
     }
