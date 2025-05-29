@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head}">
+    <title th:text="${course.id == null ? 'Добавить курс' : 'Изменить курс'}">Форма курса</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 th:text="${course.id == null ? 'Добавить новый курс' : 'Изменить курс'}">Заголовок</h1>
+                <a href="/admin/courses" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{/admin/courses/save}" th:object="${course}" method="post">
+                        <input type="hidden" th:field="*{id}" />
+
+                        <div class="form-group">
+                            <label class="form-label" for="title">Название курса:</label>
+                            <input type="text" class="form-control" id="title" th:field="*{title}" required>
+                            <small style="color: var(--error-red);" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="description">Описание:</label>
+                            <textarea class="form-control" id="description" th:field="*{description}" rows="4" required></textarea>
+                            <small style="color: var(--error-red);" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label" for="category">Категория:</label>
+                                    <input type="text" class="form-control" id="category" th:field="*{category}">
+                                </div>
+                            </div>
+                            
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label" for="price">Цена (₽):</label>
+                                    <input type="number" class="form-control" id="price" th:field="*{price}" min="0" step="0.01">
+                                    <small class="text-muted">Оставьте пустым или укажите 0 для бесплатного курса</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label" for="duration">Длительность (в часах):</label>
+                                    <input type="number" class="form-control" id="duration" th:field="*{duration}" min="1">
+                                </div>
+                            </div>
+                            
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label" for="level">Уровень сложности:</label>
+                                    <select class="form-control" id="level" th:field="*{level}">
+                                        <option value="">Выберите уровень</option>
+                                        <option value="Начинающий">Начинающий</option>
+                                        <option value="Средний">Средний</option>
+                                        <option value="Продвинутый">Продвинутый</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            <a href="/admin/courses" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html> 

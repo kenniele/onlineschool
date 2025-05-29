@@ -4,10 +4,12 @@ import com.onlineSchool.model.Role;
 import com.onlineSchool.model.User;
 import com.onlineSchool.model.Course;
 import com.onlineSchool.model.Webinar;
+import com.onlineSchool.model.EntityType;
 import com.onlineSchool.service.CourseService;
 import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
 import com.onlineSchool.service.ProgressService;
+import com.onlineSchool.service.LikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +34,7 @@ public class HomeController {
     private final UserService userService;
     private final WebinarService webinarService;
     private final ProgressService progressService;
+    private final LikeService likeService;
 
     @GetMapping("/")
     public String home(Model model) {

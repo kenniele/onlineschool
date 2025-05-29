@@ -1,11 +1,11 @@
 -- Начальные данные для приложения
 -- Пользователи с правильными BCrypt хешами паролей (password = "password")
-INSERT INTO users (username, email, password, first_name, last_name, role, active, created_at) VALUES
-('admin', 'admin@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Админ', 'Системы', 'ADMIN', true, CURRENT_TIMESTAMP),
-('teacher', 'teacher@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Иван', 'Петров', 'TEACHER', true, CURRENT_TIMESTAMP),
-('student', 'student@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Мария', 'Сидорова', 'STUDENT', true, CURRENT_TIMESTAMP),
-('teacher2', 'teacher2@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Анна', 'Козлова', 'TEACHER', true, CURRENT_TIMESTAMP),
-('student2', 'student2@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Алексей', 'Смирнов', 'STUDENT', true, CURRENT_TIMESTAMP);
+INSERT INTO users (username, email, password, first_name, last_name, role, created_at) VALUES
+('admin', 'admin@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Админ', 'Системы', 'ADMIN', CURRENT_TIMESTAMP),
+('teacher', 'teacher@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Иван', 'Петров', 'TEACHER', CURRENT_TIMESTAMP),
+('student', 'student@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Мария', 'Сидорова', 'STUDENT', CURRENT_TIMESTAMP),
+('teacher2', 'teacher2@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Анна', 'Козлова', 'TEACHER', CURRENT_TIMESTAMP),
+('student2', 'student2@onlineschool.com', '$2a$10$VpCwenFb8ptoiJvD9Cr6cOqO10.L0.LYnqDHa23nSGVCm3PTJjT8G', 'Алексей', 'Смирнов', 'STUDENT', CURRENT_TIMESTAMP);
 
 -- Курсы
 INSERT INTO courses (id, title, description, teacher_id, start_date, end_date, active, created_at) VALUES
@@ -55,4 +55,42 @@ INSERT INTO likes (id, user_id, entity_type, entity_id, created_at) VALUES
 (1, 3, 'COURSE', 1, CURRENT_TIMESTAMP),
 (2, 5, 'COURSE', 1, CURRENT_TIMESTAMP),
 (3, 3, 'WEBINAR', 1, CURRENT_TIMESTAMP),
-(4, 5, 'WEBINAR', 2, CURRENT_TIMESTAMP); 
+(4, 5, 'WEBINAR', 2, CURRENT_TIMESTAMP);
+
+-- Простое каскадное удаление через foreign keys
+
+-- Удаляем существующие ограничения
+ALTER TABLE comments DROP CONSTRAINT IF EXISTS fk_comments_course;
+ALTER TABLE comments DROP CONSTRAINT IF EXISTS fk_comments_webinar;
+ALTER TABLE likes DROP CONSTRAINT IF EXISTS fk_likes_course;
+ALTER TABLE likes DROP CONSTRAINT IF EXISTS fk_likes_webinar;
+
+-- Удаляем функции и триггеры
+DROP TRIGGER IF EXISTS trigger_delete_course_comments ON courses;
+DROP TRIGGER IF EXISTS trigger_delete_webinar_comments ON webinars;
+DROP FUNCTION IF EXISTS delete_course_comments();
+DROP FUNCTION IF EXISTS delete_webinar_comments();
+
+-- Для PostgreSQL нужно использовать условные FK через CHECK constraint
+-- Создаем индексы для производительности
+CREATE INDEX IF NOT EXISTS idx_comments_course ON comments(entity_id) WHERE entity_type = 'COURSE';
+CREATE INDEX IF NOT EXISTS idx_comments_webinar ON comments(entity_id) WHERE entity_type = 'WEBINAR';
+CREATE INDEX IF NOT EXISTS idx_likes_course ON likes(entity_id) WHERE entity_type = 'COURSE';
+CREATE INDEX IF NOT EXISTS idx_likes_webinar ON likes(entity_id) WHERE entity_type = 'WEBINAR';
+
+-- Создаем правила для каскадного удаления через ON DELETE CASCADE
+CREATE OR REPLACE RULE delete_course_comments AS
+    ON DELETE TO courses
+    DO ALSO DELETE FROM comments WHERE entity_id = OLD.id AND entity_type = 'COURSE';
+
+CREATE OR REPLACE RULE delete_course_likes AS
+    ON DELETE TO courses
+    DO ALSO DELETE FROM likes WHERE entity_id = OLD.id AND entity_type = 'COURSE';
+
+CREATE OR REPLACE RULE delete_webinar_comments AS
+    ON DELETE TO webinars
+    DO ALSO DELETE FROM comments WHERE entity_id = OLD.id AND entity_type = 'WEBINAR';
+
+CREATE OR REPLACE RULE delete_webinar_likes AS
+    ON DELETE TO webinars
+    DO ALSO DELETE FROM likes WHERE entity_id = OLD.id AND entity_type = 'WEBINAR'; 

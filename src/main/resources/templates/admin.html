@@ -8,141 +8,124 @@
     
     <main class="main-content">
         <div class="container">
-            <!-- Admin Header -->
-            <div class="admin-header">
-                <div class="admin-title">
-                    <h1><i class="fas fa-cog"></i> Панель администратора</h1>
-                    <p>Добро пожаловать в панель администратора!</p>
-                </div>
-                <div class="admin-user">
-                    <span class="role-badge admin">Администратор</span>
-                    <span sec:authentication="name">admin</span>
-                </div>
+            <div class="page-header">
+                <h1>
+                    <i class="fas fa-shield-alt"></i>
+                    Панель администратора
+                </h1>
+                <p class="lead">Управление системой онлайн-школы</p>
             </div>
 
-            <!-- Admin Dashboard Cards -->
-            <div class="admin-dashboard">
-                <div class="admin-card">
-                    <div class="admin-card-icon admin-only">
+            <!-- Статистика -->
+            <div class="stats-grid mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div class="admin-card-content">
-                        <h3>Управление пользователями</h3>
-                        <p>Просмотр, создание и редактирование пользователей системы</p>
-                        <a href="/admin/users" class="btn btn-primary">
-                            <i class="fas fa-arrow-right"></i> Перейти
-                        </a>
+                    <div class="stat-info">
+                        <span class="stat-number" th:text="${totalUsers != null ? totalUsers : 0}">0</span>
+                        <span class="stat-label">Пользователей</span>
                     </div>
                 </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-icon teacher-only">
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
                         <i class="fas fa-book"></i>
                     </div>
-                    <div class="admin-card-content">
-                        <h3>Управление курсами</h3>
-                        <p>Создание, редактирование и модерация курсов</p>
-                        <a href="/courses" class="btn btn-primary">
-                            <i class="fas fa-arrow-right"></i> Перейти
-                        </a>
+                    <div class="stat-info">
+                        <span class="stat-number" th:text="${totalCourses != null ? totalCourses : 0}">0</span>
+                        <span class="stat-label">Курсов</span>
                     </div>
                 </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-icon student-only">
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
                         <i class="fas fa-video"></i>
                     </div>
-                    <div class="admin-card-content">
-                        <h3>Управление вебинарами</h3>
-                        <p>Модерация и управление вебинарами платформы</p>
-                        <a href="/admin/webinars" class="btn btn-primary">
-                            <i class="fas fa-arrow-right"></i> Перейти
-                        </a>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <div class="admin-card-content">
-                        <h3>Статистика</h3>
-                        <p>Аналитика и отчеты по платформе</p>
-                        <a href="#" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-right"></i> Скоро
-                        </a>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-icon">
-                        <i class="fas fa-cogs"></i>
-                    </div>
-                    <div class="admin-card-content">
-                        <h3>Настройки системы</h3>
-                        <p>Конфигурация и настройки платформы</p>
-                        <a href="#" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-right"></i> Скоро
-                        </a>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="admin-card-content">
-                        <h3>Безопасность</h3>
-                        <p>Управление правами доступа и безопасностью</p>
-                        <a href="#" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-right"></i> Скоро
-                        </a>
+                    <div class="stat-info">
+                        <span class="stat-number" th:text="${totalWebinars != null ? totalWebinars : 0}">0</span>
+                        <span class="stat-label">Вебинаров</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Stats -->
-            <div class="admin-stats">
-                <h2>Быстрая статистика</h2>
-                <div class="stats-grid">
-                    <div class="stat-card admin-stat">
-                        <div class="stat-icon">
+            <!-- Управление -->
+            <div class="grid grid-3">
+                <!-- Управление пользователями -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
                             <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 th:text="${totalUsers != null ? totalUsers : 0}">0</h3>
-                            <p>Всего пользователей</p>
-                        </div>
+                            Управление пользователями
+                        </h5>
                     </div>
-                    
-                    <div class="stat-card admin-stat">
-                        <div class="stat-icon">
+                    <div class="card-body">
+                        <p>Управление учетными записями пользователей:</p>
+                        <ul style="margin: 16px 0; padding-left: 20px;">
+                            <li>Просматривать список пользователей</li>
+                            <li>Создавать новых пользователей</li>
+                            <li>Редактировать профили</li>
+                            <li>Назначать роли</li>
+                            <li>Управлять статусом</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/admin/users" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Управлять пользователями
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Управление курсами -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
                             <i class="fas fa-book"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 th:text="${totalCourses != null ? totalCourses : 0}">0</h3>
-                            <p>Активных курсов</p>
-                        </div>
+                            Управление курсами
+                        </h5>
                     </div>
-                    
-                    <div class="stat-card admin-stat">
-                        <div class="stat-icon">
+                    <div class="card-body">
+                        <p>Управление образовательными курсами:</p>
+                        <ul style="margin: 16px 0; padding-left: 20px;">
+                            <li>Просматривать все курсы</li>
+                            <li>Создавать новые курсы</li>
+                            <li>Редактировать содержание</li>
+                            <li>Назначать преподавателей</li>
+                            <li>Управлять доступом</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/admin/courses" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Управлять курсами
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Управление вебинарами -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
                             <i class="fas fa-video"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 th:text="${activeWebinars != null ? activeWebinars : 0}">0</h3>
-                            <p>Запланированных вебинаров</p>
-                        </div>
+                            Управление вебинарами
+                        </h5>
                     </div>
-                    
-                    <div class="stat-card admin-stat">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>100%</h3>
-                            <p>Активность системы</p>
-                        </div>
+                    <div class="card-body">
+                        <p>Управление онлайн-вебинарами:</p>
+                        <ul style="margin: 16px 0; padding-left: 20px;">
+                            <li>Просматривать все вебинары</li>
+                            <li>Планировать новые вебинары</li>
+                            <li>Редактировать расписание</li>
+                            <li>Назначать ведущих</li>
+                            <li>Управлять участниками</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/admin/webinars" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Управлять вебинарами
+                        </a>
                     </div>
                 </div>
             </div>

@@ -50,14 +50,6 @@
                         <i class="fas fa-home"></i> 
                         Главная
                     </a></li>
-                    <li><a href="/courses" class="nav-link">
-                        <i class="fas fa-book"></i> 
-                        Курсы
-                    </a></li>
-                    <li><a href="/webinars" class="nav-link">
-                        <i class="fas fa-video"></i> 
-                        Вебинары
-                    </a></li>
                 </div>
                 
                 <!-- Навигация для учителей -->
@@ -112,28 +104,6 @@
                             <i class="fas fa-chevron-down"></i>
                         </a>
                         <div class="dropdown-menu">
-                            <!-- Дашборд в зависимости от роли -->
-                            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="dropdown-item">
-                                <i class="fas fa-tachometer-alt"></i> Дашборд
-                            </a>
-                            <a sec:authorize="hasRole('TEACHER')" href="/teacher/dashboard" class="dropdown-item">
-                                <i class="fas fa-tachometer-alt"></i> Дашборд
-                            </a>
-                            <a sec:authorize="hasRole('STUDENT')" href="/student/dashboard" class="dropdown-item">
-                                <i class="fas fa-tachometer-alt"></i> Дашборд
-                            </a>
-                            
-                            <!-- Админ панель для админов -->
-                            <a sec:authorize="hasRole('ADMIN')" href="/admin/users" class="dropdown-item">
-                                <i class="fas fa-users-cog"></i> Управление пользователями
-                            </a>
-                            <a sec:authorize="hasRole('ADMIN')" href="/admin/courses" class="dropdown-item">
-                                <i class="fas fa-book-open"></i> Управление курсами
-                            </a>
-                            <a sec:authorize="hasRole('ADMIN')" href="/admin/webinars" class="dropdown-item">
-                                <i class="fas fa-video"></i> Управление вебинарами
-                            </a>
-                            
                             <!-- Учительские функции -->
                             <a sec:authorize="hasRole('TEACHER')" href="/teacher/courses" class="dropdown-item">
                                 <i class="fas fa-chalkboard"></i> Мои курсы

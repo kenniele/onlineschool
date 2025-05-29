@@ -4,7 +4,12 @@ import com.onlineSchool.exception.WebinarException;
 import com.onlineSchool.model.Webinar;
 import com.onlineSchool.model.WebinarStatus;
 import com.onlineSchool.model.User;
+import com.onlineSchool.model.EntityType;
+import com.onlineSchool.model.Comment;
+import com.onlineSchool.model.Like;
 import com.onlineSchool.repository.WebinarRepository;
+import com.onlineSchool.repository.CommentRepository;
+import com.onlineSchool.repository.LikeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +28,8 @@ public class WebinarService {
     private final WebinarRepository webinarRepository;
     private final UserService userService;
     private final CourseService courseService;
+    private final CommentRepository commentRepository;
+    private final LikeRepository likeRepository;
 
     public List<Webinar> findAll() {
         return webinarRepository.findAll();
@@ -48,12 +55,12 @@ public class WebinarService {
                 if (webinar.getParticipants() != null) {
                     webinar.getParticipants().size(); // Загружаем участников
                 }
-                if (webinar.getComments() != null) {
-                    webinar.getComments().size(); // Загружаем комментарии
-                }
-                if (webinar.getLikes() != null) {
-                    webinar.getLikes().size(); // Загружаем лайки
-                }
+                
+                // Загружаем комментарии и лайки через репозитории
+                List<Comment> comments = commentRepository.findByEntityIdAndEntityType(id, EntityType.WEBINAR);
+                List<Like> likes = likeRepository.findByEntityIdAndEntityType(id, EntityType.WEBINAR);
+                webinar.setComments(comments);
+                webinar.setLikes(likes);
             }
             return webinarOpt;
         } catch (Exception e) {
@@ -151,6 +158,8 @@ public class WebinarService {
         if (!webinarRepository.existsById(id)) {
             throw new EntityNotFoundException("Вебинар с ID " + id + " не найден");
         }
+        
+        // Триггеры БД автоматически удалят связанные комментарии и лайки
         webinarRepository.deleteById(id);
     }
 

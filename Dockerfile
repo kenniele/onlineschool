@@ -19,7 +19,7 @@ RUN ./mvnw dependency:go-offline -B
 COPY src ./src
 
 # Собираем приложение
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -Dmaven.test.skip=true
 
 # Экспонируем порт
 EXPOSE 8080

@@ -79,8 +79,6 @@ public class AuthController {
             user.setRole(Role.STUDENT); // По умолчанию студент
         }
         
-        user.setActive(true);
-        
         userService.save(user);
         
         // Перенаправление на страницу входа

@@ -27,77 +27,83 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Column(name = "username", nullable = false, unique = true)
+    @NotBlank(message = "Username is required")
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password", nullable = false)
+    @NotBlank(message = "Password is required")
+    @Column(nullable = false)
     private String password;
 
-    @Email
-    @NotBlank
-    @Column(name = "email", nullable = false, unique = true)
+    @Email(message = "Invalid email format")
+    @NotBlank(message = "Email is required")
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "first_name")
+    @NotBlank(message = "First name is required")
+    @Column(nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @NotBlank(message = "Last name is required")
+    @Column(nullable = false)
     private String lastName;
 
-    @NotNull
-    @Builder.Default
-    @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role = Role.STUDENT;
+    @NotNull(message = "Role is required")
+    @Column(nullable = false)
+    private Role role;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-    
-    @Builder.Default
-    @Column(name = "active")
-    private boolean active = true;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    // Реализация UserDetails
     @Override
-    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (role == null) {
-            return Collections.emptyList();
-        }
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     @JsonIgnore
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isEnabled() {
-        return active;
+    public String getPassword() {
+        return password;
     }
 
     @Override
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

@@ -128,4 +128,8 @@ public class UserService {
     public long count() {
         return userRepository.count();
     }
+
+    public List<User> findAllTeachers() {
+        return findByRole("TEACHER");
+    }
 }
