@@ -92,4 +92,4 @@ CREATE TABLE IF NOT EXISTS user_course_enrollments (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (course_id) REFERENCES courses(id),
     UNIQUE (user_id, course_id)
-); 
+);

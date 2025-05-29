@@ -76,7 +76,7 @@ public class WebinarController {
             User teacher = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Teacher not found"));
             webinar.setTeacher(teacher);
-            return ResponseEntity.ok(webinarService.save(webinar));
+        return ResponseEntity.ok(webinarService.save(webinar));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -102,7 +102,7 @@ public class WebinarController {
                 return ResponseEntity.status(403).build();
             }
             
-            return ResponseEntity.ok(webinarService.update(id, webinar));
+        return ResponseEntity.ok(webinarService.update(id, webinar));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -112,8 +112,8 @@ public class WebinarController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteWebinar(@PathVariable Long id) {
         try {
-            webinarService.deleteById(id);
-            return ResponseEntity.ok().build();
+        webinarService.deleteById(id);
+        return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -137,7 +137,7 @@ public class WebinarController {
                 return ResponseEntity.status(403).build();
             }
             
-            return ResponseEntity.ok(webinarService.start(id));
+        return ResponseEntity.ok(webinarService.start(id));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -161,7 +161,7 @@ public class WebinarController {
                 return ResponseEntity.status(403).build();
             }
             
-            return ResponseEntity.ok(webinarService.complete(id));
+        return ResponseEntity.ok(webinarService.complete(id));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -185,7 +185,7 @@ public class WebinarController {
                 return ResponseEntity.status(403).build();
             }
             
-            return ResponseEntity.ok(webinarService.cancel(id));
+        return ResponseEntity.ok(webinarService.cancel(id));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -287,7 +287,7 @@ public class WebinarController {
                 return ResponseEntity.status(403).build();
             }
             
-            return ResponseEntity.ok(webinarService.addParticipant(id, userId));
+        return ResponseEntity.ok(webinarService.addParticipant(id, userId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -312,7 +312,7 @@ public class WebinarController {
                 return ResponseEntity.status(403).build();
             }
             
-            return ResponseEntity.ok(webinarService.removeParticipant(id, userId));
+        return ResponseEntity.ok(webinarService.removeParticipant(id, userId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -322,7 +322,7 @@ public class WebinarController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Webinar> deactivateWebinar(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(webinarService.deactivate(id));
+        return ResponseEntity.ok(webinarService.deactivate(id));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

@@ -99,8 +99,8 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         try {
-            courseService.deleteById(id);
-            return ResponseEntity.ok().build();
+        courseService.deleteById(id);
+        return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -110,7 +110,7 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Course> activateCourse(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(courseService.activate(id));
+        return ResponseEntity.ok(courseService.activate(id));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -120,7 +120,7 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Course> deactivateCourse(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(courseService.deactivate(id));
+        return ResponseEntity.ok(courseService.deactivate(id));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -212,7 +212,7 @@ public class CourseController {
             @PathVariable Long id,
             @PathVariable Long studentId) {
         try {
-            return ResponseEntity.ok(courseService.addStudent(id, studentId));
+        return ResponseEntity.ok(courseService.addStudent(id, studentId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -224,7 +224,7 @@ public class CourseController {
             @PathVariable Long id,
             @PathVariable Long studentId) {
         try {
-            return ResponseEntity.ok(courseService.removeStudent(id, studentId));
+        return ResponseEntity.ok(courseService.removeStudent(id, studentId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
