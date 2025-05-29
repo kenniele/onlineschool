@@ -8,11 +8,11 @@ import com.onlineSchool.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,12 +28,6 @@ public class CommentController {
 
     private final CommentService commentService;
     private final UserService userService;
-
-    @Autowired
-    public CommentController(CommentService commentService, UserService userService) {
-        this.commentService = commentService;
-        this.userService = userService;
-    }
 
     // Получить все комментарии - доступно всем
     @GetMapping

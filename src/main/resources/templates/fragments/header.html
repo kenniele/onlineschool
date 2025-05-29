@@ -85,6 +85,18 @@
                         <i class="fas fa-book"></i> 
                         Курсы
                     </a></li>
+                    <li><a href="/about" class="nav-link">
+                        <i class="fas fa-user-circle"></i> 
+                        Об авторе
+                    </a></li>
+                </div>
+                
+                <!-- Общие ссылки для авторизованных пользователей -->
+                <div sec:authorize="isAuthenticated()">
+                    <li><a href="/about" class="nav-link">
+                        <i class="fas fa-user-circle"></i> 
+                        Об авторе
+                    </a></li>
                 </div>
                 
                 <!-- Профиль пользователя -->

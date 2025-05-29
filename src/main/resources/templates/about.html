@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: head}">
+    <title>Об авторе - Online School</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>
+                    <i class="fas fa-user-circle"></i>
+                    Об авторе
+                </h1>
+                <p class="lead">Информация о разработчике системы онлайн-школы</p>
+            </div>
+
+            <div class="author-info">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="card author-card">
+                            <div class="card-body">
+                                <div class="author-header text-center mb-4">
+                                    <div class="author-avatar">
+                                        <i class="fas fa-user-graduate fa-5x text-primary"></i>
+                                    </div>
+                                    <h2 class="author-name mt-3">Поздоровкин Кирилл Алексеевич</h2>
+                                    <p class="author-group">Группа: ТРПО23-3</p>
+                                    <p class="author-university">Финансовый университет при Правительстве Российской Федерации</p>
+                                </div>
+
+                                <div class="author-details">
+                                    <div class="detail-section mb-4">
+                                        <h4>
+                                            <i class="fas fa-envelope"></i>
+                                            Контактные данные
+                                        </h4>
+                                        <ul class="contact-list">
+                                            <li>
+                                                <i class="fas fa-envelope"></i>
+                                                Email: <a href="mailto:kenniele@yandex.ru">kenniele@yandex.ru</a>
+                                            </li>
+                                            <li>
+                                                <i class="fab fa-github"></i>
+                                                GitHub ссылка на проект: <a href="https://github.com/kenniele/onlineschool" target="_blank">github.com/kenniele/onlineschool</a>
+                                            </li>
+                                            <li>
+                                                <i class="fab fa-telegram"></i>
+                                                Telegram: <a href="https://t.me/champxde" target="_blank">@champxde</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="detail-section mb-4">
+                                        <h4>
+                                            <i class="fas fa-code"></i>
+                                            Опыт работы с технологиями
+                                        </h4>
+                                        <div class="tech-experience">
+                                            <div class="tech-category">
+                                                <h5>Backend разработка:</h5>
+                                                <ul>
+                                                    <li><strong>Golang</strong> - 4+ года опыта разработки приложений, создание высоконагруженных сервисов</li>
+                                                    <li><strong>Python</strong> - первый язык программирования, который я начал изучать</li>
+                                                    <li><strong>Java Stack</strong> - создание REST API и веб-приложений, авторизация и аутентификация, ORM</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <div class="tech-category">
+                                                <h5>Базы данных:</h5>
+                                                <ul>
+                                                    <li><strong>PostgreSQL</strong> - проектирование схем БД и оптимизация запросов</li>
+                                                    <li><strong>Oracle</strong> - опыт работы написания PL/SQL процедур и функций</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <div class="tech-category">
+                                                <h5>Frontend:</h5>
+                                                <ul>
+                                                    <li><strong>Thymeleaf</strong> - создание динамических веб-страниц</li>
+                                                    <li><strong>HTML/CSS/JavaScript</strong> - верстка и интерактивность</li>
+                                                    <li><strong>Bootstrap</strong> - адаптивная верстка</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <div class="tech-category">
+                                                <h5>Инструменты разработки:</h5>
+                                                <ul>
+                                                    <li><strong>Maven</strong> - управление зависимостями и сборка проектов</li>
+                                                    <li><strong>Git</strong> - система контроля версий</li>
+                                                    <li><strong>IntelliJ IDEA</strong> - среда разработки</li>
+                                                    <li><strong>Postman</strong> - тестирование API</li>
+                                                    <li><strong>Docker</strong> - контейнеризация приложений</li>
+                                                    <li><strong>Kubernetes</strong> - управление контейнеризированными приложениями</li>
+                                                    <li><strong>Gitlab CI</strong> - CI/CD</li>
+                                                    <li><strong>Prometheus</strong> - мониторинг и алертинг</li>
+                                                    <li><strong>Grafana</strong> - визуализация данных</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section mb-4">
+                                        <h4>
+                                            <i class="fas fa-calendar"></i>
+                                            Сроки выполнения проекта
+                                        </h4>
+                                        <div class="project-timeline">
+                                            <div class="timeline-item">
+                                                <strong>Дата начала:</strong> 15.04.2025
+                                            </div>
+                                            <div class="timeline-item">
+                                                <strong>Дата завершения:</strong> 29.05.2025
+                                            </div>
+                                            <div class="timeline-item">
+                                                <strong>Общее время разработки:</strong> 1.5 месяца
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4>
+                                            <i class="fas fa-project-diagram"></i>
+                                            О проекте
+                                        </h4>
+                                        <p>
+                                            Данная система онлайн-школы была разработана в рамках курсовой работы 
+                                            по дисциплине "Современные технологии программирования". 
+                                        </p>
+                                        <p>
+                                            Проект демонстрирует навыки fullstack разработки с использованием 
+                                            современного Java-стека технологий, включая создание REST API, 
+                                            работу с базами данных, реализацию безопасности и создание 
+                                            пользовательского интерфейса.
+                                        </p>
+                                        
+                                        <div class="project-features mt-3">
+                                            <h5>Ключевые возможности системы:</h5>
+                                            <ul>
+                                                <li>Система ролей (Студент, Преподаватель, Администратор)</li>
+                                                <li>Управление курсами и вебинарами</li>
+                                                <li>Отслеживание прогресса обучения</li>
+                                                <li>Интерактивные комментарии и лайки</li>
+                                                <li>Административная панель</li>
+                                                <li>Статистика и аналитика</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <style>
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .author-card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 12px;
+        }
+
+        .author-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1.5rem;
+        }
+
+        .author-avatar {
+            margin-bottom: 1rem;
+        }
+
+        .author-name {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .author-group,
+        .author-university {
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-section {
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 1.5rem;
+        }
+
+        .detail-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-section h4 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .contact-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .contact-list a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .contact-list a:hover {
+            text-decoration: underline;
+        }
+
+        .tech-experience {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .tech-category {
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .tech-category h5 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-category ul {
+            margin-bottom: 0;
+        }
+
+        .tech-category li {
+            margin-bottom: 0.25rem;
+            color: #555;
+        }
+
+        .project-timeline {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .timeline-item {
+            margin-bottom: 0.75rem;
+            color: #555;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .project-features ul {
+            margin-top: 0.5rem;
+        }
+
+        .project-features li {
+            margin-bottom: 0.25rem;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .author-card {
+                margin: 0 1rem;
+            }
+            
+            .tech-experience,
+            .project-timeline {
+                padding: 1rem;
+            }
+        }
+    </style>
+</body>
+</html> 
