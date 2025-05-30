@@ -101,10 +101,21 @@ public class StudentController {
         
         List<Webinar> upcomingWebinars = webinarService.findUpcoming();
         List<Webinar> attendedWebinars = webinarService.findByParticipant(student);
+        
+        // Разделяем вебинары на те, в которых студент участвует, и доступные для записи
+        List<Webinar> participatingWebinars = upcomingWebinars.stream()
+                .filter(webinar -> webinar.getParticipants() != null && webinar.getParticipants().contains(student))
+                .toList();
+                
+        List<Webinar> availableWebinars = upcomingWebinars.stream()
+                .filter(webinar -> webinar.getParticipants() == null || !webinar.getParticipants().contains(student))
+                .toList();
 
         model.addAttribute("student", student);
         model.addAttribute("upcomingWebinars", upcomingWebinars);
         model.addAttribute("attendedWebinars", attendedWebinars);
+        model.addAttribute("participatingWebinars", participatingWebinars);
+        model.addAttribute("availableWebinars", availableWebinars);
             
         return "student/webinars";
     }

@@ -76,34 +76,27 @@
                         </div>
                         <div class="meta-item">
                             <i class="fas fa-heart"></i>
-                            <span th:text="${webinar.likes != null ? webinar.likes.size() : 0} + ' лайков'">0 лайков</span>
+                            <span th:text="${webinarLikes != null ? webinarLikes.size() : 0} + ' лайков'">0 лайков</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="card-footer">
                     <div class="webinar-actions">
-                        <!-- Лайк -->
-                        <div sec:authorize="isAuthenticated()">
-                            <button type="button" 
-                                    class="btn btn-outline like-btn" 
-                                    th:data-entity-type="WEBINAR"
-                                    th:data-entity-id="${webinar.id}"
-                                    th:classappend="${hasLiked} ? 'liked' : ''">
-                                <i class="fas fa-heart"></i>
-                                <span class="like-text">
-                                    <span th:text="${hasLiked} ? 'Убрать лайк' : 'Лайк'">Лайк</span>
-                                </span>
-                                <span class="like-count" th:text="'(' + ${webinar.likes != null ? webinar.likes.size() : 0} + ')'">0</span>
-                            </button>
-                        </div>
+                        <!-- Кнопка лайка -->
+                        <button th:class="${hasLiked ? 'btn btn-primary liked like-btn' : 'btn btn-outline-primary like-btn'}"
+                                th:attr="data-entity-type='WEBINAR',data-entity-id=${webinar.id}"
+                                sec:authorize="isAuthenticated()">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-text" th:text="${hasLiked ? 'Понравилось' : 'Нравится'}">Нравится</span>
+                            <span class="like-count" th:text="'(' + ${webinarLikes != null ? webinarLikes.size() : 0} + ')'">0</span>
+                        </button>
                         
-                        <div sec:authorize="!isAuthenticated()">
-                            <a href="/login" class="btn btn-outline">
-                                <i class="fas fa-heart"></i>
-                                Лайк (<span th:text="${webinar.likes != null ? webinar.likes.size() : 0}">0</span>)
-                            </a>
-                        </div>
+                        <!-- Альтернативный текст для неавторизованных пользователей -->
+                        <span sec:authorize="!isAuthenticated()" class="text-muted">
+                            <i class="fas fa-heart"></i>
+                            Лайк (<span th:text="${webinarLikes != null ? webinarLikes.size() : 0}">0</span>)
+                        </span>
                         
                         <!-- Действия для студентов -->
                         <div sec:authorize="hasRole('STUDENT')">
@@ -180,13 +173,13 @@
                     <h2 class="card-title">
                         <i class="fas fa-comments"></i>
                         Комментарии
-                        <span class="badge badge-secondary" th:text="${webinar.comments != null ? webinar.comments.size() : 0}">0</span>
+                        <span class="badge badge-secondary" th:text="${webinarComments != null ? webinarComments.size() : 0}">0</span>
                     </h2>
                 </div>
                 <div class="card-body">
                     <!-- Comments List -->
-                    <div class="comments-list mb-4" th:if="${webinar.comments != null and !webinar.comments.empty}">
-                        <div th:each="comment : ${webinar.comments}" class="comment-item">
+                    <div class="comments-list mb-4" th:if="${webinarComments != null and !webinarComments.empty}">
+                        <div th:each="comment : ${webinarComments}" class="comment-item">
                             <div class="comment-header">
                                 <div class="comment-author">
                                     <i class="fas fa-user-circle"></i>
@@ -202,7 +195,7 @@
                     </div>
                     
                     <!-- Empty State -->
-                    <div class="empty-state text-center" th:if="${webinar.comments == null or webinar.comments.empty}">
+                    <div class="empty-state text-center" th:if="${webinarComments == null or webinarComments.empty}">
                         <div class="empty-icon">
                             <i class="fas fa-comments"></i>
                         </div>
@@ -548,6 +541,30 @@
                 return;
             }
             
+            // Функция для показа уведомлений
+            function showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                        <span>${message}</span>
+                        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Автоматически удаляем уведомление через 5 секунд
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+            
             // Обработка формы комментариев
             const commentForm = document.getElementById('commentForm');
             if (commentForm) {
@@ -610,7 +627,8 @@
             
             // Обработка лайков
             const likeButtons = document.querySelectorAll('.like-btn');
-            likeButtons.forEach((button, index) => {
+            
+            likeButtons.forEach((button) => {
                 button.addEventListener('click', function() {
                     const entityType = this.dataset.entityType;
                     const entityId = this.dataset.entityId;
@@ -619,44 +637,60 @@
                     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
                     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
                     
+                    if (!csrfToken || !csrfHeader) {
+                        showNotification('Ошибка: CSRF токены не найдены', 'error');
+                        return;
+                    }
+                    
+                    // Блокируем кнопку на время запроса
+                    this.disabled = true;
+                    
                     const headers = {
                         'Content-Type': 'application/json'
                     };
                     headers[csrfHeader] = csrfToken;
-                    
-                    // Блокируем кнопку на время запроса
-                    this.disabled = true;
                     
                     fetch(`/api/likes/toggle/${entityType}/${entityId}`, {
                         method: 'POST',
                         headers: headers,
                         credentials: 'include'
                     })
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            throw new Error('Ошибка при обработке лайка: ' + response.status);
-                        }
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        // Обновляем интерфейс
-                        const likeCountElement = this.querySelector('.like-count');
-                        if (likeCountElement) {
-                            likeCountElement.textContent = data.likeCount || 0;
-                        }
-                        
-                        // Обновляем состояние кнопки
-                        if (data.liked) {
-                            this.classList.add('liked');
-                            this.innerHTML = '❤️ ' + (data.likeCount || 0);
+                        if (data.success) {
+                            // Обновляем счетчик лайков в meta-info
+                            const metaLikeElement = document.querySelector('.webinar-meta .meta-item:last-child span');
+                            if (metaLikeElement) {
+                                metaLikeElement.textContent = (data.likeCount || 0) + ' лайков';
+                            }
+                            
+                            // Обновляем состояние кнопки и её содержимое
+                            const likeTextElement = this.querySelector('.like-text');
+                            const likeCountElement = this.querySelector('.like-count');
+                            
+                            if (data.liked) {
+                                this.classList.remove('btn-outline-primary');
+                                this.classList.add('btn-primary', 'liked');
+                                if (likeTextElement) likeTextElement.textContent = 'Понравилось';
+                            } else {
+                                this.classList.remove('btn-primary', 'liked');
+                                this.classList.add('btn-outline-primary');
+                                if (likeTextElement) likeTextElement.textContent = 'Нравится';
+                            }
+                            
+                            if (likeCountElement) {
+                                likeCountElement.textContent = '(' + (data.likeCount || 0) + ')';
+                            }
+                            
+                            // Показываем уведомление
+                            showNotification(data.message || 'Действие выполнено', 'success');
                         } else {
-                            this.classList.remove('liked');
-                            this.innerHTML = '🤍 ' + (data.likeCount || 0);
+                            showNotification(data.message || 'Ошибка', 'error');
                         }
                     })
                     .catch(error => {
-                        alert('Ошибка: ' + error.message);
+                        console.error('Like error:', error);
+                        showNotification('Ошибка при обработке лайка', 'error');
                     })
                     .finally(() => {
                         // Разблокируем кнопку

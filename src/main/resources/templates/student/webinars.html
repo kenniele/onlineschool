@@ -23,7 +23,7 @@
                             <i class="fas fa-calendar-check"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number" th:text="${participatingWebinars.size()}">0</div>
+                            <div class="stat-number" th:text="${participatingWebinars != null ? participatingWebinars.size() : 0}">0</div>
                             <div class="stat-label">Записан на вебинары</div>
                         </div>
                     </div>
@@ -32,7 +32,7 @@
                             <i class="fas fa-calendar-plus"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number" th:text="${availableWebinars.size()}">0</div>
+                            <div class="stat-number" th:text="${availableWebinars != null ? availableWebinars.size() : 0}">0</div>
                             <div class="stat-label">Доступно для записи</div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
                                     </div>
                                     <div class="meta-item">
                                         <i class="fas fa-users"></i>
-                                        <span th:text="${webinar.participants.size()} + ' участников'">0 участников</span>
+                                        <span th:text="${webinar.participants != null ? webinar.participants.size() + ' участников' : '0 участников'}">0 участников</span>
                                     </div>
                                 </div>
                                 
@@ -136,7 +136,7 @@
                                     </div>
                                     <div class="meta-item">
                                         <i class="fas fa-users"></i>
-                                        <span th:text="${webinar.participants.size()} + ' участников'">0 участников</span>
+                                        <span th:text="${webinar.participants != null ? webinar.participants.size() + ' участников' : '0 участников'}">0 участников</span>
                                     </div>
                                 </div>
                                 

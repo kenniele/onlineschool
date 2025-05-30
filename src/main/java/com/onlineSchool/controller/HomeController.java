@@ -10,6 +10,7 @@ import com.onlineSchool.service.UserService;
 import com.onlineSchool.service.WebinarService;
 import com.onlineSchool.service.ProgressService;
 import com.onlineSchool.service.LikeService;
+import com.onlineSchool.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,7 @@ public class HomeController {
     private final WebinarService webinarService;
     private final ProgressService progressService;
     private final LikeService likeService;
+    private final CommentService commentService;
 
     @GetMapping("/")
     public String home(Model model) {
@@ -212,6 +214,10 @@ public class HomeController {
             var webinar = webinarService.findByIdWithDetails(id)
                     .orElseThrow(() -> new RuntimeException("Webinar not found"));
             
+            // Загружаем лайки и комментарии для вебинара
+            var likes = likeService.getLikesByEntity(EntityType.WEBINAR, id);
+            var comments = commentService.getCommentsByEntity(EntityType.WEBINAR, id);
+            
             // Проверяем, участвует ли текущий пользователь в вебинаре
             boolean isParticipant = false;
             boolean hasLiked = false;
@@ -254,6 +260,8 @@ public class HomeController {
             }
             
             model.addAttribute("webinar", webinar);
+            model.addAttribute("webinarLikes", likes);
+            model.addAttribute("webinarComments", comments);
             model.addAttribute("isParticipant", isParticipant);
             model.addAttribute("hasLiked", hasLiked);
             

@@ -104,49 +104,30 @@ public class LikeController {
             @PathVariable Long entityId,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        log.info("=== TOGGLE LIKE DEBUG ===");
-        log.info("EntityType: {}", entityType);
-        log.info("EntityId: {}", entityId);
-        log.info("Username: {}", userDetails.getUsername());
-        
         try {
-            // Получаем User через UserService, а не кастим напрямую
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
             
-            log.info("User found: {} - {}", user.getId(), user.getUsername());
-            
             boolean hasLiked = likeService.hasLiked(user.getId(), entityId, entityType);
-            log.info("Has liked before: {}", hasLiked);
             
             Map<String, Object> response = new HashMap<>();
             
             if (hasLiked) {
-                // Убираем лайк
                 likeService.unlike(user.getId(), entityId, entityType);
                 response.put("liked", false);
                 response.put("message", "Лайк убран");
-                log.info("Like removed");
             } else {
-                // Ставим лайк
                 likeService.like(user.getId(), entityId, entityType);
                 response.put("liked", true);
                 response.put("message", "Лайк поставлен");
-                log.info("Like added");
             }
             
-            // Получаем новое количество лайков
             long likesCount = likeService.countLikes(entityId, entityType);
-            log.info("New likes count: {}", likesCount);
-            
-            response.put("likesCount", likesCount);
+            response.put("likeCount", likesCount);
             response.put("success", true);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Error in toggleLike: {}", e.getMessage());
-            e.printStackTrace();
-            
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Ошибка: " + e.getMessage());
